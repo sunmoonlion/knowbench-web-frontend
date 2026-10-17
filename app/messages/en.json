@@ -904,6 +904,7 @@
       "unknownSource": "Unknown",
       "ago": "Started {seconds} seconds ago",
       "replace": "After you allow this, {name} disconnects",
+      "intoAccount": "After you allow this, the computer connects to the account \"{account}\". If that is not the right account, deny, sign in with the right one and connect again.",
       "allow": "Allow",
       "deny": "Deny",
       "approved": "{name} is allowed to connect",

@@ -31,14 +31,14 @@ const lookup = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
 
-function page(node: React.ReactNode) {
+function page(node: React.ReactNode, user?: { name: string; email: string | null }) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
   return render(
     <NextIntlClientProvider locale="zh-CN" messages={messages} timeZone="Asia/Shanghai">
       <QueryClientProvider client={client}>
-        <WorkbenchProvider csrfToken="csrf-fixture" locale="zh-CN">
+        <WorkbenchProvider csrfToken="csrf-fixture" locale="zh-CN" user={user}>
           {node}
         </WorkbenchProvider>
       </QueryClientProvider>
@@ -77,6 +77,27 @@ describe('连接码', () => {
     fireEvent.change(input, { target: { value: 'k3npq7r2' } })
     fireEvent.click(screen.getByRole('button', { name: '核对这台电脑' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('码不对或已过期')
+  })
+
+  it('允许之前写明这台电脑连到哪个账号（账 133）', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (String(url).endsWith('/lookup')) return json(lookup)
+        if (String(url).endsWith('/api/workbench/environments'))
+          return json({ contract_version: 2, environments: [] })
+        if (String(url).endsWith('/api/workbench/agent/download'))
+          return json({ contract_version: 2, download: null })
+        return json({ status: 'absent' })
+      }),
+    )
+    page(<MachinesScreen />, { name: '分身测试', email: 'tester@example.com' })
+    fireEvent.change(await screen.findByRole('textbox'), { target: { value: 'K3NPQ7R2' } })
+    fireEvent.click(screen.getByRole('button', { name: '核对这台电脑' }))
+    const into = await screen.findByText(
+      messages.machines.connect.intoAccount.replace('{account}', '分身测试'),
+    )
+    expect(into.getAttribute('title')).toBe('tester@example.com')
   })
 
   it('有旧电脑才提示会断开，没有就不说', async () => {

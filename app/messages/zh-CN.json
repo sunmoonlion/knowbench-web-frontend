@@ -904,6 +904,7 @@
       "unknownSource": "未知",
       "ago": "{seconds} 秒前发起",
       "replace": "允许后，{name} 会断开",
+      "intoAccount": "允许后，这台电脑连到账号「{account}」。不是这个账号就先拒绝，换账号登录后再连。",
       "allow": "允许",
       "deny": "拒绝",
       "approved": "已允许 {name} 连接",

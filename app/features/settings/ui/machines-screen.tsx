@@ -79,6 +79,7 @@ export function MachinesScreen({ embedded = false }: { embedded?: boolean }) {
 }
 
 function ConnectComputer({ csrfToken }: { csrfToken: string }) {
+  const { user } = useWorkbench()
   const t = useTranslations('machines.connect')
   const s = useTranslations('machines.setup')
   const params = useSearchParams()
@@ -168,6 +169,12 @@ function ConnectComputer({ csrfToken }: { csrfToken: string }) {
           <p>{t('ago', { seconds: found.requested_seconds_ago })}</p>
           {found.replaces_machine ? (
             <p className="font-semibold">{t('replace', { name: found.replaces_machine })}</p>
+          ) : null}
+          {/* 连到哪个账号说出来：浏览器登着别的账号时点了允许，电脑就配进了那个账号（账 133） */}
+          {user ? (
+            <p className="font-semibold" title={user.email ?? undefined}>
+              {t('intoAccount', { account: user.name })}
+            </p>
           ) : null}
           <div className="flex gap-2">
             <button
