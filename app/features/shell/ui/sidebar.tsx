@@ -331,6 +331,9 @@ export function Sidebar() {
                       title={t(machine.status === 'online' ? 'machine.online' : 'machine.offline')}
                     />
                     <span className="truncate">{machine.name}</span>
+                    <span className="text-muted-foreground shrink-0 text-[11px] font-normal">
+                      {t(machine.status === 'online' ? 'computer.online' : 'computer.offline')}
+                    </span>
                     {hint.thisOne === machine.name ? (
                       <span className="text-muted-foreground shrink-0 text-[11px] font-normal">
                         {t('computer.thisOne')}
@@ -523,6 +526,14 @@ export function Sidebar() {
               ))}
             </ul>
           )}
+          {hint.elsewhere !== null ? (
+            <p className="text-muted-foreground mt-2 px-2 text-xs">
+              {t('computer.elsewhere', { name: hint.elsewhere })}{' '}
+              <Link href={routes.computer(locale)} className="underline underline-offset-3">
+                {t('computer.manage')}
+              </Link>
+            </p>
+          ) : null}
           {hint.notHere ? (
             <p className="text-muted-foreground mt-2 px-2 text-xs">
               {t('computer.notHere')}{' '}

@@ -207,6 +207,9 @@
       "connect": "Connect",
       "manage": "Manage",
       "thisOne": "this one",
+      "online": "online",
+      "offline": "offline",
+      "elsewhere": "The computer you are using now ({name}) is connected to another account, so it shows offline here. To use it with this account, pair it again under Manage.",
       "notHere": "The computer you are using now is not connected."
     },
     "project": {
