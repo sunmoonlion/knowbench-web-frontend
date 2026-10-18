@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
+import { CrossAppLink } from '@/components/common/cross-app-link'
 import { KnowbotArrival } from '@/components/workbench/knowbot-arrival'
 import { ProjectPicker } from '@/components/workbench/project-picker'
 import { ConnectComputerLink } from '@/components/workbench/connect-computer'
@@ -159,7 +160,18 @@ export function HomeScreen() {
             />
             {mode === 'expert' ? (
               <div className="px-1 pt-1" aria-label={t('expert.who')}>
-                <p className="text-muted-foreground mb-1 text-xs">{t('expert.who')}</p>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <p className="text-muted-foreground text-xs">{t('expert.who')}</p>
+                  {/* 自己的分身在 knowmart：去那里选一位，点「请这位」带回这里（SDD 0027 P4）。
+                      原来只在单独的专家页上有，从这里找不到（所有者 2026-10-18） */}
+                  <CrossAppLink
+                    to="knowmart.knowbots"
+                    refValue="expert"
+                    className="text-xs underline underline-offset-3"
+                  >
+                    {t('expert.summon')}
+                  </CrossAppLink>
+                </div>
                 <div className="flex flex-wrap gap-1.5">
                   {(packs.data ?? []).map((each) => (
                     <Button

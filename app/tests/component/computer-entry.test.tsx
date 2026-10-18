@@ -60,6 +60,11 @@ beforeEach(() => {
         if (environment === 'error') return Response.json({ code: 'unavailable' }, { status: 503 })
         return Response.json(fixture(environment, path))
       }
+      if (path === '/api/web/v1/cross-app/links')
+        return Response.json({
+          app: 'knowbench',
+          targets: { knowmart: { web_base_url: 'https://knowmart.example.test' } },
+        })
       if (path === '/api/workbench/agent/download')
         return Response.json({ contract_version: 2, download: release })
       if (path === '/api/workbench/sandboxes/provisioned')
@@ -163,6 +168,15 @@ describe('电脑接入入口', () => {
     checkLink()
     expect(calls.every((c) => c.method === 'GET')).toBe(true)
   })
+  it('主页「专家」里，「请哪一位」旁边就有「请我的分身」，去 knowmart 选（所有者 2026-10-18）', async () => {
+    navigation.query = 'mode=expert'
+    page(<HomeScreen />)
+    const link = await screen.findByRole('link', { name: zh.home.expert.summon })
+    expect(link.getAttribute('href')).toBe(
+      'https://knowmart.example.test/zh-CN/knowbots?from=knowbench&ref=expert',
+    )
+  })
+
   it('专家首页与指定项目的专家页都能接入', async () => {
     const p = page(<ExpertHomeScreen />)
     await screen.findByText(zh.expertHome.noMachine)

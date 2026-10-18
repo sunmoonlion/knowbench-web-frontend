@@ -295,7 +295,8 @@
     "expert": {
       "who": "Which expert",
       "loading": "Loading…",
-      "preparing": "Coming soon"
+      "preparing": "Coming soon",
+      "summon": "Bring my own knowbot"
     },
     "knowbot": {
       "checking": "Checking the knowbot you picked in knowmart…",

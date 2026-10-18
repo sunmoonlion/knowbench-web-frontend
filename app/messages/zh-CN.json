@@ -295,7 +295,8 @@
     "expert": {
       "who": "请哪一位",
       "loading": "加载中…",
-      "preparing": "筹备中"
+      "preparing": "筹备中",
+      "summon": "请我的分身"
     },
     "knowbot": {
       "checking": "正在核对你从 knowmart 选的分身……",
