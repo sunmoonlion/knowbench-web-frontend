@@ -111,7 +111,7 @@ describe('从 knowmart 选定分身回来', () => {
     search = new URLSearchParams({ knowbot: `${KNOWBOT}@1` })
     stub(() => answer(404, { code: 'no_such_expert', status: 404, detail: 'no such knowbot' }))
     const { unmount } = page()
-    expect(await screen.findByRole('alert')).toHaveTextContent('没找到这位分身')
+    expect(await screen.findByRole('alert')).toHaveTextContent('没找到这位专家')
     unmount()
     stub(() =>
       answer(503, { code: 'knowbot_unavailable', status: 503, detail: 'knowmart is unavailable' }),

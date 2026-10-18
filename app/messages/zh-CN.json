@@ -299,13 +299,13 @@
       "who": "请哪一位",
       "loading": "加载中…",
       "preparing": "筹备中",
-      "summon": "请我的分身"
+      "summon": "去 knowmart 选专家"
     },
     "knowbot": {
-      "checking": "正在核对你从 knowmart 选的分身……",
-      "notFound": "没找到这位分身：可能不是你的，或已停用。",
+      "checking": "正在核对你从 knowmart 选的专家……",
+      "notFound": "没找到这位专家：可能不是你的，或已停用。",
       "unavailable": "knowmart 暂时连不上，请稍后再试。",
-      "invalid": "这一版分身在工作台跑不了，请联系我们。",
+      "invalid": "这一版专家在工作台跑不了，请联系我们。",
       "failed": "没请来，请再试一次。",
       "again": "回 knowmart 重新选"
     }
@@ -670,8 +670,7 @@
     "pickBody": "专家接手的是整个项目：项目里的文件和对话。",
     "noMachine": "还没有登记电脑。先接入电脑，再开始工作或请专家。",
     "preparing": "筹备中",
-    "summonKnowbot": "请我的分身",
-    "mine": "我的分身"
+    "summonKnowbot": "去 knowmart 选专家"
   },
   "askExpert": {
     "title": "请专家",

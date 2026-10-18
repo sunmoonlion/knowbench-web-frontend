@@ -157,11 +157,6 @@ export function ExpertHomeScreen() {
                         {t('preparing')}
                       </span>
                     ) : null}
-                    {pack.source === 'knowbot' ? (
-                      <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[11px] font-normal">
-                        {t('mine')}
-                      </span>
-                    ) : null}
                   </h3>
                   <p className="text-muted-foreground text-sm">{pack.tagline}</p>
                   {pack.status === 'preparing' && pack.preparing_note ? (
