@@ -163,7 +163,16 @@ describe('工作页的时间线', () => {
       'model',
       'handover',
     ])
-    expect(line.entries[3]).toMatchObject({ what: 'returned', outcome: 'succeeded' })
+    expect(line.entries[3]).toMatchObject({
+      what: 'returned',
+      outcome: 'succeeded',
+      writesFiles: true,
+    })
+    const bare = timeline([
+      at('wheel/handover', {}),
+      at('wheel/return', { final_state: 'SUCCEEDED', writes_files: false }),
+    ])
+    expect(bare.entries[1]).toMatchObject({ outcome: 'succeeded', writesFiles: false })
     const stopped = timeline([
       at('wheel/handover', {}),
       at('wheel/return', { final_state: 'CANCELLED' }),

@@ -460,6 +460,9 @@
       "succeeded": "The expert is done. The write-up and handback are under Work papers in the right panel; each request in this conversation is kept separately and never overwritten.",
       "stopped": "The expert was stopped. Whatever it wrote is under Work papers in the right panel.",
       "failed": "The expert did not finish. Whatever it wrote is under Work papers in the right panel.",
+      "succeededNoFiles": "The expert finished. It writes no deliverable files; the result is what it handed back in this conversation.",
+      "stoppedNoFiles": "The expert was stopped. It writes no deliverable files.",
+      "failedNoFiles": "The expert did not finish. It writes no deliverable files.",
       "rejected": "The expert did not take this request; no step ran and nothing was written: {reason}",
       "rejectedPlain": "The expert did not take this request; no step ran and nothing was written.",
       "open": "Open work papers"

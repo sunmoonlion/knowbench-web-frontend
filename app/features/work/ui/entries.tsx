@@ -389,9 +389,11 @@ export function TimelineEntry({
                   ? entry.reason
                     ? t('handover.rejected', { reason: entry.reason })
                     : t('handover.rejectedPlain')
-                  : t(`handover.${entry.outcome ?? 'failed'}`)}
+                  : t(
+                      `handover.${entry.outcome ?? 'failed'}${entry.writesFiles === false ? 'NoFiles' : ''}`,
+                    )}
               </span>
-              {onOpenDossier && entry.outcome !== 'rejected' ? (
+              {onOpenDossier && entry.outcome !== 'rejected' && entry.writesFiles !== false ? (
                 <Button variant="link" size="sm" className="h-auto p-0" onClick={onOpenDossier}>
                   {t('handover.open')}
                 </Button>

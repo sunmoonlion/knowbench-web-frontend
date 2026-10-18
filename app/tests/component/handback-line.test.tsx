@@ -22,6 +22,22 @@ function line(entry: Entry) {
 }
 
 describe('专家交回那一行', () => {
+  it('不写成稿文件的专家：不提工作底稿、不给按钮（qwen-005 走查：分身只回结果，右栏底稿是空的）', () => {
+    for (const outcome of ['succeeded', 'stopped', 'failed'] as const) {
+      const view = line({
+        kind: 'handover',
+        key: outcome,
+        what: 'returned',
+        outcome,
+        writesFiles: false,
+      })
+      expect(screen.getByText(/不写成稿文件/)).toBeInTheDocument()
+      expect(screen.queryByText(/右边栏/)).toBeNull()
+      expect(screen.queryByRole('button', { name: '打开工作底稿' })).toBeNull()
+      view.unmount()
+    }
+  })
+
   it('做完了：叫人去看工作底稿', () => {
     line({ kind: 'handover', key: 'a', what: 'returned', outcome: 'succeeded' })
     expect(screen.getByRole('button', { name: '打开工作底稿' })).toBeInTheDocument()

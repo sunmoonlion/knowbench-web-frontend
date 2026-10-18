@@ -83,6 +83,8 @@ export type Entry =
       what: 'given' | 'returned'
       outcome?: 'succeeded' | 'stopped' | 'failed' | 'rejected'
       reason?: string
+      // 这位专家写不写成稿文件；老事件没有这一项，按写算
+      writesFiles?: boolean
     }
   // 专家开始做哪一步。同一步重做不再摆一次：对话里只看过程，不数第几次（所有者 2026-10-14）
   | { kind: 'stage'; key: string; title: string }
@@ -339,6 +341,7 @@ export function timeline(events: readonly ConversationEvent[]): Timeline {
                   ? 'rejected'
                   : 'failed',
           reason: text(payload.reason_text),
+          writesFiles: payload.writes_files !== false,
         })
         expert = false
         live = null
