@@ -49,7 +49,7 @@ function page(children: React.ReactNode, user?: { name: string; email: string | 
 }
 
 beforeEach(() => {
-  prefs = { model: null, approval_policy: 'on-request', mcp_sources: { knowbase: true } }
+  prefs = { model: null, approval_policy: 'on-request', mcp_sources: {} }
   puts.length = 0
   localPuts.length = 0
   posts.length = 0
@@ -262,20 +262,9 @@ describe('设置分三类（0021）', () => {
     fireEvent.click(screen.getByRole('button', { name: '提交 key' }))
     await waitFor(() => expect(posts).toHaveLength(1))
     expect(posts[0]).toMatchObject({ provider: 'kimi', base_url: 'https://gateway.example.com/v1' })
-    const toggle = await screen.findByRole('switch', { name: '公共数据' })
-    expect(toggle).toHaveAttribute('aria-checked', 'true')
-    fireEvent.click(toggle)
-    await waitFor(() => expect(puts).toHaveLength(1))
-    expect(puts[0]).toMatchObject({
-      approval_policy: 'on-request',
-      mcp_sources: { knowbase: false },
-    })
-    await waitFor(() =>
-      expect(screen.getByRole('switch', { name: '公共数据' })).toHaveAttribute(
-        'aria-checked',
-        'false',
-      ),
-    )
+    // 平台的数不给用户的沙箱（数据拓扑、待办账 111）：没有「公共数据」开关了
+    expect(screen.queryByRole('switch', { name: '公共数据' })).toBeNull()
+    expect(screen.queryByText('MCP 连接')).toBeNull()
   })
 
   it('我的电脑：代理那头的设置直接改——勾目录、开联网，保存送到那台电脑（经回环口）', async () => {

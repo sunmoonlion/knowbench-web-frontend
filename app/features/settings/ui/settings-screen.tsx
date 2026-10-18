@@ -86,7 +86,6 @@ function CloudSection({ csrfToken }: { csrfToken: string }) {
         />
       ) : null}
       <AgentSetup csrfToken={csrfToken} />
-      {prefs.data ? <McpSection csrfToken={csrfToken} prefs={prefs.data} /> : null}
       <section className="flex items-center justify-between rounded-xl border p-5">
         <div>
           <h3 className="text-base font-semibold">{t('memory')}</h3>
@@ -263,61 +262,6 @@ function KeysSection({ csrfToken }: { csrfToken: string }) {
         {creds.data && creds.data.length === 0 ? (
           <li className="text-muted-foreground py-2">{t('noKeys')}</li>
         ) : null}
-      </ul>
-    </section>
-  )
-}
-
-// Codex 在云端能用哪些数据源（0021 §二之 2）。改了要「更新沙箱」才带进去。
-function McpSection({ csrfToken, prefs }: { csrfToken: string; prefs: Prefs }) {
-  const t = useTranslations('settings.mcp')
-  const queryClient = useQueryClient()
-  const knowledge = prefs.mcp_sources?.knowbase ?? true
-  const toggle = useMutation({
-    mutationFn: (on: boolean) =>
-      savePrefs(
-        {
-          model: prefs.model,
-          approval_policy: prefs.approval_policy,
-          mcp_sources: { ...(prefs.mcp_sources ?? {}), knowbase: on },
-        },
-        csrfToken,
-      ),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['wb-prefs'] }),
-  })
-  return (
-    <section className="rounded-xl border p-5" aria-labelledby="settings-mcp">
-      <h3 id="settings-mcp" className="text-base font-semibold">
-        {t('title')}
-      </h3>
-      <p className="text-muted-foreground mt-1 text-sm">{t('lead')}</p>
-      <ul className="mt-4 divide-y text-sm">
-        <li className="flex items-center justify-between gap-4 py-3">
-          <span>
-            <span className="block font-medium">{t('knowledge')}</span>
-            <span className="text-muted-foreground block text-xs">{t('knowledgeHint')}</span>
-          </span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={knowledge}
-            aria-label={t('knowledge')}
-            disabled={toggle.isPending}
-            onClick={() => toggle.mutate(!knowledge)}
-            className={cn(
-              'rounded-full border px-3 py-1 text-xs',
-              knowledge && 'bg-primary text-primary-foreground border-primary',
-            )}
-          >
-            {knowledge ? t('on') : t('off')}
-          </button>
-        </li>
-        <li className="flex items-center justify-between gap-4 py-3 opacity-60">
-          <span>
-            <span className="block font-medium">{t('advisor')}</span>
-            <span className="text-muted-foreground block text-xs">{t('advisorHint')}</span>
-          </span>
-        </li>
       </ul>
     </section>
   )

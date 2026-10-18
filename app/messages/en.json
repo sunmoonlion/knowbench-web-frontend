@@ -1084,16 +1084,6 @@
       "memoryHint": "A few facts about you, carried into every conversation.",
       "memoryOpen": "Open"
     },
-    "mcp": {
-      "title": "MCP connections",
-      "lead": "Which data sources Codex may use in the cloud. After a change, press Update sandbox above to apply it.",
-      "knowledge": "Public data",
-      "knowledgeHint": "Public material curated by the platform.",
-      "advisor": "The chosen expert's knowledge base",
-      "advisorHint": "Appears once you pick an expert.",
-      "on": "On",
-      "off": "Off"
-    },
     "computer": {
       "local": "Settings on this computer",
       "localLead": "Folders, limits, autostart and the local library directory live in the agent on your computer. Changes made here go straight to that computer, not through the cloud; widening changes (adding a folder, raising the limit, enabling network, setting the library directory, enabling autostart) need one confirmation on that computer, after which the agent restarts itself.",

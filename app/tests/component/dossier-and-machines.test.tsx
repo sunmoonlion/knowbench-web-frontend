@@ -121,10 +121,10 @@ describe('我的电脑', () => {
 })
 
 describe('设置', () => {
-  it('云端与模型：模型 key、电脑与沙箱、新对话的默认、MCP 连接。给用户看的字里没有「会话」', async () => {
+  it('云端与模型：模型 key、电脑与沙箱、新对话的默认（MCP 连接 10-18 撤了）。给用户看的字里没有「会话」', async () => {
     page(<SettingsScreen section="cloud" />)
     expect(await screen.findByRole('heading', { name: '设置' })).toBeInTheDocument()
-    for (const name of ['模型 key', '电脑与沙箱', '新对话的默认', 'MCP 连接']) {
+    for (const name of ['模型 key', '电脑与沙箱', '新对话的默认']) {
       expect(await screen.findByRole('heading', { name })).toBeInTheDocument()
     }
     expect(document.body.textContent).not.toContain('会话')
