@@ -30,6 +30,8 @@ export type SideTab = 'dossier' | 'files' | 'changes' | 'terminal'
 // 「文件」= 那台电脑上的文件树（0022，经代理服务流），当前项目默认展开，点文件看内容；没有电脑就说明。
 // 「终端」要等本地代理开终端通道（账 83），先占位说明。
 // 「工作底稿」= 这段对话每请一次专家写的底稿，按次分开列（所有者 2026-10-14）；专家交回那一行能直接切过来。
+// 项目里的聊天与项目页也挂它，只摆「文件」「终端」（0017：聊天挂在项目下可只读看项目文件；所有者 2026-10-18）。
+// 窗口窄于 1024 时窄轨照留，展开后浮在上层，不再整个藏起来。
 export function WorkSidePanel({
   files,
   directory,
@@ -37,6 +39,7 @@ export function WorkSidePanel({
   environment = null,
   conversation = null,
   request = null,
+  only = null,
 }: {
   files: FileChanges[]
   directory: string | null
@@ -47,6 +50,8 @@ export function WorkSidePanel({
   conversation?: string | null
   // 页面要求切到某一栏（at 每次不同，同一栏也能再切一次）
   request?: { tab: SideTab; at: number } | null
+  // 只摆这几栏（聊天、项目页：文件与终端）；不给就按页面摆全
+  only?: readonly SideTab[] | null
 }) {
   const t = useTranslations('work')
   const tr = useTranslations('results')
@@ -82,10 +87,10 @@ export function WorkSidePanel({
     ...(conversation
       ? [{ key: 'dossier' as const, icon: <BookOpenIcon className="size-4" /> }]
       : []),
-    { key: 'files', icon: <FilesIcon className="size-4" /> },
-    { key: 'changes', icon: <GitCompareIcon className="size-4" /> },
-    { key: 'terminal', icon: <TerminalIcon className="size-4" /> },
-  ]
+    { key: 'files' as const, icon: <FilesIcon className="size-4" /> },
+    { key: 'changes' as const, icon: <GitCompareIcon className="size-4" /> },
+    { key: 'terminal' as const, icon: <TerminalIcon className="size-4" /> },
+  ].filter((each) => only === null || only.includes(each.key))
   // 右栏宽度可拖（所有者 2026-10-17）；没拖过是 384px
   const panes = usePaneWidths()
   const tp = useTranslations('panes')
@@ -97,7 +102,7 @@ export function WorkSidePanel({
       <aside
         aria-label={tr('title')}
         data-state="collapsed"
-        className="hidden w-10 shrink-0 flex-col items-center gap-1 border-l py-2 lg:flex"
+        className="hidden w-10 shrink-0 flex-col items-center gap-1 border-l py-2 sm:flex"
       >
         <Button
           variant="ghost"
@@ -139,8 +144,8 @@ export function WorkSidePanel({
     <aside
       aria-label={tr('title')}
       data-state="open"
-      style={{ width: sideWidth }}
-      className="relative hidden shrink-0 flex-col border-l lg:flex"
+      style={{ width: sideWidth, maxWidth: '90vw' }}
+      className="bg-background relative flex shrink-0 flex-col border-l max-lg:fixed max-lg:inset-y-0 max-lg:right-0 max-lg:z-40 max-lg:shadow-xl"
     >
       <ResizeHandle
         edge="left"

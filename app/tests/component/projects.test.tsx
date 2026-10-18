@@ -203,6 +203,11 @@ describe('项目页', () => {
     expect(dossiers.getByText('已完成')).toBeInTheDocument()
     expect(dossiers.getByText('¥0.400')).toBeInTheDocument()
     expect(document.body.textContent).not.toContain('FIN_REVIEW')
+    // 项目页也有右栏：看这个项目的文件、终端，不用先进某段对话（所有者 2026-10-18）
+    const rail = screen.getByRole('complementary', { name: '结果' })
+    expect(within(rail).getByRole('button', { name: '文件' })).toBeInTheDocument()
+    expect(within(rail).getByRole('button', { name: '终端' })).toBeInTheDocument()
+    expect(within(rail).queryByRole('button', { name: '改动' })).toBeNull()
   })
 
   it('机器离线：可以看、可以聊天，不能新建工作、不能请专家', async () => {

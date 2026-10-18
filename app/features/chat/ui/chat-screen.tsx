@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { Composer } from '@/components/workbench/composer'
 import { ConversationTitle } from '@/components/workbench/conversation-title'
 import { ProjectPicker } from '@/components/workbench/project-picker'
+import { WorkSidePanel } from '@/components/workbench/side-panel'
 import { Button } from '@/components/ui/button'
 import { Marker, MarkerContent } from '@/components/ui/marker'
 import {
@@ -175,6 +176,16 @@ export function ChatScreen({
             </Button>
           </Composer>
         </div>
+        {session?.project_id ? (
+          // 挂在项目下的聊天：可以只读看项目文件（0017），不改文件，所以没有「改动」
+          <WorkSidePanel
+            files={[]}
+            directory={project?.directory ?? null}
+            live={false}
+            environment={session.environment_id ?? project?.environment_id ?? null}
+            only={['files', 'terminal']}
+          />
+        ) : null}
       </div>
 
       <ProjectPicker

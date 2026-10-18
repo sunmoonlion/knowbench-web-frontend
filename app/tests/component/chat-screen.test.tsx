@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -26,6 +26,10 @@ const manifest = JSON.parse(readFileSync(join(full, 'manifest.json'), 'utf8')) a
 }
 const CHAT = manifest.pages
   .find((page) => page.title.startsWith('聊天（不属于项目'))!
+  .path.split('/')
+  .pop()!
+const IN_PROJECT = manifest.pages
+  .find((page) => page.title.startsWith('项目里的聊天'))!
   .path.split('/')
   .pop()!
 
@@ -85,14 +89,17 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-function page() {
+function page(conversation: string = CHAT) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <NextIntlClientProvider locale="zh-CN" messages={messages}>
       <QueryClientProvider client={client}>
         <WorkbenchProvider csrfToken="csrf-for-test" locale="zh-CN">
-          <ConversationEventsProvider conversation={CHAT}>
-            <ChatScreen conversation={CHAT} cost={<CostLine conversation={CHAT} />} />
+          <ConversationEventsProvider conversation={conversation}>
+            <ChatScreen
+              conversation={conversation}
+              cost={<CostLine conversation={conversation} />}
+            />
           </ConversationEventsProvider>
         </WorkbenchProvider>
       </QueryClientProvider>
@@ -115,6 +122,21 @@ function event(cursor: number, type: string, payload: Record<string, unknown>) {
 }
 
 describe('聊天页', () => {
+  it('挂在项目下的聊天有右栏：只读看文件、终端，没有「改动」；不属于项目的没有右栏（0017，所有者 2026-10-18）', async () => {
+    page(IN_PROJECT)
+    const rail = await screen.findByRole('complementary', { name: '结果' })
+    expect(within(rail).getByRole('button', { name: '文件' })).toBeInTheDocument()
+    expect(within(rail).getByRole('button', { name: '终端' })).toBeInTheDocument()
+    expect(within(rail).queryByRole('button', { name: '改动' })).toBeNull()
+    // 窗口窄于 1024 也不整个藏起来（原来是 lg 才显示）
+    expect(rail.className).toContain('sm:flex')
+    expect(rail.className).not.toContain('lg:flex')
+    cleanup()
+    page()
+    await screen.findByRole('textbox')
+    expect(screen.queryByRole('complementary', { name: '结果' })).toBeNull()
+  })
+
   it('一段答完了的聊天：三轮、没有数据的卡片、花了多少', async () => {
     page()
     expect(await screen.findByText('片仔癀 2025 年的毛利率是多少？')).toBeInTheDocument()
