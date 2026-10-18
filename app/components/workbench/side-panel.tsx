@@ -2,10 +2,10 @@
 
 import {
   BookOpenIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   FilesIcon,
   GitCompareIcon,
+  PanelRightCloseIcon,
+  PanelRightOpenIcon,
   TerminalIcon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -51,7 +51,7 @@ export function WorkSidePanel({
   const t = useTranslations('work')
   const tr = useTranslations('results')
   const [tab, setTab] = useState<SideTab | null>(null)
-  // 收起前开的是哪一栏：点收起栏顶上的「‹」就回到它（所有者 2026-10-18：原来「‹」只是图标，点了没反应）
+  // 收起前开的是哪一栏：点收起栏顶上的展开钮就回到它（所有者 2026-10-18：原来那里只是个箭头图标，点了没反应）
   const [last, setLast] = useState<SideTab | null>(null)
   const [opened, setOpened] = useState<string | null>(null)
   const [paper, setPaper] = useState<string | null>(null)
@@ -105,9 +105,11 @@ export function WorkSidePanel({
           aria-label={tp('expandSide')}
           title={tp('expandSide')}
           aria-expanded={false}
-          onClick={() => setTab(last && tabs.some((each) => each.key === last) ? last : tabs[0].key)}
+          onClick={() =>
+            setTab(last && tabs.some((each) => each.key === last) ? last : tabs[0].key)
+          }
         >
-          <ChevronLeftIcon />
+          <PanelRightOpenIcon />
         </Button>
         {tabs.map((each) => (
           <button
@@ -192,7 +194,7 @@ export function WorkSidePanel({
             setTab(null)
           }}
         >
-          <ChevronRightIcon />
+          <PanelRightCloseIcon />
         </Button>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto p-4 text-[13px]">

@@ -239,7 +239,7 @@ describe('右边栏「文件」：直接问本机代理，文件不经云端', (
     expect(await screen.findByRole('alert')).toHaveTextContent('别的账号')
   })
 
-  it('收起的右栏，点顶上的「‹」能展开，回到收起前那一栏（所有者 2026-10-18）', async () => {
+  it('收起的右栏，点顶上的展开钮能展开，回到收起前那一栏（所有者 2026-10-18）', async () => {
     panel(null, null)
     const expand = screen.getByRole('button', { name: messages.panes.expandSide })
     fireEvent.click(expand)
