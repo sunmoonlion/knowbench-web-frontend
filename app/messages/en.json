@@ -1140,6 +1140,7 @@
     "side": "Drag to resize the right panel",
     "hint": "Drag to resize; double-click to reset",
     "collapseSidebar": "Collapse the sidebar",
-    "expandSidebar": "Expand the sidebar"
+    "expandSidebar": "Expand the sidebar",
+    "expandSide": "Expand side panel"
   }
 }

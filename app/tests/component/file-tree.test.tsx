@@ -239,6 +239,19 @@ describe('右边栏「文件」：直接问本机代理，文件不经云端', (
     expect(await screen.findByRole('alert')).toHaveTextContent('别的账号')
   })
 
+  it('收起的右栏，点顶上的「‹」能展开，回到收起前那一栏（所有者 2026-10-18）', async () => {
+    panel(null, null)
+    const expand = screen.getByRole('button', { name: messages.panes.expandSide })
+    fireEvent.click(expand)
+    expect(screen.getByRole('complementary', { name: messages.results.title }).dataset.state).toBe(
+      'open',
+    )
+    fireEvent.click(screen.getByRole('button', { name: '改动' }))
+    fireEvent.click(screen.getByRole('button', { name: messages.results.close }))
+    fireEvent.click(screen.getByRole('button', { name: messages.panes.expandSide }))
+    expect(screen.getByRole('button', { name: /改动/, pressed: true })).toBeInTheDocument()
+  })
+
   it('没有电脑的对话：没有文件可看', () => {
     panel(null, null)
     fireEvent.click(screen.getByRole('button', { name: '文件' }))

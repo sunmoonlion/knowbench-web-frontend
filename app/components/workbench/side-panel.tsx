@@ -51,6 +51,8 @@ export function WorkSidePanel({
   const t = useTranslations('work')
   const tr = useTranslations('results')
   const [tab, setTab] = useState<SideTab | null>(null)
+  // 收起前开的是哪一栏：点收起栏顶上的「‹」就回到它（所有者 2026-10-18：原来「‹」只是图标，点了没反应）
+  const [last, setLast] = useState<SideTab | null>(null)
   const [opened, setOpened] = useState<string | null>(null)
   const [paper, setPaper] = useState<string | null>(null)
   const [served, setServed] = useState<number | null>(null)
@@ -97,7 +99,16 @@ export function WorkSidePanel({
         data-state="collapsed"
         className="hidden w-10 shrink-0 flex-col items-center gap-1 border-l py-2 lg:flex"
       >
-        <ChevronLeftIcon className="text-muted-foreground size-3.5" />
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          aria-label={tp('expandSide')}
+          title={tp('expandSide')}
+          aria-expanded={false}
+          onClick={() => setTab(last && tabs.some((each) => each.key === last) ? last : tabs[0].key)}
+        >
+          <ChevronLeftIcon />
+        </Button>
         {tabs.map((each) => (
           <button
             key={each.key}
@@ -176,7 +187,10 @@ export function WorkSidePanel({
           size="icon-xs"
           aria-label={tr('close')}
           aria-expanded
-          onClick={() => setTab(null)}
+          onClick={() => {
+            setLast(tab)
+            setTab(null)
+          }}
         >
           <ChevronRightIcon />
         </Button>

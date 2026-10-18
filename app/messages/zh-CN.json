@@ -1140,6 +1140,7 @@
     "side": "拖动调整右栏宽度",
     "hint": "拖动调整宽度，双击恢复默认",
     "collapseSidebar": "折叠侧边栏",
-    "expandSidebar": "展开侧边栏"
+    "expandSidebar": "展开侧边栏",
+    "expandSide": "展开右栏"
   }
 }
