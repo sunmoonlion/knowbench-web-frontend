@@ -24,7 +24,7 @@ const ok: LinkCheckInput = {
 
 describe('打开工作台时的核对（会合点备忘第五节，账 143）', () => {
   it('甲 = 乙，本地 link 连着、沙箱就绪：不提示', () => {
-    expect(linkCheck(ok)).toEqual({ link: null, sandbox: null })
+    expect(linkCheck(ok)).toEqual({ link: null, sandbox: null, isolation: null })
   })
   it('还没探完或还没问到后端：先不说', () => {
     expect(linkCheck({ ...ok, presence: undefined }).link).toBeNull()
@@ -82,5 +82,25 @@ describe('打开工作台时的核对（会合点备忘第五节，账 143）', 
       kind: 'no_key',
     })
     expect(linkCheck({ ...ok, sandboxReady: false }).sandbox).toEqual({ kind: 'sandbox_not_ready' })
+  })
+})
+
+describe('Codex 命令隔离是普通模式时的提示（SDD 0041 第四节）', () => {
+  it('甲 = 乙且报普通模式：提示到托盘里提高；提权模式或老版本不报：不提示', () => {
+    expect(
+      linkCheck({ ...ok, presence: here({ windows_sandbox: 'unelevated' }) }).isolation,
+    ).toEqual({
+      kind: 'weak_isolation',
+    })
+    expect(
+      linkCheck({ ...ok, presence: here({ windows_sandbox: 'elevated' }) }).isolation,
+    ).toBeNull()
+    expect(linkCheck(ok).isolation).toBeNull()
+  })
+  it('甲 ≠ 乙、探不到、还没配给：不提示（在别的电脑上做不了）', () => {
+    const weak = here({ windows_sandbox: 'unelevated' })
+    expect(linkCheck({ ...ok, presence: { ...weak, device_id: B } }).isolation).toBeNull()
+    expect(linkCheck({ ...ok, presence: null }).isolation).toBeNull()
+    expect(linkCheck({ ...ok, presence: weak, assigned: null }).isolation).toBeNull()
   })
 })

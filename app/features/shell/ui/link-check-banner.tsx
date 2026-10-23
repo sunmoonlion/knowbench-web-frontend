@@ -25,20 +25,29 @@ export function LinkCheckBanner() {
   const local = useLocalLink()
   const sandbox = useSandboxStatus()
   const keys = useCredentials()
-  const { link, sandbox: box } = linkCheck({
+  const {
+    link,
+    sandbox: box,
+    isolation,
+  } = linkCheck({
     presence: presence.isSuccess ? (presence.data?.presence ?? null) : undefined,
     assigned: local.isSuccess ? local.data.assigned : undefined,
     copied: local.isSuccess ? local.data.copied : undefined,
     sandboxReady: sandbox.isSuccess ? Boolean(sandbox.data.ready) : undefined,
     hasKey: keys.isSuccess ? keys.data.some((key) => key.status === 'active') : undefined,
   })
-  if (link === null && box === null) return null
+  if (link === null && box === null && isolation === null) return null
   const computer = routes.computer(locale)
   return (
     <div role="status" aria-label={t('label')}>
       {link ? <LinkLine prompt={link} computer={computer} /> : null}
       {box ? (
         <SandboxLine prompt={box} computer={computer} models={routes.settings(locale, 'cloud')} />
+      ) : null}
+      {isolation ? (
+        <p className={`${bar} bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100`}>
+          <span>{t('weakIsolation')}</span>
+        </p>
       ) : null}
     </div>
   )

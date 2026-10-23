@@ -235,6 +235,7 @@
       "copied": "The local link's settings look copied from another computer (first seen on \"{first}\", now on \"{host}\"). Reinstall the local link on this computer.",
       "noKey": "Register a model key under Models first so the sandbox can start.",
       "sandboxNotReady": "The sandbox is not ready.",
+      "weakIsolation": "Codex runs commands on this computer in standard isolation: it cannot write outside the allowed folders, but it can delete files. In the tray, open “这台电脑上的设置” (settings on this computer) and click “提高安全” (raise security); it needs administrator approval once.",
       "reissue": "Reissue token",
       "toModels": "Go to Models",
       "toComputer": "Go to Computer & sandbox",

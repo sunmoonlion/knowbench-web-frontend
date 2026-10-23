@@ -107,4 +107,16 @@ describe('工作台顶上的核对提示（会合点备忘第五节，账 143）
       '/zh-CN/workbench/settings/cloud',
     )
   })
+  it('这台的 Codex 命令隔离是普通模式：提示到托盘里提高', async () => {
+    answers[`${LOCAL}/presence`] = {
+      ...(answers[`${LOCAL}/presence`] as object),
+      windows_sandbox: 'unelevated',
+    }
+    banner()
+    expect(
+      await screen.findByText(
+        '这台电脑上 Codex 的命令隔离是普通模式：白名单外写不进，但能删文件。到托盘「这台电脑上的设置」里点「提高安全」（要管理员确认一次）。',
+      ),
+    ).toBeInTheDocument()
+  })
 })

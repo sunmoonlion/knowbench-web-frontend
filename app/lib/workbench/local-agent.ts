@@ -56,6 +56,8 @@ export type Presence = {
   host?: string
   os?: string
   link_state?: LinkState
+  // Windows 上 Codex 命令隔离的模式：普通模式（unelevated）拦写不拦删，提示用户在托盘里提高（SDD 0041 第四节）
+  windows_sandbox?: 'elevated' | 'unelevated'
 }
 const presenceSchema = z
   .object({
@@ -78,6 +80,7 @@ const presenceSchema = z
       ])
       .optional()
       .catch(undefined),
+    windows_sandbox: z.enum(['elevated', 'unelevated']).optional().catch(undefined),
   })
   .loose()
 

@@ -10,6 +10,8 @@ export type LinkPrompt =
   | { kind: 'no_local_link'; name: string | null }
   | { kind: 'copied'; first: string; host: string }
 export type SandboxPrompt = { kind: 'no_key' } | { kind: 'sandbox_not_ready' }
+// 这台就是装有本地 link 的电脑、而它的 Codex 命令隔离是普通模式（拦写不拦删）：提示到托盘里提高
+export type IsolationPrompt = { kind: 'weak_isolation' }
 
 export type Assigned = {
   name: string
@@ -31,8 +33,13 @@ export type LinkCheckInput = {
 export function linkCheck(input: LinkCheckInput): {
   link: LinkPrompt | null
   sandbox: SandboxPrompt | null
+  isolation: IsolationPrompt | null
 } {
-  return { link: linkPrompt(input), sandbox: sandboxPrompt(input) }
+  return {
+    link: linkPrompt(input),
+    sandbox: sandboxPrompt(input),
+    isolation: isolationPrompt(input),
+  }
 }
 
 function linkPrompt({ presence, assigned, copied }: LinkCheckInput): LinkPrompt | null {
@@ -57,6 +64,13 @@ function linkPrompt({ presence, assigned, copied }: LinkCheckInput): LinkPrompt 
   // 在运行却连不上会合点（网断了、卡住）：叫检查网络或重开，不叫重新颁发
   if (state === 'unreachable' || state === 'rejected') return { kind: 'unreachable' }
   return null
+}
+
+// 只在甲 = 乙时说：在别的电脑上看到也做不了什么（要在那台电脑的托盘里点）
+function isolationPrompt({ presence, assigned }: LinkCheckInput): IsolationPrompt | null {
+  if (!presence?.device_id || !assigned?.device_id || presence.device_id !== assigned.device_id)
+    return null
+  return presence.windows_sandbox === 'unelevated' ? { kind: 'weak_isolation' } : null
 }
 
 function sandboxPrompt({ sandboxReady, hasKey }: LinkCheckInput): SandboxPrompt | null {
