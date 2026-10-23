@@ -15,8 +15,10 @@ import { useMachines, useProjectDetail, useSandboxes } from '@/lib/workbench/que
 import { routes } from '@/lib/workbench/routes'
 import { cn } from '@/lib/utils'
 
-import { useAsk, usePacks, useSaid } from '../api/desk'
+import { useAsk, useDataNeeds, usePacks, useSaid } from '../api/desk'
 import { askBlocker, busyConversation, sees } from '../model/ask'
+import { choicesOf, pickProblems, type Picks, picksFromLast } from '../model/data'
+import { DataDialog, NeedLine } from './data-dialog'
 
 const QUESTION = 'workbench.question'
 const label = 'text-muted-foreground mb-1.5 text-xs font-medium'
@@ -46,6 +48,10 @@ export function AskExpertScreen({
   const ask = useAsk()
 
   const [chosen, setChosen] = useState<string | null>(expert)
+  // 专家写了数据需求声明（SDD 0042）：按声明选的数据，每位专家各记各的；没动过就用上次选的
+  const needs = useDataNeeds(chosen, projectId)
+  const [picksBy, setPicksBy] = useState<Record<string, Picks>>({})
+  const [choosingData, setChoosingData] = useState(false)
   // 用户自己打的字。没打过的时候用带进来的那句
   const [typed, setTyped] = useState<string | null>(null)
   // 同一页交两次用同一个号：后端认得出是同一次
@@ -59,12 +65,17 @@ export function AskExpertScreen({
   const question = typed ?? (from ? said.data?.last : fromHome) ?? ''
 
   const pack = (packs.data ?? []).find((each) => each.id === chosen)
+  const declared = needs.data?.needs ?? []
+  const picks =
+    (chosen ? picksBy[chosen] : undefined) ?? picksFromLast(declared, needs.data?.last ?? [])
+  const missing = pickProblems(declared, picks)
   const blocker = askBlocker({
     pack,
     question,
     project: project.data,
     sandboxes: sandboxes.data?.length,
     machines: machines.isSuccess ? machines.data.length : undefined,
+    dataProblems: missing.length,
   })
   const busyAt = busyConversation(project.data)
   const seen = sees(project.data, from)
@@ -79,6 +90,7 @@ export function AskExpertScreen({
         expert: pack.id,
         question: question.trim(),
         key,
+        data: choicesOf(declared, picks),
       })
       window.sessionStorage.removeItem(QUESTION)
       router.push(
@@ -171,6 +183,52 @@ export function AskExpertScreen({
                 <p className="text-muted-foreground mt-1 text-[13px]">{t('continues')}</p>
               ) : null}
             </section>
+
+            {declared.length ? (
+              <section aria-label={t('data.title')}>
+                <p className={label}>{t('data.title')}</p>
+                <p className="text-muted-foreground mb-2 text-[13px]">{t('data.lead')}</p>
+                <ul className="space-y-1.5">
+                  {declared.map((need) => {
+                    const names = (picks[need.key] ?? []).map((each) => each.name)
+                    const short = missing.some((problem) => problem.need.key === need.key)
+                    return (
+                      <li key={need.key} className="text-sm">
+                        <span className="font-medium">{need.name}</span> <NeedLine need={need} />
+                        <p
+                          className={cn(
+                            'truncate text-[13px]',
+                            short ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground',
+                          )}
+                        >
+                          {names.length ? names.join(' · ') : t('data.none')}
+                        </p>
+                      </li>
+                    )
+                  })}
+                </ul>
+                <Button
+                  className="mt-2"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setChoosingData(true)}
+                >
+                  {t(
+                    Object.values(picks).some((each) => each.length)
+                      ? 'data.change'
+                      : 'data.choose',
+                  )}
+                </Button>
+                <DataDialog
+                  open={choosingData}
+                  onOpenChange={setChoosingData}
+                  needs={declared}
+                  picks={picks}
+                  onChange={(next) => chosen && setPicksBy({ ...picksBy, [chosen]: next })}
+                  environment={project.data?.project.environment_id ?? null}
+                />
+              </section>
+            ) : null}
 
             <section>
               <p className={label}>{t('project')}</p>

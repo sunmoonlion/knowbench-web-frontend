@@ -356,6 +356,18 @@ export const runSheetSchema = z
       })
       .loose()
       .nullable(),
+    // 请专家时选的、钉进这件委托的数据（SDD 0042）
+    chosen_data: z
+      .array(
+        z
+          .object({
+            need: z.string().nullable(),
+            name: z.string(),
+            source: z.enum(['cloud', 'local']),
+          })
+          .loose(),
+      )
+      .optional(),
     started_at: z.string().nullable(),
     ended_at: z.string().nullable(),
     active_interaction_id: uuid.nullable(),
@@ -652,6 +664,40 @@ export const cloudItemSchema = z
 export type CloudItem = z.infer<typeof cloudItemSchema>
 export const cloudListSchema = z.object({ items: z.array(cloudItemSchema) }).loose()
 export const cloudCreatedSchema = z.object({ item: cloudItemSchema }).loose()
+
+// ---------------- 请专家用自己的数据（SDD 0042 第五节）----------------
+// 专家的数据需求声明：每样要什么格式、几份、必填还是可选；请专家时按它从本地或云端知识库选
+export const dataFormatSchema = z.enum(['pdf', 'excel', 'csv', 'text'])
+export type DataFormat = z.infer<typeof dataFormatSchema>
+export const dataNeedSchema = z
+  .object({
+    key: z.string(),
+    name: z.string(),
+    description: z.string(),
+    formats: z.array(dataFormatSchema),
+    required: z.boolean(),
+    min_count: z.number().int(),
+    max_count: z.number().int(),
+    tables: z.array(
+      z.object({ sheet: z.string().nullable(), columns: z.array(z.string()) }).loose(),
+    ),
+  })
+  .loose()
+export type DataNeed = z.infer<typeof dataNeedSchema>
+// 选的一份：云端是资料编号，本地是路径；name 只给页面看
+export const dataChoiceSchema = z
+  .object({
+    need: z.string(),
+    source: z.enum(['cloud', 'local']),
+    name: z.string().optional(),
+    item_id: z.string().optional(),
+    path: z.string().optional(),
+  })
+  .loose()
+export type DataChoice = z.infer<typeof dataChoiceSchema>
+export const dataNeedsSchema = z
+  .object({ needs: z.array(dataNeedSchema), last: z.array(dataChoiceSchema) })
+  .loose()
 
 // ---------------- 长期记忆：关于这位用户的几条事实（0019 §四）----------------
 export const memorySchema = z

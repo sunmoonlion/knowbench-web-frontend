@@ -9,6 +9,7 @@ export type AskBlocker =
   | 'noMachine'
   | 'offline' // 项目所在的机器不在线：专家要在上面干活
   | 'busy' // 这个项目里有一件事专家还在做
+  | 'noData' // 专家写了数据需求声明，必填的还没选够（SDD 0042）
 
 export function askBlocker(input: {
   pack: Pack | undefined
@@ -16,6 +17,8 @@ export function askBlocker(input: {
   project: ProjectDetail | undefined
   sandboxes: number | undefined
   machines?: number
+  // 按声明还差几样没选好（没有声明的专家是 0）
+  dataProblems?: number
 }): AskBlocker | null {
   const { pack, question, project, sandboxes } = input
   if (input.machines === 0) return 'noMachine'
@@ -24,6 +27,7 @@ export function askBlocker(input: {
   if (project?.active_task_id) return 'busy'
   if (!pack) return 'noExpert'
   if (!question.trim()) return 'noQuestion'
+  if (input.dataProblems) return 'noData'
   return null
 }
 

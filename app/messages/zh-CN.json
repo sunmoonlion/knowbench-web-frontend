@@ -565,7 +565,9 @@
       "offline": "你的机器断开了，专家在等它回来",
       "position": "第 {step} 步，共 {of} 步：{title}",
       "spent": "已花 {amount}",
-      "estimated": "估算"
+      "estimated": "估算",
+      "data": "用的数据：{names}",
+      "dataItem": "{name}（{source, select, cloud {云端} other {本地}}）"
     },
     "stop": {
       "stopping": "停下中…",
@@ -713,7 +715,8 @@
       "noSandbox": "还没有可用的沙箱：先登记模型的 key、拉起沙箱。",
       "offline": "你电脑上的本地 link 没连着，专家要在那台电脑上干活。",
       "busy": "这个项目里有一件事专家还在做。",
-      "noMachine": "还没有登记电脑。先接入电脑，再开始工作或请专家。"
+      "noMachine": "还没有登记电脑。先接入电脑，再开始工作或请专家。",
+      "noData": "专家要的数据还没选好。"
     },
     "toBusy": "去看看",
     "toSettings": "去设置",
@@ -722,11 +725,50 @@
       "environment_offline": "你电脑上的本地 link 没连着，专家要在那台电脑上干活。",
       "project_required": "这段对话还没有放进项目。",
       "preview_no_sample": "预览里只能看，不能交出。",
-      "other": "没有交出去，请再试一次。"
+      "other": "没有交出去，请再试一次。",
+      "data_required": "这位专家要的数据还没选。",
+      "data_choice_invalid": "选的数据不合这位专家的要求，请改选。",
+      "reauth_required": "登录过期了，请重新登录再交。",
+      "user_data_unavailable": "知识库暂时读不到，请稍后再试。",
+      "agent_offline": "你电脑上的本地 link 没连着，读不到本地知识库。"
     },
     "loading": "加载中…",
     "packsFailed": "没有取到专家清单，请刷新再试。",
-    "preparing": "筹备中"
+    "preparing": "筹备中",
+    "data": {
+      "title": "要用的数据",
+      "lead": "这位专家要你提供下面这些数据。从本地知识库或云端知识库里选，专家只读你选的这几份。",
+      "choose": "选数据",
+      "change": "改选",
+      "none": "还没选",
+      "required": "必填",
+      "optional": "可选",
+      "count": "选 {min}～{max} 份",
+      "countOne": "选 {count} 份",
+      "tables": "要有：{tables}",
+      "dialogTitle": "选数据",
+      "dialogLead": "按专家要的逐样选。项目里的文件不算，那是专家写的产出。",
+      "picked": "已选 {count} 份",
+      "cloud": "云端知识库",
+      "local": "本地知识库（只在装着本地 link 的这台电脑上看得到）",
+      "loading": "加载中…",
+      "cloudEmpty": "云端知识库里没有这种格式的资料。",
+      "cloudFailed": "没有取到云端知识库，可以先从本地知识库选。",
+      "notTaken": "「{name}」不是这一样要的格式。",
+      "full": "这一样最多选 {max} 份，先拿掉一份再选。",
+      "remove": "拿掉「{name}」",
+      "done": "好了",
+      "source": {
+        "cloud": "云端",
+        "local": "本地"
+      },
+      "format": {
+        "pdf": "PDF",
+        "excel": "Excel",
+        "csv": "CSV",
+        "text": "文本"
+      }
+    }
   },
   "reviewPage": {
     "title": "待我决定",

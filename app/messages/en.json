@@ -565,7 +565,9 @@
       "offline": "Your machine is offline; the expert is waiting for it",
       "position": "Step {step} of {of}: {title}",
       "spent": "Spent {amount}",
-      "estimated": "est."
+      "estimated": "est.",
+      "data": "Data used: {names}",
+      "dataItem": "{name} ({source, select, cloud {cloud} other {local}})"
     },
     "stop": {
       "stopping": "Stopping…",
@@ -713,7 +715,8 @@
       "noSandbox": "No sandbox available yet: register a model key and start the sandbox first.",
       "offline": "The local link on your computer is not connected; the expert needs to work on it.",
       "busy": "The expert is still working on something in this project.",
-      "noMachine": "No computer registered. Connect one before starting Work or Expert."
+      "noMachine": "No computer registered. Connect one before starting Work or Expert.",
+      "noData": "The data this expert needs is not chosen yet."
     },
     "toBusy": "Take a look",
     "toSettings": "Go to settings",
@@ -722,11 +725,50 @@
       "environment_offline": "The local link on your computer is not connected; the expert needs to work on it.",
       "project_required": "This conversation is not in a project yet.",
       "preview_no_sample": "The preview is read-only.",
-      "other": "Not handed over. Please try again."
+      "other": "Not handed over. Please try again.",
+      "data_required": "Choose the data this expert needs first.",
+      "data_choice_invalid": "The chosen data does not fit what this expert asks for; please change it.",
+      "reauth_required": "Your sign-in has expired; sign in again and retry.",
+      "user_data_unavailable": "The knowledge base cannot be read right now; please try again later.",
+      "agent_offline": "The local link on your computer is not connected, so the local knowledge base cannot be read."
     },
     "loading": "Loading…",
     "packsFailed": "The list of experts could not be loaded; refresh and try again.",
-    "preparing": "Coming soon"
+    "preparing": "Coming soon",
+    "data": {
+      "title": "Data to use",
+      "lead": "This expert needs the data below. Choose it from your local or cloud knowledge base; the expert reads only what you choose.",
+      "choose": "Choose data",
+      "change": "Change",
+      "none": "Nothing chosen yet",
+      "required": "Required",
+      "optional": "Optional",
+      "count": "Choose {min} to {max}",
+      "countOne": "Choose {count}",
+      "tables": "Must have: {tables}",
+      "dialogTitle": "Choose data",
+      "dialogLead": "Choose item by item as the expert asks. Files in the project do not count: they are what the expert writes.",
+      "picked": "{count} chosen",
+      "cloud": "Cloud knowledge base",
+      "local": "Local knowledge base (only on the computer running the local link)",
+      "loading": "Loading…",
+      "cloudEmpty": "Nothing in your cloud knowledge base is in this format.",
+      "cloudFailed": "Could not load your cloud knowledge base; you can choose from the local one.",
+      "notTaken": "“{name}” is not in a format this item takes.",
+      "full": "This item takes at most {max}; remove one first.",
+      "remove": "Remove “{name}”",
+      "done": "Done",
+      "source": {
+        "cloud": "Cloud",
+        "local": "Local"
+      },
+      "format": {
+        "pdf": "PDF",
+        "excel": "Excel",
+        "csv": "CSV",
+        "text": "Text"
+      }
+    }
   },
   "reviewPage": {
     "title": "Waiting for me",

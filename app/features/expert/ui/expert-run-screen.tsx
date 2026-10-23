@@ -96,6 +96,18 @@ export function ExpertRunScreen({ task }: { task: string }) {
       </header>
 
       {now ? <NowStrip now={now} clock={clock} /> : null}
+      {sheet.chosen_data?.length ? (
+        <p
+          className="text-muted-foreground shrink-0 truncate border-b px-4 py-1.5 text-xs"
+          data-testid="run-data"
+        >
+          {t('band.data', {
+            names: sheet.chosen_data
+              .map((each) => t('band.dataItem', { name: each.name, source: each.source }))
+              .join(' · '),
+          })}
+        </p>
+      ) : null}
 
       <div className="flex min-h-0 flex-1">
         <StepRail steps={steps} shown={shown} onPick={setPicked} />
