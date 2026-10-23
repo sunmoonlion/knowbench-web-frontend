@@ -85,6 +85,28 @@ export function sendJson<T>(
   )
 }
 
+// 传文件：请求体就是文件本身（云端知识库上传，SDD 0042）
+export function sendFile<T>(
+  schema: z.ZodType<T>,
+  path: string,
+  options: { csrfToken: string; file: Blob },
+  fetchImpl: Fetch = fetch,
+) {
+  return exchange(
+    schema,
+    path,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': options.file.type || 'application/octet-stream',
+        'X-CSRF-Token': options.csrfToken,
+      },
+      body: options.file,
+    },
+    fetchImpl,
+  )
+}
+
 export function seg(value: string) {
   return encodeURIComponent(value)
 }

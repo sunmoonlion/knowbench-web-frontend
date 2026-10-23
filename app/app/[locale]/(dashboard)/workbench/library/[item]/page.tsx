@@ -1,14 +1,9 @@
-import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { redirect } from 'next/navigation'
 
-import { LibraryItemScreen } from '@/features/library'
+import { routes } from '@/lib/workbench/routes'
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('library')
-  return { title: t('title'), robots: { index: false, follow: false } }
-}
-
-export default async function LibraryItemPage({ params }: { params: Promise<{ item: string }> }) {
-  const { item } = await params
-  return <LibraryItemScreen item={decodeURIComponent(item)} />
+// 旧的「知识库」单份资料页（按交回物算出来的那一版）：10-23 起换成云端知识库，没有单份页了（SDD 0042）
+export default async function LibraryItemPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  redirect(routes.library(locale))
 }

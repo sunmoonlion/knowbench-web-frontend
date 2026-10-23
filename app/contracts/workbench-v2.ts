@@ -637,62 +637,21 @@ export const reviewPlaceSchema = z
 
 export const createdProjectSchema = z.object({ id: uuid }).loose()
 
-// ---------------- 知识库（SDD 0011 第一期）----------------
-export const libraryItemSchema = z
+// ---------------- 云端知识库（SDD 0042）：真源在 knowbase，经后端凭用户令牌转交 ----------------
+export const cloudItemSchema = z
   .object({
-    id: z.string(),
-    kind: z.enum(['dossier', 'deliverable']),
-    title: z.string(),
-    default_title: z.string(),
-    project_id: uuid.nullable(),
-    task_id: uuid,
-    session_id: uuid,
-    versions: z.number().int(),
-    updated_at: z.string(),
-    created_at: z.string(),
-    size_bytes: z.number().int().nullable(),
-    source: z
-      .object({
-        expert: z.string().nullable().optional(),
-        question: z.string().nullable().optional(),
-        step_title: z.string().nullable().optional(),
-        artifact: z.string().nullable().optional(),
-      })
-      .loose(),
-    deleted: z.boolean(),
-  })
-  .loose()
-export type LibraryItem = z.infer<typeof libraryItemSchema>
-export const libraryListSchema = z.object({ items: z.array(libraryItemSchema) }).loose()
-export const libraryDetailSchema = z
-  .object({
-    item: libraryItemSchema
-      .extend({
-        version_list: z.array(
-          z
-            .object({
-              version: z.number().int(),
-              created_at: z.string(),
-              sha256: z.string().optional(),
-              note: z.string().optional(),
-            })
-            .loose(),
-        ),
-      })
-      .loose(),
-  })
-  .loose()
-export type LibraryDetail = z.infer<typeof libraryDetailSchema>['item']
-export const libraryContentSchema = z
-  .object({
-    version: z.number().int(),
+    item_id: z.string(),
+    name: z.string(),
+    media_type: z.string(),
+    size_bytes: z.number().int(),
     sha256: z.string(),
-    kind: z.enum(['dossier', 'deliverable']),
-    content: z.unknown(),
-    text: z.string(),
+    origin: z.enum(['upload', 'collect', 'purchase']),
+    created_at: z.string(),
   })
   .loose()
-export type LibraryContent = z.infer<typeof libraryContentSchema>
+export type CloudItem = z.infer<typeof cloudItemSchema>
+export const cloudListSchema = z.object({ items: z.array(cloudItemSchema) }).loose()
+export const cloudCreatedSchema = z.object({ item: cloudItemSchema }).loose()
 
 // ---------------- 长期记忆：关于这位用户的几条事实（0019 §四）----------------
 export const memorySchema = z
