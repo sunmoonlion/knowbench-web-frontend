@@ -25,7 +25,6 @@ import { LogoutButton } from '@/components/auth/logout-button'
 import { useWorkbench } from '@/lib/workbench/context'
 import {
   useConversations,
-  useLocalPresence,
   useMachines,
   usePending,
   useProjects,
@@ -45,7 +44,6 @@ import {
   looseChats,
   modeOf,
   pendingPointers,
-  presenceHint,
   recent,
   type TreeConversation,
 } from '../model/nav'
@@ -156,22 +154,18 @@ export function Sidebar() {
   const pending = usePending()
   const machines = useMachines()
   // 账 92：探一下本机回环口，知道「这台电脑还没接入」还是「就是这台」
-  const presence = useLocalPresence()
 
   const allProjects = projects.data ?? []
   const here = (conversations.data ?? []).find((c) => pathname.includes(c.id))
   const mode = modeOf(pathname, search, here)
   const waiting = pending.data?.length ?? 0
+  // 侧栏只留电脑名与项目，不挂连没连着这类状态（会合点备忘第六节，账 143）；要用户做事时工作台顶上单独提示
   const tree = computerTree(
     machines.data ?? [],
     workspaces.data ?? [],
     allProjects,
     conversations.data ?? [],
     locale,
-  )
-  const hint = presenceHint(
-    machines.data ?? [],
-    presence.isSuccess ? (presence.data?.presence ?? null) : undefined,
   )
   const loose = looseChats(conversations.data ?? [], locale)
   // 当前项目所在的工作区默认展开，其余折叠；手动开合记在这一次
@@ -321,24 +315,9 @@ export function Sidebar() {
           ) : (
             <ul className="space-y-1">
               {tree.map((machine) => (
-                <li key={machine.id} className={machine.status !== 'online' ? 'opacity-60' : ''}>
+                <li key={machine.id}>
                   <div className={cn(row, 'font-medium')}>
-                    <span
-                      className={cn(
-                        'size-2 shrink-0 rounded-full',
-                        machine.status === 'online' ? 'bg-green-600' : 'bg-amber-500',
-                      )}
-                      title={t(machine.status === 'online' ? 'machine.online' : 'machine.offline')}
-                    />
                     <span className="truncate">{machine.name}</span>
-                    <span className="text-muted-foreground shrink-0 text-[11px] font-normal">
-                      {t(machine.status === 'online' ? 'computer.online' : 'computer.offline')}
-                    </span>
-                    {hint.thisOne === machine.name ? (
-                      <span className="text-muted-foreground shrink-0 text-[11px] font-normal">
-                        {t('computer.thisOne')}
-                      </span>
-                    ) : null}
                     <Link
                       href={routes.computer(locale)}
                       className="text-muted-foreground hover:text-foreground ml-auto text-xs font-normal"
@@ -526,22 +505,6 @@ export function Sidebar() {
               ))}
             </ul>
           )}
-          {hint.elsewhere !== null ? (
-            <p className="text-muted-foreground mt-2 px-2 text-xs">
-              {t('computer.elsewhere', { name: hint.elsewhere })}{' '}
-              <Link href={routes.computer(locale)} className="underline underline-offset-3">
-                {t('computer.manage')}
-              </Link>
-            </p>
-          ) : null}
-          {hint.notHere ? (
-            <p className="text-muted-foreground mt-2 px-2 text-xs">
-              {t('computer.notHere')}{' '}
-              <Link href={routes.computer(locale)} className="underline underline-offset-3">
-                {t('computer.connect')}
-              </Link>
-            </p>
-          ) : null}
         </section>
 
         {loose.length > 0 ? (

@@ -225,7 +225,7 @@ describe('右边栏「文件」：直接问本机代理，文件不经云端', (
     delete answers[`${LOCAL}/presence`]
     panel(ENV, null)
     fireEvent.click(screen.getByRole('button', { name: '文件' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('没有在运行的代理')
+    expect(await screen.findByRole('alert')).toHaveTextContent('没有在运行的本地 link')
     expect(seen.some((each) => each.url.includes('local-ticket'))).toBe(false)
   })
 

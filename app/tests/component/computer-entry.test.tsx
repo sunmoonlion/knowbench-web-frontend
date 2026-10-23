@@ -285,7 +285,7 @@ describe('三步引导证据', () => {
     const guide = within(screen.getByRole('region', { name: zh.machines.guide.title }))
     await waitFor(() => expect(guide.getAllByLabelText('已完成')).toHaveLength(3))
     expect(guide.getByText(zh.machines.guide.evidence)).toHaveTextContent(
-      '有电脑在线，这三步就算完成',
+      '本地 link 连着，这三步就算完成',
     )
     expect(guide.queryAllByRole('checkbox')).toHaveLength(0)
   })
@@ -295,7 +295,7 @@ describe('三步引导证据', () => {
     await waitFor(() => expect(guide.getAllByLabelText('还没做')).toHaveLength(3))
     expect(guide.getAllByRole('link').map((link) => link.textContent)).toEqual([
       '1. 下载安装',
-      '2. 装完后电脑会自动打开本站这一页并带上连接码，核对电脑名后点允许',
+      '2. 装完后电脑会自动打开本站这一页并带上确认码，核对电脑名后点允许，给本地 link 颁发令牌',
       '3. 选文件夹完成',
     ])
     expect(await screen.findByRole('button', { name: '复制安装命令' })).toBeVisible()

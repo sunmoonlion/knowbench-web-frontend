@@ -1,6 +1,7 @@
 'use client'
 
-// 设置分三类（0021）：个人偏好 / 云端与模型 / 我的电脑。左边一列三项，右边一次只显示一类。
+// 设置分三项（0021；会合点备忘第七节 2026-10-23 改）：个人偏好 / 模型 / 电脑与沙箱。左边一列三项，右边一次只显示一项。
+// 「模型」的路由名仍是 cloud；沙箱从「模型」挪到「电脑与沙箱」。
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
@@ -19,6 +20,7 @@ import {
   savePrefs,
 } from '../api/client'
 import { AgentSetup } from './agent-setup'
+import { LinkStatus } from './link-status'
 import { LocalAgentSettings } from './local-agent-settings'
 import { MachinesScreen } from './machines-screen'
 import { PreferencesSection } from './preferences-section'
@@ -59,14 +61,14 @@ export function SettingsScreen({ section }: { section: SettingsSection }) {
         <div className="min-w-0 flex-1 space-y-6">
           {section === 'preferences' ? <PreferencesSection /> : null}
           {section === 'cloud' ? <CloudSection csrfToken={csrfToken} /> : null}
-          {section === 'computer' ? <ComputerSection /> : null}
+          {section === 'computer' ? <ComputerSection csrfToken={csrfToken} /> : null}
         </div>
       </div>
     </div>
   )
 }
 
-// ---------------- 云端与模型 ----------------
+// ---------------- 模型 ----------------
 function CloudSection({ csrfToken }: { csrfToken: string }) {
   const t = useTranslations('settings.cloud')
   const { locale } = useWorkbench()
@@ -85,7 +87,6 @@ function CloudSection({ csrfToken }: { csrfToken: string }) {
           initial={prefs.data}
         />
       ) : null}
-      <AgentSetup csrfToken={csrfToken} />
       <section className="flex items-center justify-between rounded-xl border p-5">
         <div>
           <h3 className="text-base font-semibold">{t('memory')}</h3>
@@ -267,11 +268,13 @@ function KeysSection({ csrfToken }: { csrfToken: string }) {
   )
 }
 
-// ---------------- 我的电脑 ----------------
-function ComputerSection() {
+// ---------------- 电脑与沙箱（页面标题：电脑、link、沙箱与令牌）----------------
+function ComputerSection({ csrfToken }: { csrfToken: string }) {
   return (
     <>
       <MachinesScreen embedded />
+      <LinkStatus />
+      <AgentSetup csrfToken={csrfToken} />
       <LocalAgentSettings />
     </>
   )

@@ -125,7 +125,7 @@
       "saved": "Saved",
       "error": "Error: {code}",
       "sandbox": "My sandbox",
-      "sandboxHint": "Register a model key in Settings, then create your cloud sandbox. The first creation returns your agent token once.",
+      "sandboxHint": "Register a model key under Models, then start your cloud sandbox. The first start returns your local link token once.",
       "sandboxStatus": {
         "absent": "No sandbox yet",
         "starting": "Starting",
@@ -136,20 +136,20 @@
       "sandboxUpdate": "Update sandbox",
       "sandboxDelete": "Remove sandbox",
       "sandboxCapacityFull": "Cloud sandboxes are at capacity right now. Please try again later; your key and settings are kept.",
-      "rotateToken": "Reconnect computer",
+      "rotateToken": "Reissue token",
       "reconnectHint": "This replaces both the computer token and the cloud sandbox token: the old computer disconnects and a running sandbox restarts for a few dozen seconds",
       "sandboxRolled": "The cloud sandbox is using the new token and is restarting",
-      "rotateHint": "The old tokens are revoked at the relay right away; the new command is shown once and a running sandbox rolls automatically.",
+      "rotateHint": "The old tokens stop working right away; the new token is shown once and a running sandbox switches automatically.",
       "provisioning": "Starting…",
       "updating": "Updating…",
       "deleting": "Removing…",
       "rotating": "Rotating…",
       "cancel": "Cancel",
       "noticeProvisioned": "Sandbox startup requested. Copy the token and initialize locally; it cannot be viewed again after refresh.",
-      "noticeUpdated": "Updated: the sandbox restarts with the new settings (about a minute), showing \"Starting\" then \"Running\". Your local agent needs nothing.",
-      "noticeRestored": "Restored: the sandbox is starting and your earlier work is kept. Your local agent does not need to reconnect.",
-      "noticeDeleted": "Removed: the sandbox is stopped and your work is kept. Start it again any time; no new command will be issued.",
-      "noticeRotated": "The old token is revoked. Initialize locally with the new token, then start the agent.",
+      "noticeUpdated": "Updated: the sandbox restarts with the new settings (about a minute), showing \"Starting\" then \"Running\". Your local link needs nothing.",
+      "noticeRestored": "Restored: the sandbox is starting and your earlier work is kept. Your local link does not need a new token.",
+      "noticeDeleted": "Removed: the sandbox is stopped and your work is kept. Start it again when needed; no new token is issued.",
+      "noticeRotated": "The old token is revoked. On your computer, choose \"Reissue token\" in the tray to give the local link the new one.",
       "confirmRotate": "This replaces both the computer token and the cloud sandbox token: the old computer disconnects and a running sandbox restarts for a few dozen seconds. Continue?",
       "confirmRotateYes": "Rotate",
       "confirmDelete": "Removing stops the sandbox (your work is kept) and sessions pause until you start it again. Remove it?",
@@ -160,7 +160,7 @@
       "agentTokenTitle": "Local initialization (enter token separately)",
       "agentTokenHint": "Run this command in local PowerShell, then paste the token into the hidden prompt.",
       "lead": "Register your own model key and set the model and approval policy for new conversations.",
-      "machineEntry": "Computers and sandbox",
+      "machineEntry": "Cloud sandbox",
       "machineEntryHint": "The cloud sandbox only starts, updates and is removed here. Connecting a computer is in My computer below.",
       "toMachines": "Connect computer"
     }
@@ -175,7 +175,7 @@
       "expert": "Expert"
     },
     "workspace": {
-      "none": "No folder yet. Add one in the agent on this computer so projects have a place.",
+      "none": "No folder yet. Add one in the local link on this computer so projects have a place.",
       "all": "All",
       "add": "New project in {name}"
     },
@@ -196,21 +196,11 @@
       "memory": "Memory",
       "localLibrary": "Local library"
     },
-    "machine": {
-      "online": "A computer is online",
-      "offline": "No computer is online",
-      "none": "No computer registered"
-    },
     "computers": "Computers and projects",
     "computer": {
-      "none": "No computer connected yet. Once connected, your folders and projects appear here.",
+      "none": "No computer yet. Install the local link and issue its token, and your folders and projects appear here.",
       "connect": "Connect",
-      "manage": "Manage",
-      "thisOne": "this one",
-      "online": "online",
-      "offline": "offline",
-      "elsewhere": "The computer you are using now ({name}) is connected to another account, so it shows offline here. To use it with this account, pair it again under Manage.",
-      "notHere": "The computer you are using now is not connected."
+      "manage": "Manage"
     },
     "project": {
       "new": "New project",
@@ -234,12 +224,27 @@
       "note": "Removed from here only; the folder on your computer stays",
       "busy": "Not removed: an expert is still working in this conversation. Wait for it to finish or stop it first.",
       "failed": "Not removed. Please try again."
+    },
+    "linkCheck": {
+      "tokenInvalid": "The token has expired or was revoked.",
+      "unreachable": "The local link cannot connect: check the network, or quit the link and open it again.",
+      "versionMismatch": "The local link does not match the server version and was refused. Download the new version under Computer & sandbox.",
+      "notThisComputer": "The workbench is not using this computer right now.",
+      "noLocalLink": "No local link is running on this device, or the browser does not allow checking.",
+      "noLocalLinkNamed": "No local link is running on this device, or the browser does not allow checking; the workbench is using \"{name}\".",
+      "copied": "The local link's settings look copied from another computer (first seen on \"{first}\", now on \"{host}\"). Reinstall the local link on this computer.",
+      "noKey": "Register a model key under Models first so the sandbox can start.",
+      "sandboxNotReady": "The sandbox is not ready.",
+      "reissue": "Reissue token",
+      "toModels": "Go to Models",
+      "toComputer": "Go to Computer & sandbox",
+      "label": "Workbench notice"
     }
   },
   "projectPicker": {
     "loading": "Loading…",
     "none": "No projects yet. A project is a folder inside a workspace on your machine.",
-    "offline": "machine offline"
+    "offline": "local link not connected"
   },
   "home": {
     "title": "What do you want to work out today?",
@@ -280,7 +285,7 @@
       "noSandbox": "No sandbox available yet: register a model key and start the sandbox first.",
       "needProject": "Choose a project first.",
       "noMachine": "No computer registered. Connect one before starting Work or Expert.",
-      "machineOffline": "The machine holding this project is offline. Start the local agent on it first.",
+      "machineOffline": "The local link on the computer holding this project is not connected. Open the local link on that computer first.",
       "notBuilt": "This page is still being built; it will work here once it is done."
     },
     "toSettings": "Go to settings",
@@ -517,7 +522,7 @@
     "files": {
       "noComputer": "This conversation is not on any computer, so there are no files to show.",
       "loading": "Loading…",
-      "noRoots": "The agent on this computer has no folders selected yet. Pick them in the tray settings.",
+      "noRoots": "The local link on this computer has no folders selected yet. Pick them in the tray under Settings for this computer.",
       "library": "Local library",
       "empty": "Empty folder",
       "truncated": "Too many items; only the first 2000 are listed",
@@ -525,12 +530,12 @@
       "binary": "Not a text file; contents are not shown here.",
       "partial": "The file is larger than 1 MiB; only the beginning is shown.",
       "problem": {
-        "no_agent_here": "No agent is running on the computer you are using, so files cannot be shown. Files are only visible on the computer that runs the agent; they never go through the cloud.",
-        "other_account": "The agent on this computer is paired with another account.",
-        "agent_offline": "This account has not connected a computer yet.",
+        "no_agent_here": "No local link is running on the computer you are using, so files cannot be shown. Files are only visible on the computer that runs the local link; they never go through the cloud.",
+        "other_account": "The local link on this computer is assigned to another account.",
+        "agent_offline": "No local link has a token for this account yet.",
         "agent_service_unconfigured": "This site has not enabled local access yet.",
-        "ticket_invalid": "The agent did not accept the local access ticket; reload and try again.",
-        "keys_unavailable": "The agent could not fetch the site's public key; try again later.",
+        "ticket_invalid": "The local link did not accept the local access ticket; reload and try again.",
+        "keys_unavailable": "The local link could not fetch the site's public key; try again later.",
         "rate_limited": "Too fast; wait a moment.",
         "other": "Could not read it."
       },
@@ -700,7 +705,7 @@
       "noExpert": "Choose an expert first.",
       "noQuestion": "Write what should be solved first.",
       "noSandbox": "No sandbox available yet: register a model key and start the sandbox first.",
-      "offline": "Your machine is offline; the expert needs to work on it.",
+      "offline": "The local link on your computer is not connected; the expert needs to work on it.",
       "busy": "The expert is still working on something in this project.",
       "noMachine": "No computer registered. Connect one before starting Work or Expert."
     },
@@ -708,7 +713,7 @@
     "toSettings": "Go to settings",
     "problem": {
       "project_busy": "The expert is still working on something in this project.",
-      "environment_offline": "Your machine is offline; the expert needs to work on it.",
+      "environment_offline": "The local link on your computer is not connected; the expert needs to work on it.",
       "project_required": "This conversation is not in a project yet.",
       "preview_no_sample": "The preview is read-only.",
       "other": "Not handed over. Please try again."
@@ -740,15 +745,15 @@
       "conversations": "{n} conversations",
       "never": "not used yet",
       "none": "No projects in this workspace yet.",
-      "offline": "machine offline",
+      "offline": "local link not connected",
       "loading": "Loading…",
       "noWorkspace": {
         "title": "No workspace yet",
         "lead": "A workspace is a root folder on your machine. Having none usually has one of these three causes:",
         "sandbox": "No sandbox yet: register a model key in Settings, then start the sandbox in My computers.",
-        "agent": "No local agent connected yet: install the local agent on your machine and add a folder in it.",
-        "account": "Signed in with a different account: the local agent and the web page must use the same account.",
-        "note": "Workspaces are added and removed in the local agent on your machine, not on the web."
+        "agent": "No local link yet: install the local link on your computer and add a folder in it.",
+        "account": "Signed in with a different account: the local link must be assigned to the account you use on the web.",
+        "note": "Workspaces are added and removed in the local link on your computer, not on the web."
       },
       "onlyWorkspace": "Only this workspace: {root}",
       "seeAll": "Show all"
@@ -766,7 +771,7 @@
       "submit": "Create",
       "submitting": "Creating…",
       "choose": "Choose",
-      "machineOffline": " (offline)",
+      "machineOffline": " (local link not connected)",
       "problem": {
         "absolute": "The subfolder must be relative to the workspace, not an absolute path.",
         "upward": "The subfolder must not go upwards (no ..).",
@@ -775,7 +780,7 @@
         "root_outside_whitelist": "This workspace is not whitelisted on that machine.",
         "preview_no_sample": "The preview is read-only.",
         "other": "Not created. Please try again.",
-        "outside_whitelist": "This place is outside the computer's workspaces, or the path goes through a link or alias; the agent does not write there.",
+        "outside_whitelist": "This place is outside the computer's workspaces, or the path goes through a link or alias; the local link does not write there.",
         "local_read_only": "The computer's local setting is read-only. Allow writing in the local settings first.",
         "not_a_directory": "There is a file with this name here, not a folder.",
         "target_not_empty": "This subfolder already has content. Cloning needs a subfolder that does not exist or is empty.",
@@ -789,9 +794,9 @@
         "clone_failed": "The clone failed. Check the address and the network, then try again.",
         "cancelled": "Cancelled; the half-cloned folder was removed.",
         "project_directory_missing": "This folder is not on the computer; the project was not registered.",
-        "no_agent_here": "The agent on this computer went away; nothing was created.",
-        "ticket_invalid": "The pass for the agent expired. Click once more.",
-        "local_failed": "The agent could not do it. Please try again."
+        "no_agent_here": "The local link on this computer went away; nothing was created.",
+        "ticket_invalid": "The pass for the local link expired. Click once more.",
+        "local_failed": "The local link could not do it. Please try again."
       },
       "loadingMachines": "Loading computers and directories…",
       "machinesFailed": "Could not load computers. Try reloading; no project was created.",
@@ -810,15 +815,15 @@
       "registering": "Registering the project…",
       "cancelClone": "Cancel clone",
       "agent": {
-        "checking": "Looking for the agent on this computer…",
-        "no_agent_here": "Create projects on the computer that runs the agent: the folder is made there, and this computer has no running agent.",
-        "other_account": "The agent on this computer belongs to another account; you cannot create projects here.",
-        "outdated": "Update the agent on the computer to 0.4.1 to create projects.",
-        "failed": "Could not reach the agent on this computer. Try again later."
+        "checking": "Looking for the local link on this computer…",
+        "no_agent_here": "Create projects on the computer that runs the local link: the folder is made there, and this computer has no running local link.",
+        "other_account": "The local link on this computer belongs to another account; you cannot create projects here.",
+        "outdated": "Update the local link on the computer to 0.4.1 to create projects.",
+        "failed": "Could not reach the local link on this computer. Try again later."
       },
       "auth": {
         "title": "This repository needs a login",
-        "lead": "Git on your computer has no login for this repository. Enter an access token: it goes only to the agent on your computer, for this clone, never through our servers.",
+        "lead": "Git on your computer has no login for this repository. Enter an access token: it goes only to the local link on your computer, for this clone, never through our servers.",
         "username": "User name (optional)",
         "token": "Access token",
         "remember": "Remember on this computer (saved by the computer's git credential manager; not asked again)",
@@ -830,12 +835,12 @@
       "workspace": "Workspace",
       "directory": "Folder",
       "machine": "Machine",
-      "online": "online",
-      "offline": "offline",
+      "online": "local link connected",
+      "offline": "local link not connected",
       "newChat": "New chat",
       "newWork": "New work",
       "askExpert": "Ask an expert",
-      "offlineNote": "The machine is offline: you can look and chat, but not start work or ask an expert.",
+      "offlineNote": "The local link on this computer is not connected: you can look and chat, but not start work or ask an expert.",
       "conversations": "Conversations",
       "empty": "Nothing in this project yet. Start with the three buttons above.",
       "noConversations": "No conversations yet.",
@@ -863,19 +868,19 @@
     }
   },
   "machines": {
-    "title": "My computers",
-    "lead": "Work and Expert read and write projects on your own computer. A local agent runs there and lets us touch only the folders you whitelisted.",
+    "title": "Computer, link, sandbox and token",
+    "lead": "Work and Expert read and write projects on your own computer. The local link runs there and lets us touch only the folders you whitelisted.",
     "none": "No computer connected yet.",
     "current": "Connected computer",
     "elsewhere": "This is the computer connected to your account. If you are on a different computer now, install and connect it with the three steps below; {name} then disconnects, because an account drives one computer at a time.",
-    "online": "online",
-    "offline": "offline",
-    "offlineNote": "The agent is offline. Check the reason in the local tray and start it; if logon startup is enabled it starts after login.",
-    "agent": "Local agent",
+    "online": "local link connected",
+    "offline": "local link not connected",
+    "offlineNote": "The local link is not connected. Check \"Status and reason\" in the tray on that computer; with \"Run at logon\" on, it starts after you log in.",
+    "agent": "Local link",
     "codex": "Codex",
     "lastSeen": "Last contact",
     "roots": "Whitelisted folders",
-    "noRoots": "No folder added yet. Add one in the local agent so projects have a place.",
+    "noRoots": "No folder added yet. Add one in the local link so projects have a place.",
     "unknown": "unknown",
     "ceiling": {
       "title": "The limits this machine sets for itself",
@@ -891,24 +896,24 @@
     "guide": {
       "title": "Connect a computer",
       "install": "Download and install",
-      "connect": "After installing, your computer opens this page with the code filled in; check the computer name and allow it",
+      "connect": "After installing, your computer opens this page with the confirmation code filled in; check the computer name and allow it to issue the local link's token",
       "folders": "Choose folders to finish",
       "done": "done",
       "todo": "not yet",
-      "evidence": "An online computer means these three steps are done.",
-      "onlineHint": "Status updates every 5 seconds. Return to Work or Expert once the computer is online."
+      "evidence": "A connected local link means these three steps are done.",
+      "onlineHint": "Status updates every 5 seconds. Return to Work or Expert once the local link is connected."
     },
     "connect": {
       "title": "Connect a computer",
-      "code": "Connection code",
+      "code": "Confirmation code",
       "hint": "Eight characters. They are uppercased and a hyphen is inserted after the fourth. If this page did not open by itself, type the code shown on your computer here.",
-      "prefilled": "The connection code came from your computer. Make sure the computer below is yours, then allow it.",
+      "prefilled": "The confirmation code came from your computer. Make sure the computer below is yours, then allow it.",
       "lookup": "Check this computer",
       "wrong": "The code is wrong or expired",
       "unknownSource": "Unknown",
       "ago": "Started {seconds} seconds ago",
       "replace": "After you allow this, {name} disconnects",
-      "intoAccount": "After you allow this, the computer connects to the account \"{account}\". If that is not the right account, deny, sign in with the right one and connect again.",
+      "intoAccount": "After you allow this, the local link on this computer gets the token of the account \"{account}\". If that is not the right account, deny, sign in with the right one and issue again.",
       "allow": "Allow",
       "deny": "Deny",
       "approved": "{name} is allowed to connect",
@@ -921,7 +926,7 @@
     },
     "loading": "Loading…",
     "setup": {
-      "downloadTitle": "Download the Windows local agent",
+      "downloadTitle": "Download the Windows local link",
       "loading": "Loading download information…",
       "downloadFailed": "Download information could not be loaded. No sandbox or token was changed.",
       "retryStatus": "Reload information",
@@ -939,14 +944,14 @@
       "developmentOnly": "Development-site package. Clean Windows and real reboot acceptance are still pending before public release.",
       "startTitle": "Choose directories and start after initialization",
       "startHint": "Complete local initialization above, then open tray settings, add and select project directories, save and start. Logon startup is an explicit tray option.",
-      "oneMachine": "Only one agent may be online per account. Connecting another replaces the existing connection.",
-      "expires": "Current agent token expires: {value}",
+      "oneMachine": "An account is assigned to one local link at a time; issuing a token on another computer disconnects the old one.",
+      "expires": "Current local link token expires: {value}",
       "unknownExpiry": "Not issued or a legacy token with no recorded expiry",
       "refreshRequired": "The identity changed or an operation is still running. Status was refreshed. Review it before explicitly trying again; no automatic rotation occurs.",
       "needKey": "Register a model key in Settings first, then create your sandbox to receive the first token.",
       "operationFailed": "Operation not confirmed ({code}). Check status before retrying. If the first token was lost, explicitly request a replacement.",
       "statusFailed": "Status could not be loaded. Actions are disabled; refresh the page to retry.",
-      "tokenLabel": "Your agent token",
+      "tokenLabel": "Your local link token",
       "showToken": "Show token",
       "hideToken": "Hide token",
       "copyToken": "Copy token",
@@ -957,7 +962,7 @@
       "tokenTitle": "Agent token and cloud sandbox",
       "toSettings": "Register a model key"
     },
-    "loadFailed": "Computer status could not be loaded; online status is unknown."
+    "loadFailed": "Computer status could not be loaded; whether the local link is connected is unknown."
   },
   "results": {
     "title": "Results",
@@ -1032,13 +1037,13 @@
     "title": "Settings",
     "nav": {
       "preferences": "Preferences",
-      "cloud": "Cloud & models",
-      "computer": "My computer"
+      "cloud": "Models",
+      "computer": "Computer & sandbox"
     },
     "navHint": {
       "preferences": "Stored in this browser only",
       "cloud": "Follows your account",
-      "computer": "Lives in the agent on your computer"
+      "computer": "Local link, sandbox and token"
     },
     "preferences": {
       "title": "Preferences",
@@ -1075,15 +1080,15 @@
       }
     },
     "cloud": {
-      "title": "Cloud & models",
-      "lead": "Model keys and endpoints, defaults for new conversations, the cloud sandbox and the data sources Codex may use. All follow your account.",
+      "title": "Models",
+      "lead": "Model keys and base URL, defaults for new conversations, the data sources Codex may use, and long-term memory. They follow your account on any computer.",
       "memory": "Long-term memory",
       "memoryHint": "A few facts about you, carried into every conversation.",
       "memoryOpen": "Open"
     },
     "computer": {
       "local": "Settings on this computer",
-      "localLead": "Folders, limits, autostart and the local library directory live in the agent on your computer. Changes made here go straight to that computer, not through the cloud; widening changes (adding a folder, raising the limit, enabling network, setting the library directory, enabling autostart) need one confirmation on that computer, after which the agent restarts itself.",
+      "localLead": "Folders, limits, run at logon and the local library directory live in the local link on your computer. Changes made here go straight to that computer, not through the cloud; widening changes (adding a folder, raising the limit, enabling network, setting the library directory, turning on run at logon) need one confirmation on that computer, after which the local link restarts itself.",
       "roots": "Allowed folders",
       "noRoots": "No folders yet",
       "sandboxMode": "Sandbox mode",
@@ -1094,37 +1099,59 @@
       "none": "No computer connected yet.",
       "loading": "Loading…",
       "cannotEdit": "Cannot change now:",
-      "readOnlyFrom": "Below is what the agent last reported (read-only):",
+      "readOnlyFrom": "Below is what the local link last reported (read-only):",
       "addRoot": "Add folder",
       "addRootPlaceholder": "Absolute path on the computer, e.g. D:\\research",
       "sandbox": {
         "read-only": "Read-only: can look, cannot change",
         "workspace-write": "Write only inside the whitelisted folders"
       },
-      "autostart": "Start at login",
+      "autostart": "Run at logon",
       "libraryDir": "Local library directory",
       "libraryDirPlaceholder": "One directory; leave empty for none",
       "clear": "Clear",
       "save": "Save to the computer",
       "saving": "Sending to the computer…",
       "confirmOnComputer": "This widens access: enter the code in the confirmation window on the computer and allow it.",
-      "saved": "Saved. The agent is restarting; this refreshes in a few seconds.",
+      "saved": "Saved. The local link is restarting; this refreshes in a few seconds.",
       "failure": {
         "local_denied": "Not allowed on the computer; nothing changed.",
-        "busy": "The agent is busy (maybe restarting); try again shortly.",
+        "busy": "The local link is busy (maybe restarting); try again shortly.",
         "invalid": "One item is not acceptable (folder missing, duplicated, or more than 32); nothing changed.",
-        "no_agent_here": "The agent on this computer is gone; nothing was sent.",
+        "no_agent_here": "The local link on this computer is gone; nothing was sent.",
         "ticket_invalid": "The local access ticket was not accepted; reload and try again.",
         "other": "Could not reach the computer."
       },
-      "lastChange": "Last changed from the web: {at}"
+      "lastChange": "Last changed from the web: {at}",
+      "status": {
+        "title": "Status now",
+        "link": "Local link",
+        "connected": "connected",
+        "notConnected": "not connected",
+        "none": "No local link has a token for this account yet.",
+        "computer": "Computer",
+        "joined": "Joined",
+        "lastSeen": "Last contact",
+        "tokenExpires": "Token expires",
+        "reissueHint": "To reissue the token: choose \"Reissue token\" in the tray on that computer, then check the confirmation code and account on the page that opens and allow it.",
+        "sandbox": "Sandbox",
+        "ready": "ready",
+        "notReady": "not ready",
+        "needKey": "Register a model key under Models, then start the sandbox.",
+        "toModels": "Go to Models",
+        "paired": "Paired: the local link is connected and the sandbox is ready.",
+        "unpaired": "Not paired: {missing}.",
+        "missingLink": "the local link is not connected",
+        "missingSandbox": "the sandbox is not ready",
+        "and": "; "
+      }
     },
     "baseUrl": "Endpoint (optional)",
     "baseUrlHint": "A self-hosted or proxied OpenAI-compatible endpoint; https only, no local or private addresses. Leave empty for the vendor default."
   },
   "localLibrary": {
     "title": "Local library",
-    "lead": "A directory on your computer for material you want to keep; work and expert conversations can read it. This page reads straight from your computer, nothing goes to the cloud, so it is only visible on the computer that runs the agent.",
+    "lead": "A directory on your computer for material you want to keep; work and expert conversations can read it. This page reads straight from your computer, nothing goes to the cloud, so it is only visible on the computer that runs the local link.",
     "noComputer": "No computer is connected yet.",
     "noDir": "No local library directory has been chosen yet.",
     "goComputer": "Set it under My computer"

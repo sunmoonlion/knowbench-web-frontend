@@ -103,7 +103,7 @@ describe('agent onboarding', () => {
     await waitFor(() => expect(start).toBeEnabled())
     expect(calls.every((call) => call.method === 'GET')).toBe(true)
     fireEvent.click(start)
-    const secret = await screen.findByLabelText('本人代理令牌')
+    const secret = await screen.findByLabelText('本人的本地 link 令牌')
     expect(secret).toHaveAttribute('type', 'password')
     expect(secret).toHaveValue(token)
     expect(document.querySelector('[data-issued-command]')!.textContent).toContain('--token-prompt')
@@ -129,7 +129,7 @@ describe('agent onboarding', () => {
     expect(window.localStorage.getItem('agent_token')).toBeNull()
     expect(window.sessionStorage.getItem('agent_token')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: '清除页面上的令牌' }))
-    expect(screen.queryByLabelText('本人代理令牌')).toBeNull()
+    expect(screen.queryByLabelText('本人的本地 link 令牌')).toBeNull()
   })
   it('rotation confirmation stays bound to the revision shown when opened; no automatic retry', async () => {
     let current = revision
@@ -150,7 +150,7 @@ describe('agent onboarding', () => {
       }),
     )
     const p = page(<ReconnectComputer csrfToken="csrf-fixture" />)
-    fireEvent.click(await screen.findByRole('button', { name: '重新连接电脑' }))
+    fireEvent.click(await screen.findByRole('button', { name: '重新颁发令牌' }))
     const dialog = screen.getByRole('alertdialog')
     expect(dialog.textContent).toContain('会同时换掉电脑和云端沙箱的令牌')
     current = 'b'.repeat(64)
@@ -158,6 +158,6 @@ describe('agent onboarding', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: '确定更换' }))
     await screen.findByText(/接入状态已变化或操作仍在进行/)
     expect(mutations).toEqual([{ expected_revision: revision }])
-    expect(screen.queryByLabelText('本人代理令牌')).toBeNull()
+    expect(screen.queryByLabelText('本人的本地 link 令牌')).toBeNull()
   })
 })

@@ -38,13 +38,46 @@ export class LocalAgentError extends Error {
   }
 }
 
-export type Presence = { agent: string; version: string; machine_name: string; connected: boolean }
+// 0.5.2 起本地 link 多报设备编号、主机名、系统和连接状态（账 143，会合点备忘第五节）；老版本没有这几项
+export type LinkState =
+  | 'connected'
+  | 'connecting'
+  | 'unreachable'
+  | 'token_invalid'
+  | 'replaced'
+  | 'version_mismatch'
+  | 'rejected'
+export type Presence = {
+  agent: string
+  version: string
+  machine_name: string
+  connected: boolean
+  device_id?: string
+  host?: string
+  os?: string
+  link_state?: LinkState
+}
 const presenceSchema = z
   .object({
     agent: z.string(),
     version: z.string(),
     machine_name: z.string(),
     connected: z.boolean(),
+    device_id: z.string().max(64).optional(),
+    host: z.string().max(128).optional(),
+    os: z.string().max(64).optional(),
+    link_state: z
+      .enum([
+        'connected',
+        'connecting',
+        'unreachable',
+        'token_invalid',
+        'replaced',
+        'version_mismatch',
+        'rejected',
+      ])
+      .optional()
+      .catch(undefined),
   })
   .loose()
 

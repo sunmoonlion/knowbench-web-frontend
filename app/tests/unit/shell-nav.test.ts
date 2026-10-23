@@ -7,7 +7,6 @@ import {
   footHref,
   machineLight,
   modeOf,
-  presenceHint,
   projectsIn,
   recent,
   workspaceKey,
@@ -175,40 +174,5 @@ describe('首页：现在能不能开始', () => {
     expect(blockerOf({ ...ready, sandboxes: 0, mode: 'work' })).toBe('noMachine')
     expect(blockerOf({ ...ready, sandboxes: 0, mode: 'expert' })).toBe('noMachine')
     expect(blockerOf({ ...ready, sandboxes: 0, mode: 'chat' })).toBe('noSandbox')
-  })
-})
-
-describe('「这台电脑还没接入 / 就是这台 / 连在别的账号上」（账 92）', () => {
-  const none = { thisOne: null, elsewhere: null, notHere: false }
-  const machines = [{ name: 'zymun', status: 'online' }]
-  const here = { machine_name: 'zymun', connected: true }
-  it('还没探：什么都不说', () => {
-    expect(presenceHint(machines, undefined)).toEqual(none)
-  })
-  it('探到了，名字对得上、账号下这台在线：就是这台', () => {
-    expect(presenceHint(machines, here)).toEqual({ ...none, thisOne: 'zymun' })
-  })
-  it('探不到，或探到的是别的名字：这台还没接入', () => {
-    expect(presenceHint(machines, null)).toEqual({ ...none, notHere: true })
-    expect(presenceHint(machines, { machine_name: 'other', connected: true })).toEqual({
-      ...none,
-      notHere: true,
-    })
-  })
-  it('名字对得上，代理连着会合点，账号下这台却离线：连在别的账号上，不说「就是这台」', () => {
-    const offline = [{ name: 'zymun', status: 'offline' }]
-    expect(presenceHint(offline, here)).toEqual({ ...none, elsewhere: 'zymun' })
-    // 同名两条，有一条在线就是这个账号的
-    expect(presenceHint([...offline, ...machines], here)).toEqual({ ...none, thisOne: 'zymun' })
-  })
-  it('名字对得上，代理自己也没连上：还是这台，只是离线', () => {
-    const offline = [{ name: 'zymun', status: 'offline' }]
-    expect(presenceHint(offline, { machine_name: 'zymun', connected: false })).toEqual({
-      ...none,
-      thisOne: 'zymun',
-    })
-  })
-  it('账号下一台电脑都没有：不提示（那是「去接入」那句的事）', () => {
-    expect(presenceHint([], null)).toEqual(none)
   })
 })

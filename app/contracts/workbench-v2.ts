@@ -107,6 +107,12 @@ export const machineSchema = z
     agent_version: z.string().nullable().optional(),
     codex_version: z.string().nullable().optional(),
     last_seen_at: z.string().nullable().optional(),
+    created_at: z.string().nullable().optional(),
+    // 0.5.2 起（账 143）：设备编号认「这台电脑上的这一份本地 link」；主机名对不上第一次登记的，配置像是拷来的
+    device_id: z.string().nullable().optional(),
+    host: z.string().nullable().optional(),
+    os: z.string().nullable().optional(),
+    first_host: z.string().nullable().optional(),
     // 这台机器自己定的上限：只能在那台机器上改，网页只显示
     ceiling: z
       .object({ sandbox: z.string().optional(), network: z.boolean().optional() })
@@ -116,6 +122,16 @@ export const machineSchema = z
   .loose()
 export type Machine = z.infer<typeof machineSchema>
 export const machinesSchema = z.object({ environments: z.array(machineSchema) }).loose()
+
+// 打开工作台时的核对（账 143）：配给当前账号的那份本地 link 在哪台机器上（带编号乙）、配置像不像拷来的、令牌哪天到期
+export const localLinkSchema = z
+  .object({
+    assigned: machineSchema.nullable(),
+    copied: z.boolean(),
+    token_expires_at: z.string().nullable(),
+  })
+  .loose()
+export type LocalLink = z.infer<typeof localLinkSchema>
 
 export const sandboxesSchema = z
   .object({ sandboxes: z.array(z.object({ id: uuid, status: z.string() }).loose()) })

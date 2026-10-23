@@ -96,7 +96,7 @@ describe('我的电脑', () => {
   it('接入的机器：在线、版本、白名单里的目录、它自己定的上限', async () => {
     page(<MachinesScreen />)
     expect(await screen.findByRole('heading', { name: '办公室的电脑' })).toBeInTheDocument()
-    expect(screen.getAllByText('在线').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('本地 link 连着').length).toBeGreaterThan(0)
     expect(screen.getByText('/home/demo/research')).toBeInTheDocument()
     expect(screen.getByText(/只能改白名单目录里的文件；不许联网/)).toBeInTheDocument()
     expect(screen.getByText(/这些只能在那台机器上改/)).toBeInTheDocument()
@@ -108,7 +108,9 @@ describe('我的电脑', () => {
   it('机器离线：写明本地代理没在运行', async () => {
     scenario = 'offline'
     page(<MachinesScreen />)
-    expect(await screen.findByText(/代理当前离线。请在本机托盘查看原因并启动/)).toBeVisible()
+    expect(
+      await screen.findByText(/本地 link 当前没连着。请在这台电脑的托盘「查看状态与原因」里看原因/),
+    ).toBeVisible()
   })
 
   it('还没有电脑：照五步做', async () => {
@@ -121,17 +123,18 @@ describe('我的电脑', () => {
 })
 
 describe('设置', () => {
-  it('云端与模型：模型 key、电脑与沙箱、新对话的默认（MCP 连接 10-18 撤了）。给用户看的字里没有「会话」', async () => {
+  it('模型：模型 key、新对话的默认（MCP 连接 10-18 撤了；沙箱 10-23 挪到「电脑与沙箱」）。给用户看的字里没有「会话」', async () => {
     page(<SettingsScreen section="cloud" />)
     expect(await screen.findByRole('heading', { name: '设置' })).toBeInTheDocument()
-    for (const name of ['模型 key', '电脑与沙箱', '新对话的默认']) {
+    for (const name of ['模型 key', '新对话的默认']) {
       expect(await screen.findByRole('heading', { name })).toBeInTheDocument()
     }
+    expect(screen.queryByRole('heading', { name: '云端沙箱' })).toBeNull()
     expect(document.body.textContent).not.toContain('会话')
-    // 左列三类（0021）
+    // 左列三项（0021；会合点备忘第七节 10-23）
     expect(
       screen
-        .getAllByRole('link', { name: /个人偏好|云端与模型|我的电脑/ })
+        .getAllByRole('link', { name: /^(个人偏好|模型|电脑与沙箱)/ })
         .map((a) => a.getAttribute('href')),
     ).toEqual([
       '/zh-CN/workbench/settings/preferences',
@@ -141,10 +144,14 @@ describe('设置', () => {
     expect(document.getElementById('computer')).toBeNull()
   })
 
-  it('我的电脑：接入电脑整节在第三类', async () => {
+  it('电脑与沙箱：接入电脑、现在的状态、云端沙箱、这台电脑上的设置都在第三项', async () => {
     page(<SettingsScreen section="computer" />)
     expect(await screen.findByRole('heading', { name: '设置' })).toBeInTheDocument()
     await waitFor(() => expect(document.getElementById('computer')).not.toBeNull())
     expect(await screen.findByRole('heading', { name: '这台电脑上的设置' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '云端沙箱' })).toBeInTheDocument()
+    expect(document.getElementById('link-status')).not.toBeNull()
+    // 页面里不出现「会合点」（会合点备忘第四节）
+    expect(document.body.textContent).not.toContain('会合点')
   })
 })

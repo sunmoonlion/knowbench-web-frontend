@@ -246,23 +246,3 @@ export function pendingPointers(
     })
     .sort((a, b) => Number(b.urgent) - Number(a.urgent))
 }
-
-// ---------------- 「这台电脑还没接入 / 就是这台 / 连在别的账号上」（账 92）：网页探本机回环口得到的结果和账号下的电脑对一对 ----------------
-// elsewhere：本机代理连着会合点，账号下同名的电脑却不在线——代理配在别的账号上（同一台电脑在两个账号下各有一条，只按名字比会误报「就是这台」）
-export type PresenceHint = { thisOne: string | null; elsewhere: string | null; notHere: boolean }
-const NO_HINT: PresenceHint = { thisOne: null, elsewhere: null, notHere: false }
-// presence 为 undefined = 还没探；null = 探过了，这台电脑上没有在跑的代理
-export function presenceHint(
-  machines: readonly { name: string; status: string }[],
-  presence: { machine_name: string; connected: boolean } | null | undefined,
-): PresenceHint {
-  if (presence === undefined || machines.length === 0) return NO_HINT
-  if (presence === null) return { ...NO_HINT, notHere: true }
-  const same = machines.filter((machine) => machine.name === presence.machine_name)
-  // 探到了代理但名字对不上账号下的电脑：多半是别的账号的代理，也算「这台还没接入」
-  if (same.length === 0) return { ...NO_HINT, notHere: true }
-  if (presence.connected && !same.some((machine) => machine.status === 'online')) {
-    return { ...NO_HINT, elsewhere: presence.machine_name }
-  }
-  return { ...NO_HINT, thisOne: presence.machine_name }
-}

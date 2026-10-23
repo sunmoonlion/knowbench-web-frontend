@@ -1,9 +1,11 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { z } from 'zod'
 
 import {
   conversationsSchema,
+  localLinkSchema,
   machinesSchema,
   pendingListSchema,
   projectDetailSchema,
@@ -12,6 +14,7 @@ import {
   tasksSchema,
   workspacesSchema,
 } from '@/contracts/workbench-v2'
+import { credentialSchema, provisionedSandboxSchema } from '@/contracts/workbench-settings'
 import { getJson, seg } from './http'
 import {
   connectLocalAgent,
@@ -90,6 +93,37 @@ export function useMachines(refetchInterval: number | false = false) {
     refetchInterval,
     queryFn: async () =>
       (await getJson(machinesSchema, '/api/workbench/environments')).environments,
+  })
+}
+
+// 沙箱的状态（就绪没有）与登记过的模型 key：工作台顶上的核对与设置页共用同一份缓存（账 143）
+export function useSandboxStatus() {
+  return useQuery({
+    queryKey: ['wb-provisioned'],
+    queryFn: () => getJson(provisionedSandboxSchema, '/api/workbench/sandboxes/provisioned'),
+    refetchInterval: 5000,
+  })
+}
+
+export function useCredentials() {
+  return useQuery({
+    queryKey: ['wb-credentials'],
+    queryFn: async () =>
+      (
+        await getJson(
+          z.object({ credentials: z.array(credentialSchema) }),
+          '/api/workbench/credentials',
+        )
+      ).credentials,
+  })
+}
+
+// 配给当前账号的那份本地 link（账 143）：打开工作台时的核对和设置页「电脑与沙箱」都用
+export function useLocalLink() {
+  return useQuery({
+    queryKey: ['workbench', 'local-link'] as const,
+    queryFn: () => getJson(localLinkSchema, '/api/workbench/local-link'),
+    refetchInterval: 15_000,
   })
 }
 

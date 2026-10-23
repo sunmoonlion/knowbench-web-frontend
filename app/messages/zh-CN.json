@@ -125,7 +125,7 @@
       "saved": "已保存",
       "error": "出错：{code}",
       "sandbox": "我的沙箱",
-      "sandboxHint": "先在「设置」登记模型 key，再创建云端沙箱。首次创建只返回一次本人代理令牌。",
+      "sandboxHint": "先在「模型」登记模型 key，再拉起云端沙箱。首次拉起只返回一次本人的本地 link 令牌。",
       "sandboxStatus": {
         "absent": "还没有沙箱",
         "starting": "启动中",
@@ -136,20 +136,20 @@
       "sandboxUpdate": "更新沙箱",
       "sandboxDelete": "回收沙箱",
       "sandboxCapacityFull": "云端沙箱暂时满了，请稍后再试。你已登记的 key 和设置都保留着。",
-      "rotateToken": "重新连接电脑",
+      "rotateToken": "重新颁发令牌",
       "reconnectHint": "会同时换掉电脑和云端沙箱的令牌：旧电脑断开，在跑的沙箱重启几十秒",
       "sandboxRolled": "云端沙箱已换用新令牌，正在重启",
-      "rotateHint": "旧令牌立即失效并推到会合点；新的接入命令只显示这一次，沙箱在线会自动滚动。",
+      "rotateHint": "旧令牌立即失效；新的令牌只显示这一次，沙箱在运行会自动换上新令牌。",
       "provisioning": "正在拉起…",
       "updating": "正在更新…",
       "deleting": "正在回收…",
       "rotating": "正在更换…",
       "cancel": "取消",
       "noticeProvisioned": "沙箱开始启动。请复制本页令牌并在本机初始化，刷新后不能再次查看。",
-      "noticeUpdated": "已更新：沙箱会按新设置重启，约一分钟，状态会先变「启动中」再变「运行中」。本地代理不用动。",
-      "noticeRestored": "已恢复：沙箱正在启动，之前的研究记录都在。本地代理不用重新接入，开着就行。",
-      "noticeDeleted": "已回收：沙箱已停下，研究记录保留。需要时点「拉起沙箱」恢复，不会给新的接入命令。",
-      "noticeRotated": "旧令牌已吊销。请用新令牌在本机重新初始化，再启动代理。",
+      "noticeUpdated": "已更新：沙箱会按新设置重启，约一分钟，状态会先变「启动中」再变「运行中」。本地 link 不用动。",
+      "noticeRestored": "已恢复：沙箱正在启动，之前的研究记录都在。本地 link 不用重新颁发令牌，开着就行。",
+      "noticeDeleted": "已回收：沙箱已停下，研究记录保留。需要时点「拉起沙箱」恢复，不会重新颁发令牌。",
+      "noticeRotated": "旧令牌已吊销。请在这台电脑的托盘点「重新颁发令牌」，给本地 link 换上新令牌。",
       "confirmRotate": "会同时换掉电脑和云端沙箱的令牌：旧电脑断开，在跑的沙箱重启几十秒。确定继续吗？",
       "confirmRotateYes": "确定更换",
       "confirmDelete": "回收后沙箱会停下（研究记录保留），对话暂时用不了，需要时可以再拉起。确定回收吗？",
@@ -160,7 +160,7 @@
       "agentTokenTitle": "本机初始化（令牌单独输入）",
       "agentTokenHint": "在本机 PowerShell 运行下面的命令，再在隐藏输入提示中粘贴令牌。",
       "lead": "登记你自己的模型 key，设置新对话的模型与审批策略。",
-      "machineEntry": "电脑与沙箱",
+      "machineEntry": "云端沙箱",
       "machineEntryHint": "云端沙箱只负责拉起、更新和回收。连接电脑在下面的「我的电脑」。",
       "toMachines": "接入电脑"
     }
@@ -175,7 +175,7 @@
       "expert": "专家"
     },
     "workspace": {
-      "none": "还没有加目录。在这台电脑的代理里加一个，项目才有地方放。",
+      "none": "还没有加目录。在这台电脑的本地 link 里加一个，项目才有地方放。",
       "all": "全部",
       "add": "在 {name} 里新建项目"
     },
@@ -196,21 +196,11 @@
       "memory": "长期记忆",
       "localLibrary": "本地知识库"
     },
-    "machine": {
-      "online": "电脑在线",
-      "offline": "电脑都不在线",
-      "none": "还没有登记电脑"
-    },
     "computers": "我的电脑与项目",
     "computer": {
-      "none": "还没有接入电脑。接入后，你的目录和项目会出现在这里。",
+      "none": "还没有接入电脑。装好本地 link、颁发令牌后，你的目录和项目会出现在这里。",
       "connect": "去接入",
-      "manage": "管理",
-      "thisOne": "就是这台",
-      "online": "在线",
-      "offline": "离线",
-      "elsewhere": "你现在用的这台电脑（{name}）连在别的账号上，所以这个账号下它显示离线。要在这个账号用它，在「管理」里重新配对。",
-      "notHere": "你现在用的这台电脑还没接入。"
+      "manage": "管理"
     },
     "project": {
       "new": "新建项目",
@@ -234,12 +224,27 @@
       "note": "只从这里移除，电脑上的文件夹不动",
       "busy": "没有删掉：专家正在这段对话里干活，等它做完或先停下再删。",
       "failed": "没有删掉，请再试一次。"
+    },
+    "linkCheck": {
+      "tokenInvalid": "令牌已失效。",
+      "unreachable": "本地 link 连不上：检查网络，或退出 link 再重新打开。",
+      "versionMismatch": "本地 link 的版本和服务端不配套，连接被拒。请到「电脑与沙箱」下载安装新版。",
+      "notThisComputer": "工作台现在用的不是这台电脑。",
+      "noLocalLink": "这台设备没有在运行的本地 link，或浏览器不允许检测。",
+      "noLocalLinkNamed": "这台设备没有在运行的本地 link，或浏览器不允许检测；工作台现在用的是「{name}」。",
+      "copied": "本地 link 的配置像是从别的电脑拷过来的（第一次是在「{first}」，现在在「{host}」）。请在这台电脑上重新安装本地 link。",
+      "noKey": "先到「模型」登记模型 key，沙箱才能拉起。",
+      "sandboxNotReady": "沙箱没就绪。",
+      "reissue": "重新颁发令牌",
+      "toModels": "去「模型」",
+      "toComputer": "去「电脑与沙箱」",
+      "label": "工作台提示"
     }
   },
   "projectPicker": {
     "loading": "加载中…",
     "none": "还没有项目。项目是你机器上工作区里的一个目录。",
-    "offline": "机器离线"
+    "offline": "本地 link 没连着"
   },
   "home": {
     "title": "今天想弄清楚什么？",
@@ -280,7 +285,7 @@
       "noSandbox": "还没有可用的沙箱：先登记模型的 key、拉起沙箱。",
       "needProject": "先选一个项目。",
       "noMachine": "还没有登记电脑。先接入电脑，再开始工作或请专家。",
-      "machineOffline": "这个项目所在的机器不在线。先打开那台机器上的本地代理。",
+      "machineOffline": "这个项目所在电脑上的本地 link 没连着。先在那台电脑上打开本地 link。",
       "notBuilt": "这一页还在做，做好之后这里就能用。"
     },
     "toSettings": "去设置",
@@ -517,7 +522,7 @@
     "files": {
       "noComputer": "这段对话不在哪台电脑上，没有文件可看。",
       "loading": "读取中…",
-      "noRoots": "这台电脑的代理还没选任何文件夹。在托盘「白名单与上限设置」里选。",
+      "noRoots": "这台电脑的本地 link 还没选任何文件夹。在托盘「这台电脑上的设置」里选。",
       "library": "本地知识库",
       "empty": "空目录",
       "truncated": "太多了，只列了前 2000 项",
@@ -525,12 +530,12 @@
       "binary": "不是文本文件，这里不显示内容。",
       "partial": "文件比 1 MiB 大，只显示了开头。",
       "problem": {
-        "no_agent_here": "你现在用的这台电脑上没有在运行的代理，看不到文件。文件只能在装着代理的那台电脑上看——它不经过云端。",
-        "other_account": "这台电脑上的代理接的是别的账号。",
-        "agent_offline": "这个账号还没有接入电脑。",
+        "no_agent_here": "你现在用的这台电脑上没有在运行的本地 link，看不到文件。文件只能在装着本地 link 的那台电脑上看——它不经过云端。",
+        "other_account": "这台电脑上的本地 link 配给的是别的账号。",
+        "agent_offline": "这个账号还没有给哪份本地 link 颁发令牌。",
         "agent_service_unconfigured": "这个站点还没开本机访问。",
-        "ticket_invalid": "代理没认本机访问票，刷新页面再试。",
-        "keys_unavailable": "代理取不到站点公钥，稍后再试。",
+        "ticket_invalid": "本地 link 没认本机访问票，刷新页面再试。",
+        "keys_unavailable": "本地 link 取不到站点公钥，稍后再试。",
         "rate_limited": "点得太快，稍等一下。",
         "other": "没有读到。"
       },
@@ -700,7 +705,7 @@
       "noExpert": "先选一位专家。",
       "noQuestion": "先写清楚要解决什么问题。",
       "noSandbox": "还没有可用的沙箱：先登记模型的 key、拉起沙箱。",
-      "offline": "你的机器没在线，专家要在上面干活。",
+      "offline": "你电脑上的本地 link 没连着，专家要在那台电脑上干活。",
       "busy": "这个项目里有一件事专家还在做。",
       "noMachine": "还没有登记电脑。先接入电脑，再开始工作或请专家。"
     },
@@ -708,7 +713,7 @@
     "toSettings": "去设置",
     "problem": {
       "project_busy": "这个项目里有一件事专家还在做。",
-      "environment_offline": "你的机器没在线，专家要在上面干活。",
+      "environment_offline": "你电脑上的本地 link 没连着，专家要在那台电脑上干活。",
       "project_required": "这段对话还没有放进项目。",
       "preview_no_sample": "预览里只能看，不能交出。",
       "other": "没有交出去，请再试一次。"
@@ -740,15 +745,15 @@
       "conversations": "{n} 段对话",
       "never": "还没有用过",
       "none": "这个工作区里还没有项目。",
-      "offline": "机器离线",
+      "offline": "本地 link 没连着",
       "loading": "加载中…",
       "noWorkspace": {
         "title": "还没有工作区",
         "lead": "工作区是你机器上的一个根目录。一个都没有，通常是这三种原因之一：",
         "sandbox": "还没有拉起沙箱：先去设置登记模型 key，再到「我的电脑」拉起沙箱。",
-        "agent": "还没有接入本地代理：在你的机器上装好本地代理，在里面加一个目录。",
-        "account": "登录的账号不对：本地代理登的和网页登的要是同一个账号。",
-        "note": "工作区的增减不在网页上做，在你机器上的本地代理里做。"
+        "agent": "还没有装本地 link：在你的电脑上装好本地 link，在里面加一个目录。",
+        "account": "登录的账号不对：本地 link 配给的账号和网页登录的要是同一个。",
+        "note": "工作区的增减不在网页上做，在你电脑上的本地 link 里做。"
       },
       "onlyWorkspace": "只看这个工作区：{root}",
       "seeAll": "看全部"
@@ -766,7 +771,7 @@
       "submit": "建立",
       "submitting": "正在建立…",
       "choose": "请选择",
-      "machineOffline": "（离线）",
+      "machineOffline": "（本地 link 没连着）",
       "problem": {
         "absolute": "子目录要写相对工作区的路径，不能是绝对路径。",
         "upward": "子目录不能往上走（不能有 ..）。",
@@ -775,7 +780,7 @@
         "root_outside_whitelist": "这个工作区不在那台机器的白名单里。",
         "preview_no_sample": "预览里只能看，不能建。",
         "other": "没有建成，请再试一次。",
-        "outside_whitelist": "这个位置不在电脑的工作区里，或者路径里有链接、别名，代理不往那里写。",
+        "outside_whitelist": "这个位置不在电脑的工作区里，或者路径里有链接、别名，本地 link 不往那里写。",
         "local_read_only": "电脑上的本机设置是「只读」，不能新建。先在「这台电脑上的设置」里放开写入。",
         "not_a_directory": "这个位置已经有一个同名文件，不是文件夹。",
         "target_not_empty": "这个子目录已经有东西了。拉取要一个不存在或空的子目录。",
@@ -789,9 +794,9 @@
         "clone_failed": "没拉下来。请检查地址和网络后再试。",
         "cancelled": "已取消，拉了一半的文件夹已删掉。",
         "project_directory_missing": "电脑上没有这个文件夹，没有登记。",
-        "no_agent_here": "这台电脑上的代理不见了，没建成。",
-        "ticket_invalid": "和代理的通行凭据过期了，请再点一次。",
-        "local_failed": "代理那头没做成，请再试一次。"
+        "no_agent_here": "这台电脑上的本地 link 不见了，没建成。",
+        "ticket_invalid": "和本地 link 的通行凭据过期了，请再点一次。",
+        "local_failed": "本地 link 那头没做成，请再试一次。"
       },
       "loadingMachines": "正在读取电脑与目录…",
       "machinesFailed": "电脑列表读取失败，请重新读取；不会创建项目。",
@@ -810,15 +815,15 @@
       "registering": "正在登记项目…",
       "cancelClone": "取消拉取",
       "agent": {
-        "checking": "正在找这台电脑上的代理…",
-        "no_agent_here": "要在装着代理的那台电脑上新建项目：文件夹建在那台电脑上，你现在用的这台电脑上没有在运行的代理。",
-        "other_account": "这台电脑上的代理接的是别的账号，不能在这里新建。",
-        "outdated": "电脑上的代理要更新到 0.4.1 才能新建项目。",
-        "failed": "连不上这台电脑上的代理，请稍后再试。"
+        "checking": "正在找这台电脑上的本地 link…",
+        "no_agent_here": "要在装着本地 link 的那台电脑上新建项目：文件夹建在那台电脑上，你现在用的这台电脑上没有在运行的本地 link。",
+        "other_account": "这台电脑上的本地 link 配给的是别的账号，不能在这里新建。",
+        "outdated": "电脑上的本地 link 要更新到 0.4.1 才能新建项目。",
+        "failed": "连不上这台电脑上的本地 link，请稍后再试。"
       },
       "auth": {
         "title": "这个仓库要登录",
-        "lead": "你电脑上的 git 没有这个仓库的登录。填一个访问令牌：它只交给你电脑上的代理用这一次，不经过我们的服务器。",
+        "lead": "你电脑上的 git 没有这个仓库的登录。填一个访问令牌：它只交给你电脑上的本地 link 用这一次，不经过我们的服务器。",
         "username": "用户名（可以不填）",
         "token": "访问令牌",
         "remember": "记住在这台电脑上（交给电脑上的 git 凭据管理器保存，下次不再问）",
@@ -830,12 +835,12 @@
       "workspace": "工作区",
       "directory": "目录",
       "machine": "机器",
-      "online": "在线",
-      "offline": "离线",
+      "online": "本地 link 连着",
+      "offline": "本地 link 没连着",
       "newChat": "新聊天",
       "newWork": "新工作",
       "askExpert": "请专家",
-      "offlineNote": "机器不在线：可以看、可以聊天，不能新建工作、不能请专家。",
+      "offlineNote": "这台电脑的本地 link 没连着：可以看、可以聊天，不能新建工作、不能请专家。",
       "conversations": "对话",
       "empty": "这个项目里还什么都没有。用上面三个按钮开始。",
       "noConversations": "还没有对话。",
@@ -863,19 +868,19 @@
     }
   },
   "machines": {
-    "title": "我的电脑",
-    "lead": "工作和专家要在你自己的电脑上读写项目。电脑上跑着一个本地代理，它只让我们碰你加进白名单的目录。",
+    "title": "电脑、link、沙箱与令牌",
+    "lead": "工作和专家要在你自己的电脑上读写项目。电脑上装着本地 link，它只让我们碰你加进白名单的目录。",
     "none": "还没有电脑接入。",
     "current": "已接入的电脑",
     "elsewhere": "这是你账号下接入的电脑。你现在用的如果是另一台电脑，要在那台上按下面三步安装并接入；接入后 {name} 会断开——一个账号同一时刻只连一台电脑。",
-    "online": "在线",
-    "offline": "离线",
-    "offlineNote": "代理当前离线。请在本机托盘查看原因并启动；已开启登录自启时会在登录后自动启动。",
-    "agent": "本地代理",
+    "online": "本地 link 连着",
+    "offline": "本地 link 没连着",
+    "offlineNote": "本地 link 当前没连着。请在这台电脑的托盘「查看状态与原因」里看原因；打开了「登录时自动运行」的，登录后会自己运行。",
+    "agent": "本地 link",
     "codex": "Codex",
     "lastSeen": "最近一次联系",
     "roots": "白名单里的目录",
-    "noRoots": "还没有加目录。在本地代理里加一个，项目才有地方放。",
+    "noRoots": "还没有加目录。在本地 link 里加一个，项目才有地方放。",
     "unknown": "不知道",
     "ceiling": {
       "title": "这台机器自己定的上限",
@@ -891,24 +896,24 @@
     "guide": {
       "title": "接入电脑",
       "install": "下载安装",
-      "connect": "装完后电脑会自动打开本站这一页并带上连接码，核对电脑名后点允许",
+      "connect": "装完后电脑会自动打开本站这一页并带上确认码，核对电脑名后点允许，给本地 link 颁发令牌",
       "folders": "选文件夹完成",
       "done": "已完成",
       "todo": "还没做",
-      "evidence": "有电脑在线，这三步就算完成。",
-      "onlineHint": "状态每 5 秒更新。电脑在线后即可返回工作或专家。"
+      "evidence": "本地 link 连着，这三步就算完成。",
+      "onlineHint": "状态每 5 秒更新。本地 link 连着后即可返回工作或专家。"
     },
     "connect": {
       "title": "连接一台电脑",
-      "code": "连接码",
+      "code": "确认码",
       "hint": "8 位。会自动大写，并在第四位后补上横线。没有自动跳到这里时，把电脑上页面显示的码填在这里。",
-      "prefilled": "连接码已从你的电脑自动带过来。确认下面这台电脑是你自己的，再点允许。",
+      "prefilled": "确认码已从你的电脑自动带过来。确认下面这台电脑是你自己的，再点允许。",
       "lookup": "核对这台电脑",
       "wrong": "码不对或已过期",
       "unknownSource": "未知",
       "ago": "{seconds} 秒前发起",
       "replace": "允许后，{name} 会断开",
-      "intoAccount": "允许后，这台电脑连到账号「{account}」。不是这个账号就先拒绝，换账号登录后再连。",
+      "intoAccount": "允许后，给这台电脑上的本地 link 颁发账号「{account}」的令牌。不是这个账号就先拒绝，换账号登录后再颁发。",
       "allow": "允许",
       "deny": "拒绝",
       "approved": "已允许 {name} 连接",
@@ -921,7 +926,7 @@
     },
     "loading": "加载中…",
     "setup": {
-      "downloadTitle": "下载 Windows 本地代理",
+      "downloadTitle": "下载 Windows 本地 link",
       "loading": "正在读取下载信息…",
       "downloadFailed": "下载信息暂时读取失败；不会创建沙箱或更换令牌。",
       "retryStatus": "重新读取",
@@ -939,14 +944,14 @@
       "developmentOnly": "当前为开发站点接入包，尚未完成干净 Windows、真实重启等正式发行验收。",
       "startTitle": "初始化后选择目录并启动",
       "startHint": "先完成上一步的本机初始化，再打开托盘设置，添加并勾选项目目录，保存后启动。登录自启在托盘中自行开启。",
-      "oneMachine": "同一账号目前只能有一个在线代理；另一台连接会替换原连接。",
-      "expires": "当前代理令牌到期：{value}",
+      "oneMachine": "一个账号同一时刻只配给一份本地 link；在另一台电脑上颁发令牌，原来那份会断开。",
+      "expires": "当前本地 link 令牌到期：{value}",
       "unknownExpiry": "尚未签发或旧令牌没有到期记录",
       "refreshRequired": "接入状态已变化或操作仍在进行。已重新读取状态；核对后再明确操作，不会自动重领。",
       "needKey": "请先到「设置」登记模型 key，再创建沙箱领取首次令牌。",
       "operationFailed": "操作未确认完成（{code}）。请先核对状态，不要连续重试；丢失首次令牌时可明确选择重新领取。",
       "statusFailed": "状态读取失败，操作暂不可用；请刷新页面后重试。",
-      "tokenLabel": "本人代理令牌",
+      "tokenLabel": "本人的本地 link 令牌",
       "showToken": "显示令牌",
       "hideToken": "隐藏令牌",
       "copyToken": "复制令牌",
@@ -957,7 +962,7 @@
       "tokenTitle": "领取令牌与云端沙箱",
       "toSettings": "登记模型 key"
     },
-    "loadFailed": "电脑状态读取失败，暂时无法确认是否在线。"
+    "loadFailed": "电脑状态读取失败，暂时无法确认本地 link 连没连着。"
   },
   "results": {
     "title": "结果",
@@ -1032,13 +1037,13 @@
     "title": "设置",
     "nav": {
       "preferences": "个人偏好",
-      "cloud": "云端与模型",
-      "computer": "我的电脑"
+      "cloud": "模型",
+      "computer": "电脑与沙箱"
     },
     "navHint": {
       "preferences": "只存在这个浏览器里",
       "cloud": "跟着账号走",
-      "computer": "存在你电脑上的代理里"
+      "computer": "本地 link、沙箱与令牌"
     },
     "preferences": {
       "title": "个人偏好",
@@ -1075,15 +1080,15 @@
       }
     },
     "cloud": {
-      "title": "云端与模型",
-      "lead": "模型 key 与接入地址、新对话的默认、云端沙箱、Codex 能用的数据源。都跟着账号走，在哪台电脑登录都一样。",
+      "title": "模型",
+      "lead": "模型 key 与接入地址、新对话的默认、Codex 能用的数据源、长期记忆。都跟着账号走，在哪台电脑登录都一样。",
       "memory": "长期记忆",
       "memoryHint": "关于你的几条事实，每段对话开头都带上。",
       "memoryOpen": "去看"
     },
     "computer": {
       "local": "这台电脑上的设置",
-      "localLead": "白名单目录、上限、开机自启、本地知识库目录存在电脑上的代理里。在这里改会直接送到那台电脑，不经云端；放宽的改动（加目录、抬上限、开网、设知识库目录、开自启）要你到电脑上的确认窗里点一次允许，改完代理自己重启。",
+      "localLead": "白名单目录、上限、登录时自动运行、本地知识库目录存在电脑上的本地 link 里。在这里改会直接送到那台电脑，不经云端；放宽的改动（加目录、抬上限、开网、设知识库目录、打开登录时自动运行）要你到电脑上的确认窗里点一次允许，改完本地 link 自己重启。",
       "roots": "白名单目录",
       "noRoots": "还没有加目录",
       "sandboxMode": "沙箱模式",
@@ -1094,37 +1099,59 @@
       "none": "还没有接入电脑。",
       "loading": "读取中…",
       "cannotEdit": "现在改不了：",
-      "readOnlyFrom": "下面是代理上次报来的（只读）：",
+      "readOnlyFrom": "下面是本地 link 上次报来的（只读）：",
       "addRoot": "加目录",
       "addRootPlaceholder": "电脑上的绝对路径，如 D:\\研究",
       "sandbox": {
         "read-only": "只读：能看，不能改",
         "workspace-write": "只能改白名单目录里的文件"
       },
-      "autostart": "开机自启",
+      "autostart": "登录时自动运行",
       "libraryDir": "本地知识库目录",
       "libraryDirPlaceholder": "一个目录；留空就没有",
       "clear": "清空",
       "save": "保存到电脑",
       "saving": "正在送到电脑…",
       "confirmOnComputer": "有放宽的改动：到电脑上的确认窗里输入码并点允许。",
-      "saved": "已保存，代理正在重启，几秒后这里会刷新。",
+      "saved": "已保存，本地 link 正在重启，几秒后这里会刷新。",
       "failure": {
         "local_denied": "你在电脑上没有允许，什么都没改。",
-        "busy": "代理正忙（可能正在重启），稍后再试。",
+        "busy": "本地 link 正忙（可能正在重启），稍后再试。",
         "invalid": "有一项不合规矩（目录不存在、重复，或超过 32 个），没改。",
-        "no_agent_here": "这台电脑上的代理不见了，没送到。",
+        "no_agent_here": "这台电脑上的本地 link 不见了，没送到。",
         "ticket_invalid": "本机访问票没被认可，刷新再试。",
         "other": "没送到电脑。"
       },
-      "lastChange": "上次从网页改：{at}"
+      "lastChange": "上次从网页改：{at}",
+      "status": {
+        "title": "现在的状态",
+        "link": "本地 link",
+        "connected": "连着",
+        "notConnected": "没连着",
+        "none": "还没有给哪份本地 link 颁发令牌。",
+        "computer": "电脑",
+        "joined": "接入日期",
+        "lastSeen": "最近一次联系",
+        "tokenExpires": "令牌到期日",
+        "reissueHint": "要重新颁发令牌：在这台电脑的托盘点「重新颁发令牌」，在打开的确认页核对确认码和账号后点允许。",
+        "sandbox": "沙箱",
+        "ready": "就绪",
+        "notReady": "没就绪",
+        "needKey": "先到「模型」登记模型 key，再拉起沙箱。",
+        "toModels": "去「模型」",
+        "paired": "配对成功：本地 link 连着，沙箱就绪。",
+        "unpaired": "未配对：{missing}。",
+        "missingLink": "本地 link 没连着",
+        "missingSandbox": "沙箱没就绪",
+        "and": "；"
+      }
     },
     "baseUrl": "接入地址（可选）",
     "baseUrlHint": "自建或代理的 OpenAI 兼容端点，只收 https、不收本机和内网地址；空着用厂商默认。"
   },
   "localLibrary": {
     "title": "本地知识库",
-    "lead": "你电脑上的一个目录，放自己想留的资料；工作和专家对话能读它。这里直接从你的电脑上翻看，一个字节不上云，所以只在装着代理的那台电脑上看得到。",
+    "lead": "你电脑上的一个目录，放自己想留的资料；工作和专家对话能读它。这里直接从你的电脑上翻看，一个字节不上云，所以只在装着本地 link 的那台电脑上看得到。",
     "noComputer": "还没有接入电脑。",
     "noDir": "还没有选本地知识库目录。",
     "goComputer": "去「我的电脑」设"

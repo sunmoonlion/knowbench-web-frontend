@@ -173,7 +173,7 @@ describe('连接码', () => {
     const replace = vi.fn()
     vi.stubGlobal('location', { replace })
     page(<MachinesRedirect />)
-    expect(screen.getByRole('link', { name: '我的电脑' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '电脑、link、沙箱与令牌' })).toHaveAttribute(
       'href',
       '/zh-CN/workbench/settings/computer',
     )

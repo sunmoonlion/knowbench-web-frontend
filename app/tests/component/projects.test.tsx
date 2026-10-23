@@ -159,7 +159,7 @@ describe('项目列表', () => {
     scenario = 'empty'
     page(<ProjectListScreen />)
     expect(await screen.findByText('还没有工作区')).toBeInTheDocument()
-    expect(screen.getByText(/还没有接入本地代理/)).toBeInTheDocument()
+    expect(screen.getByText(/还没有装本地 link/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '接入电脑' })).toHaveAttribute(
       'href',
       '/zh-CN/workbench/settings/computer',
@@ -213,7 +213,7 @@ describe('项目页', () => {
   it('机器离线：可以看、可以聊天，不能新建工作、不能请专家', async () => {
     scenario = 'offline'
     page(<ProjectScreen project={idOf('offline', '项目页')} />)
-    expect(await screen.findByText(/机器不在线/)).toBeInTheDocument()
+    expect(await screen.findByText(/这台电脑的本地 link 没连着/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '新聊天' })).not.toHaveAttribute(
       'aria-disabled',
       'true',
