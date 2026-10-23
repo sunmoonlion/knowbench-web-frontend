@@ -475,7 +475,9 @@
       "failedNoFiles": "The expert did not finish. It writes no deliverable files.",
       "rejected": "The expert did not take this request; no step ran and nothing was written: {reason}",
       "rejectedPlain": "The expert did not take this request; no step ran and nothing was written.",
-      "open": "Open work papers"
+      "open": "Open work papers",
+      "returnedStep": "Returned: {summary}",
+      "returnedRaw": "What this step returned (open to read)"
     },
     "question": {
       "title": "Codex is asking you",

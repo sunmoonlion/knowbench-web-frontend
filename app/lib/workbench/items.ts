@@ -124,6 +124,26 @@ function countLines(diff: string) {
   return { added, removed }
 }
 
+// 新建、删除的文件，Codex 给的是整份内容、不是补丁：Markdown 里「- 」开头的列表行会被当成
+// 删掉的行，新建的成稿显示成「+0 −38」（账 147）。按整份内容数行，前面补上 + 或 −，和补丁一样
+// 显示。已经是一行一个 + 或 − 的（照补丁写的）原样用。
+function wholeFile(how: 'add' | 'delete', content: string) {
+  const sign = how === 'add' ? '+' : '-'
+  const lines = content === '' ? [] : content.replace(/\n$/, '').split('\n')
+  if (lines.length > 0 && lines.every((line) => line.startsWith(sign))) {
+    return {
+      diff: content,
+      added: how === 'add' ? lines.length : 0,
+      removed: how === 'add' ? 0 : lines.length,
+    }
+  }
+  return {
+    diff: lines.map((line) => sign + line).join('\n'),
+    added: how === 'add' ? lines.length : 0,
+    removed: how === 'add' ? 0 : lines.length,
+  }
+}
+
 // 用补丁改文件（Codex 的 fileChange）。命令行里改的文件不在这里：那种改动 Codex 不单独报
 export function changeStep(item: Item, running: boolean): ChangeStep {
   const changes = Array.isArray(item.changes) ? (item.changes as Item[]) : []
@@ -133,13 +153,13 @@ export function changeStep(item: Item, running: boolean): ChangeStep {
     running,
     failed: !running && (item.status === 'failed' || item.status === 'declined'),
     files: changes.map((change) => {
-      const how = text((change.kind as Item | undefined)?.type)
+      const kind = text((change.kind as Item | undefined)?.type)
+      const how = kind === 'add' || kind === 'delete' ? kind : 'update'
       const diff = text(change.diff)
       return {
         path: text(change.path),
-        how: how === 'add' || how === 'delete' ? how : 'update',
-        diff,
-        ...countLines(diff),
+        how,
+        ...(how === 'update' ? { diff, ...countLines(diff) } : wholeFile(how, diff)),
       }
     }),
   }

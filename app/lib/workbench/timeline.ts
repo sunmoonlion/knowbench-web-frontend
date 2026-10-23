@@ -88,6 +88,8 @@ export type Entry =
     }
   // 专家开始做哪一步。同一步重做不再摆一次：对话里只看过程，不数第几次（所有者 2026-10-14）
   | { kind: 'stage'; key: string; title: string }
+  // 专家这一步交回的原文（给验收看的 JSON）：默认折成一行，写它的一句说明，点开看原文（账 148）
+  | { kind: 'returned'; key: string; summary: string | null; raw: string }
   | { kind: 'notice'; key: string; what: 'stopped' | 'failed' }
 
 export type Activity =
@@ -116,8 +118,8 @@ export function timeline(events: readonly ConversationEvent[]): Timeline {
   let last: Timeline['last'] = 'none'
   let asked = 0
   // 专家拿着方向盘的时候：过程照常摆（查数、命令、改文件、它说的话），只是每一步最后交回的
-  // 那段 JSON 是给验收看的原样，不是给人读的话，不摆进来；一轮结束也不报「停下了 / 出错了」，
-  // 那是专家自己的返工，结果在交回那一行说
+  // 那段 JSON 是给验收看的原样，不是给人读的话：折成一行，点开才看（账 148）；一轮结束也不报
+  // 「停下了 / 出错了」，那是专家自己的返工，结果在交回那一行说
   let expert = false
   let stage: string | null = null
 
@@ -169,7 +171,15 @@ export function timeline(events: readonly ConversationEvent[]): Timeline {
       if (event.type === 'command/failed') continue
       if (event.type === 'item/completed') {
         const item = (payload.item ?? {}) as Item
-        if (item.type === 'agentMessage' && looksLikeArtifact(text(item.text))) continue
+        const returned = item.type === 'agentMessage' ? splitArtifact(text(item.text)) : null
+        if (returned) {
+          entries.push({
+            kind: 'returned',
+            key: `returned:${text(item.id) || event.cursor}`,
+            ...returned,
+          })
+          continue
+        }
       }
     }
     switch (event.type) {
@@ -398,6 +408,25 @@ export function timeline(events: readonly ConversationEvent[]): Timeline {
 export function looksLikeArtifact(said: string): boolean {
   const body = said.trim()
   return body.startsWith('{') || body.startsWith('```')
+}
+
+const SUMMARY_CHARS = 120
+
+/**
+ * 一段话里有没有交回的原文：整段是 JSON，或者先说一两句再贴 JSON（围栏或从某一行起的 {…}）。
+ * 有就拆成（前面那句说明，原文）；说明取第一行、过长截断。没有回 null（是它说的过程话）。
+ */
+export function splitArtifact(said: string): { summary: string | null; raw: string } | null {
+  const body = said.trim()
+  if (!body) return null
+  if (looksLikeArtifact(body)) return { summary: null, raw: body }
+  const fence = body.search(/^```/m)
+  const brace = body.search(/^\{/m)
+  const at = fence >= 0 ? fence : brace >= 0 && body.endsWith('}') ? brace : -1
+  if (at < 0) return null
+  const line = body.slice(0, at).trim().split('\n')[0]?.trim() ?? ''
+  const summary = line.length > SUMMARY_CHARS ? `${line.slice(0, SUMMARY_CHARS)}…` : line || null
+  return { summary, raw: body.slice(at).trim() }
 }
 
 // 「改动」栏：一个文件一行，同一个文件改了几次合在一起

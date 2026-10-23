@@ -286,6 +286,36 @@ function QuestionCard({
   )
 }
 
+// 专家这一步交回的原文：默认一行（一句说明），点开看原文（账 148）
+function Returned({ entry }: { entry: Extract<Entry, { kind: 'returned' }> }) {
+  const t = useTranslations('work')
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="text-[13px]">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        className="text-muted-foreground hover:bg-muted flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left"
+      >
+        <span className="min-w-0 flex-1 truncate">
+          {entry.summary
+            ? t('handover.returnedStep', { summary: entry.summary })
+            : t('handover.returnedRaw')}
+        </span>
+        <ChevronRightIcon
+          className={cn('size-3.5 shrink-0 transition-transform', open && 'rotate-90')}
+        />
+      </button>
+      {open ? (
+        <pre className="bg-muted mt-1 mb-2 ml-1.5 max-h-96 overflow-auto rounded-md p-2 font-mono text-xs leading-5 whitespace-pre-wrap">
+          {entry.raw}
+        </pre>
+      ) : null}
+    </div>
+  )
+}
+
 export function TimelineEntry({
   entry,
   directory,
@@ -408,6 +438,8 @@ export function TimelineEntry({
           {t('handover.stage', { title: entry.title })}
         </p>
       )
+    case 'returned':
+      return <Returned entry={entry} />
     case 'notice':
       return (
         <Marker className={entry.what === 'failed' ? 'text-destructive' : undefined}>

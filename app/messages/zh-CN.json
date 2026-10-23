@@ -475,7 +475,9 @@
       "failedNoFiles": "专家没有做完。这位专家不写成稿文件。",
       "rejected": "专家没有接这个委托，一步也没做，没有写底稿：{reason}",
       "rejectedPlain": "专家没有接这个委托，一步也没做，没有写底稿。",
-      "open": "打开工作底稿"
+      "open": "打开工作底稿",
+      "returnedStep": "交回：{summary}",
+      "returnedRaw": "这一步交回的原文（点开看）"
     },
     "question": {
       "title": "Codex 想问你",

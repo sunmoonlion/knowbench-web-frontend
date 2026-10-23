@@ -4,8 +4,14 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { conversationEventSchema, type ConversationEvent } from '@/contracts/workbench-v2'
-import { byFile, liveDetail, phaseTally, timeline } from '@/features/work/model/timeline'
-import { relativeTo } from '@/lib/workbench/items'
+import {
+  byFile,
+  liveDetail,
+  phaseTally,
+  splitArtifact,
+  timeline,
+} from '@/features/work/model/timeline'
+import { changeStep, relativeTo } from '@/lib/workbench/items'
 
 const full = join(process.cwd(), 'preview/fixtures/full')
 const manifest = JSON.parse(readFileSync(join(full, 'manifest.json'), 'utf8')) as {
@@ -107,7 +113,7 @@ describe('工作页的时间线', () => {
     expect(after.live).toBe('thinking')
   })
 
-  it('专家拿着方向盘的那一段：过程照常摆，每一步交回的 JSON 原样不摆', () => {
+  it('专家拿着方向盘的那一段：过程照常摆，每一步交回的 JSON 折成一行（账 148）', () => {
     const page = manifest.pages.find((each) => each.title.startsWith('专家处理中'))!
     const id = page.path.split('/').pop()!
     const found = manifest.responses.find(
@@ -115,15 +121,14 @@ describe('工作页的时间线', () => {
     )!
     const body = JSON.parse(readFileSync(join(full, found.file), 'utf8')) as { events: unknown[] }
     const during = timeline(body.events.map((event) => conversationEventSchema.parse(event)))
-    // 交给专家 → 第一步（只交回了 JSON，没有过程）→ 第二步查了两次数 → 第三步在查
-    expect(during.entries.map((entry) => entry.kind)).toEqual([
-      'handover',
-      'stage',
-      'stage',
-      'phase',
-      'stage',
-      'phase',
-    ])
+    // 交给专家 → 第一步（只交回了 JSON，没有过程）→ 第二步查了两次数 → 第三步在查；
+    // 每步交回的原文折成一行，点开才看
+    expect(
+      during.entries.filter((entry) => entry.kind !== 'returned').map((entry) => entry.kind),
+    ).toEqual(['handover', 'stage', 'stage', 'phase', 'stage', 'phase'])
+    const returned = during.entries.filter((entry) => entry.kind === 'returned')
+    expect(returned.length).toBeGreaterThan(0)
+    expect(returned.every((entry) => entry.kind === 'returned' && entry.raw.length > 0)).toBe(true)
     expect(during.entries.filter((entry) => entry.kind === 'stage')).toMatchObject([
       { title: '改写问题' },
       { title: '生成 SQL' },
@@ -161,9 +166,11 @@ describe('工作页的时间线', () => {
       'handover',
       'stage',
       'model',
+      'returned',
       'handover',
     ])
-    expect(line.entries[3]).toMatchObject({
+    expect(line.entries[3]).toMatchObject({ summary: null, raw: '```json\n{"answer": "x"}\n```' })
+    expect(line.entries[4]).toMatchObject({
       what: 'returned',
       outcome: 'succeeded',
       writesFiles: true,
@@ -315,5 +322,44 @@ describe('活动行的细节', () => {
     ])
     expect(thinking.live).toBe('thinking')
     expect(liveDetail(thinking)).toBeNull()
+  })
+})
+
+describe('新建、删除的文件（账 147）', () => {
+  const item = (how: string, diff: string) => ({
+    id: 'patch-9',
+    type: 'fileChange',
+    status: 'completed',
+    changes: [{ path: '/p/成稿.md', kind: { type: how }, diff }],
+  })
+
+  it('Codex 给的是整份内容：按行数算新增，列表行不算删掉', () => {
+    const content = '# 成稿\n\n- 毛利率 0.52\n- 净利率 0.31\n'
+    const [file] = changeStep(item('add', content), false).files
+    expect(file).toMatchObject({ how: 'add', added: 4, removed: 0 })
+    expect(file!.diff.split('\n')).toEqual(['+# 成稿', '+', '+- 毛利率 0.52', '+- 净利率 0.31'])
+    const [gone] = changeStep(item('delete', content), false).files
+    expect(gone).toMatchObject({ how: 'delete', added: 0, removed: 4 })
+  })
+
+  it('已经一行一个 + 的（照补丁写的）原样用', () => {
+    const [file] = changeStep(item('add', '+# 待办\n+\n+- 核对\n'), false).files
+    expect(file).toMatchObject({ added: 3, removed: 0, diff: '+# 待办\n+\n+- 核对\n' })
+  })
+})
+
+describe('专家每步交回的原文（账 148）', () => {
+  it('先说一句再贴 JSON：说明留一行，原文折起来；只是说话的不动', () => {
+    expect(splitArtifact('第 4 步取数完成，交回如下：\n```json\n{"rows": 5}\n```')).toEqual({
+      summary: '第 4 步取数完成，交回如下：',
+      raw: '```json\n{"rows": 5}\n```',
+    })
+    expect(splitArtifact('算好了五年的毛利率。\n{\n  "gross_margin": [0.52]\n}')).toEqual({
+      summary: '算好了五年的毛利率。',
+      raw: '{\n  "gross_margin": [0.52]\n}',
+    })
+    expect(splitArtifact('{"a": 1}')).toEqual({ summary: null, raw: '{"a": 1}' })
+    expect(splitArtifact('先把两份文件写进去。')).toBeNull()
+    expect(splitArtifact('')).toBeNull()
   })
 })
