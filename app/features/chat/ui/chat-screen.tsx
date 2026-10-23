@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
+import { CloudDataButton } from '@/components/workbench/cloud-data-button'
 import { Composer } from '@/components/workbench/composer'
 import { ConversationTitle } from '@/components/workbench/conversation-title'
 import { ProjectPicker } from '@/components/workbench/project-picker'
@@ -152,6 +153,7 @@ export function ChatScreen({
             placeholder={t('placeholder')}
             footer={cost}
           >
+            <CloudDataButton session={session ? id : null} disabled={live !== null} />
             <Button
               variant="outline"
               size="sm"

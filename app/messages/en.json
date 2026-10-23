@@ -1209,5 +1209,25 @@
     "collapseSidebar": "Collapse the sidebar",
     "expandSidebar": "Expand the sidebar",
     "expandSide": "Expand side panel"
+  },
+  "cloudData": {
+    "button": "Cloud knowledge base",
+    "buttonWith": "Cloud knowledge base · {count}",
+    "title": "Use your cloud knowledge base in this conversation",
+    "lead": "Choose a few items for this conversation; the model reads only these. Changes apply at once; choose again after a day.",
+    "loading": "Loading…",
+    "failed": "Could not load your cloud knowledge base; please try again later.",
+    "empty": "Nothing in your cloud knowledge base can be read as text yet (PDF, Excel, CSV, text). Upload in “Cloud knowledge base” first.",
+    "note": "While chosen, these items cannot be deleted from the cloud knowledge base; untick them and save when you are done.",
+    "cancel": "Cancel",
+    "save": "{count, plural, =0 {Stop using} one {Use # item} other {Use # items}}",
+    "saving": "Saving…",
+    "problem": {
+      "data_choice_invalid": "One item cannot be read as text or is no longer in your cloud knowledge base; please change the choice.",
+      "reauth_required": "Your sign-in has expired; sign in again and retry.",
+      "user_data_unavailable": "The cloud knowledge base cannot be reached right now; please try again later.",
+      "knowbase_unconfigured": "The cloud knowledge base is not available yet.",
+      "other": "Not saved; please try again."
+    }
   }
 }

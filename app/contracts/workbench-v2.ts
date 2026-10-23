@@ -695,6 +695,24 @@ export const dataChoiceSchema = z
   })
   .loose()
 export type DataChoice = z.infer<typeof dataChoiceSchema>
+// 这段对话选用的云端知识库（SDD 0042 第四节）：凭「会话」运行授权，到期要再选
+export const sessionCloudDataSchema = z
+  .object({
+    items: z.array(
+      z
+        .object({
+          item_id: z.string(),
+          name: z.string(),
+          media_type: z.string(),
+          size_bytes: z.number().int(),
+          sha256: z.string(),
+        })
+        .loose(),
+    ),
+    expires_at: z.string().nullable(),
+  })
+  .loose()
+export type SessionCloudData = z.infer<typeof sessionCloudDataSchema>
 export const dataNeedsSchema = z
   .object({ needs: z.array(dataNeedSchema), last: z.array(dataChoiceSchema) })
   .loose()

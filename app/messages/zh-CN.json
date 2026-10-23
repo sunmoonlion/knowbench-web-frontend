@@ -1209,5 +1209,25 @@
     "collapseSidebar": "折叠侧边栏",
     "expandSidebar": "展开侧边栏",
     "expandSide": "展开右栏"
+  },
+  "cloudData": {
+    "button": "云端知识库",
+    "buttonWith": "云端知识库 · {count} 份",
+    "title": "这段对话选用云端知识库",
+    "lead": "选几份给这段对话用，模型只读你选的这几份；改选随时生效，过一天要再选一次。",
+    "loading": "加载中…",
+    "failed": "没有取到云端知识库，请稍后再试。",
+    "empty": "云端知识库里还没有能读成文字的资料（PDF、Excel、CSV、文本）。先到「云端知识库」上传。",
+    "note": "选用期间这几份不能在云端知识库里删除；不用了取消勾选再保存。",
+    "cancel": "取消",
+    "save": "{count, plural, =0 {不用了} other {选用 # 份}}",
+    "saving": "正在保存…",
+    "problem": {
+      "data_choice_invalid": "有一份读不成文字或已不在云端知识库里，请改选。",
+      "reauth_required": "登录过期了，请重新登录再选。",
+      "user_data_unavailable": "云端知识库暂时连不上，请稍后再试。",
+      "knowbase_unconfigured": "云端知识库还没开通。",
+      "other": "没有保存，请再试一次。"
+    }
   }
 }
