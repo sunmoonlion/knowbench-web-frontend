@@ -122,11 +122,11 @@ function event(cursor: number, type: string, payload: Record<string, unknown>) {
 }
 
 describe('聊天页', () => {
-  it('挂在项目下的聊天有右栏：只读看文件、终端，没有「改动」；不属于项目的没有右栏（0017，所有者 2026-10-18）', async () => {
+  it('挂在项目下的聊天有右栏：只读看文件，没有「改动」「终端」；不属于项目的没有右栏（0017，所有者 2026-10-18；终端 10-23 去掉）', async () => {
     page(IN_PROJECT)
     const rail = await screen.findByRole('complementary', { name: '结果' })
     expect(within(rail).getByRole('button', { name: '文件' })).toBeInTheDocument()
-    expect(within(rail).getByRole('button', { name: '终端' })).toBeInTheDocument()
+    expect(within(rail).queryByRole('button', { name: '终端' })).toBeNull()
     expect(within(rail).queryByRole('button', { name: '改动' })).toBeNull()
     // 窗口窄于 1024 也不整个藏起来（原来是 lg 才显示）
     expect(rail.className).toContain('sm:flex')

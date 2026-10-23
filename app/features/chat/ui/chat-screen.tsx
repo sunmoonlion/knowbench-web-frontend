@@ -183,7 +183,7 @@ export function ChatScreen({
             directory={project?.directory ?? null}
             live={false}
             environment={session.environment_id ?? project?.environment_id ?? null}
-            only={['files', 'terminal']}
+            only={['files']}
           />
         ) : null}
       </div>

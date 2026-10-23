@@ -203,10 +203,10 @@ describe('项目页', () => {
     expect(dossiers.getByText('已完成')).toBeInTheDocument()
     expect(dossiers.getByText('¥0.400')).toBeInTheDocument()
     expect(document.body.textContent).not.toContain('FIN_REVIEW')
-    // 项目页也有右栏：看这个项目的文件、终端，不用先进某段对话（所有者 2026-10-18）
+    // 项目页也有右栏：看这个项目的文件，不用先进某段对话（所有者 2026-10-18）；终端 10-23 去掉
     const rail = screen.getByRole('complementary', { name: '结果' })
     expect(within(rail).getByRole('button', { name: '文件' })).toBeInTheDocument()
-    expect(within(rail).getByRole('button', { name: '终端' })).toBeInTheDocument()
+    expect(within(rail).queryByRole('button', { name: '终端' })).toBeNull()
     expect(within(rail).queryByRole('button', { name: '改动' })).toBeNull()
   })
 

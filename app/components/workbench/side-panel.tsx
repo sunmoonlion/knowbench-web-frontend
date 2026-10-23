@@ -6,7 +6,6 @@ import {
   GitCompareIcon,
   PanelRightCloseIcon,
   PanelRightOpenIcon,
-  TerminalIcon,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
@@ -23,14 +22,14 @@ import { FileTree, ServiceProblem } from './file-tree'
 import { FileView } from './file-view'
 import { useLocalAgent } from '@/lib/workbench/queries'
 
-export type SideTab = 'dossier' | 'files' | 'changes' | 'terminal'
+export type SideTab = 'dossier' | 'files' | 'changes'
 
-// 工作页与专家页同一个右边栏（0017 §五、0015 §3.2）：文件 / 改动 / 终端 三个钮，一次只开一个。
+// 工作页与专家页同一个右边栏（0017 §五、0015 §3.2）：工作底稿 / 文件 / 改动，一次只开一个。
 // 「改动」= 这段对话用补丁改的文件；本次打开页面后第一次出现改动时自动弹开一次，之后不抢焦点。
 // 「文件」= 那台电脑上的文件树（0022，经代理服务流），当前项目默认展开，点文件看内容；没有电脑就说明。
-// 「终端」要等本地代理开终端通道（账 83），先占位说明。
+// 不设「终端」：回环直连等于网页里嵌一个本机终端，用户自己开就行，为这点方便担云端代码驱动本机 shell 的风险不划算（所有者 2026-10-23 去掉，账 83 作废）。
 // 「工作底稿」= 这段对话每请一次专家写的底稿，按次分开列（所有者 2026-10-14）；专家交回那一行能直接切过来。
-// 项目里的聊天与项目页也挂它，只摆「文件」「终端」（0017：聊天挂在项目下可只读看项目文件；所有者 2026-10-18）。
+// 项目里的聊天与项目页也挂它，只摆「文件」（0017：聊天挂在项目下可只读看项目文件；所有者 2026-10-18）。
 // 窗口窄于 1024 时窄轨照留，展开后浮在上层，不再整个藏起来。
 export function WorkSidePanel({
   files,
@@ -50,7 +49,7 @@ export function WorkSidePanel({
   conversation?: string | null
   // 页面要求切到某一栏（at 每次不同，同一栏也能再切一次）
   request?: { tab: SideTab; at: number } | null
-  // 只摆这几栏（聊天、项目页：文件与终端）；不给就按页面摆全
+  // 只摆这几栏（聊天、项目页：文件）；不给就按页面摆全
   only?: readonly SideTab[] | null
 }) {
   const t = useTranslations('work')
@@ -89,7 +88,6 @@ export function WorkSidePanel({
       : []),
     { key: 'files' as const, icon: <FilesIcon className="size-4" /> },
     { key: 'changes' as const, icon: <GitCompareIcon className="size-4" /> },
-    { key: 'terminal' as const, icon: <TerminalIcon className="size-4" /> },
   ].filter((each) => only === null || only.includes(each.key))
   // 右栏宽度可拖（所有者 2026-10-17）；没拖过是 384px
   const panes = usePaneWidths()
@@ -215,23 +213,16 @@ export function WorkSidePanel({
               onOpen={setPaper}
             />
           )
-        ) : tab === 'files' ? (
-          opened && environment ? (
-            <OpenedFile environment={environment} path={opened} onBack={() => setOpened(null)} />
-          ) : (
-            <section aria-label={t('panel.files')}>
-              <FileTree
-                environment={environment}
-                directory={directory}
-                selected={opened}
-                onSelect={setOpened}
-              />
-            </section>
-          )
+        ) : opened && environment ? (
+          <OpenedFile environment={environment} path={opened} onBack={() => setOpened(null)} />
         ) : (
-          <section aria-label={t(`panel.${tab}`)}>
-            <h2 className="text-sm font-medium">{t(`panel.${tab}`)}</h2>
-            <p className="text-muted-foreground mt-2 leading-6">{t(`panel.${tab}Soon`)}</p>
+          <section aria-label={t('panel.files')}>
+            <FileTree
+              environment={environment}
+              directory={directory}
+              selected={opened}
+              onSelect={setOpened}
+            />
           </section>
         )}
       </div>

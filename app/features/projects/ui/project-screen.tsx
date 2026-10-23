@@ -232,7 +232,7 @@ export function ProjectScreen({ project: id }: { project: string }) {
         directory={project.directory}
         live={false}
         environment={project.environment_id}
-        only={['files', 'terminal']}
+        only={['files']}
       />
 
       <Dialog open={archiving} onOpenChange={setArchiving}>

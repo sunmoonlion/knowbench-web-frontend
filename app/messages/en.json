@@ -500,9 +500,7 @@
     "panel": {
       "dossier": "Work papers",
       "files": "Files",
-      "changes": "Changes",
-      "terminal": "Terminal",
-      "terminalSoon": "This will be a terminal in the project folder on your computer. It waits for the local agent's terminal channel (ledger 83)."
+      "changes": "Changes"
     },
     "dossier": {
       "lead": "Each time this conversation asks an expert, its papers go into their own folder under 底稿/对话-…/ in the project directory, newest first. The files live on your computer and are read from there.",
