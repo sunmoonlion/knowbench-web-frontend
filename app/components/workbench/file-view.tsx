@@ -14,19 +14,19 @@ import { Markdown } from '@/components/common/markdown'
 import { Button } from '@/components/ui/button'
 import { exportExcel, exportWord, hasTables, printRendered } from '@/lib/workbench/export/actions'
 import { baseName, decodeText, isMarkdown, sizeText } from '@/lib/workbench/file-tree'
-import type { LocalAgent } from '@/lib/workbench/local-agent'
+import { isRemote, type LinkHandle } from '@/lib/workbench/local-agent'
 import { useLocalFile } from '@/lib/workbench/queries'
 
 import { ServiceProblem } from './file-tree'
 
-// 点开一个文件看内容（0022 乙案，直接从本机代理读，不经云端）：≤ 1 MiB 的文本直接看，Markdown 渲染；二进制只给大小。只读。
+// 点开一个文件看内容（0022 乙案；在装有本地 link 的电脑上直接从本机读、不经云端，在远程登录 link 的电脑上经工作台转发，账 165）：≤ 1 MiB 的文本直接看，Markdown 渲染；二进制只给大小。只读。
 // 完整读到的 Markdown 可以导出成 Word、Excel（只含表格）、PDF（0031），都在浏览器里做。
 export function FileView({
   agent,
   path,
   onBack,
 }: {
-  agent: LocalAgent
+  agent: LinkHandle
   path: string
   onBack: () => void
 }) {
@@ -51,6 +51,9 @@ export function FileView({
           </span>
         ) : null}
       </header>
+      {isRemote(agent) ? (
+        <p className="text-muted-foreground mb-2 text-xs leading-5">{t('files.remoteNote')}</p>
+      ) : null}
       {exportable !== null ? <ExportBar text={exportable} path={path} rendered={rendered} /> : null}
       {file.isPending ? (
         <p className="text-muted-foreground flex items-center gap-2">

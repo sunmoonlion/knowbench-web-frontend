@@ -64,7 +64,12 @@ export function getJson<T>(schema: z.ZodType<T>, path: string, fetchImpl: Fetch 
 export function sendJson<T>(
   schema: z.ZodType<T>,
   path: string,
-  options: { csrfToken: string; method?: 'POST' | 'PATCH' | 'PUT' | 'DELETE'; body?: unknown },
+  options: {
+    csrfToken: string
+    method?: 'POST' | 'PATCH' | 'PUT' | 'DELETE'
+    body?: unknown
+    signal?: AbortSignal
+  },
   fetchImpl: Fetch = fetch,
 ) {
   return exchange(
@@ -74,6 +79,7 @@ export function sendJson<T>(
       method: options.method ?? 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': options.csrfToken },
       body: JSON.stringify(options.body ?? {}),
+      signal: options.signal,
     },
     fetchImpl,
   )

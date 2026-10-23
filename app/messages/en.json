@@ -532,12 +532,16 @@
       "problem": {
         "no_agent_here": "No local link is running on the computer you are using, so files cannot be shown. Files are only visible on the computer that runs the local link; they never go through the cloud.",
         "other_account": "The local link on this computer is assigned to another account.",
-        "agent_offline": "No local link has a token for this account yet.",
+        "agent_offline": "The local link on the computer is not connected (or has no token yet), so files cannot be shown.",
         "agent_service_unconfigured": "This site has not enabled local access yet.",
         "ticket_invalid": "The local link did not accept the local access ticket; reload and try again.",
         "keys_unavailable": "The local link could not fetch the site's public key; try again later.",
         "rate_limited": "Too fast; wait a moment.",
-        "other": "Could not read it."
+        "other": "Could not read it.",
+        "agent_outdated": "The local link on that computer is too old to show files.",
+        "agent_busy": "The local link on that computer is busy; try again shortly.",
+        "agent_service_failed": "Could not reach the local link on that computer; try again later.",
+        "outside_whitelist": "This place is not in that computer's whitelist."
       },
       "noLibrary": "This computer has no local library directory yet.",
       "export": {
@@ -548,7 +552,8 @@
         "failed": "Export failed. Please try again.",
         "sheetSource": "Source",
         "notes": "Exported as written in the file; no numbers were changed."
-      }
+      },
+      "remoteNote": "You are not on the computer with the local link: file contents are relayed to you through the cloud and not stored."
     }
   },
   "expert": {
@@ -819,7 +824,9 @@
         "no_agent_here": "Create projects on the computer that runs the local link: the folder is made there, and this computer has no running local link.",
         "other_account": "The local link on this computer belongs to another account; you cannot create projects here.",
         "outdated": "Update the local link on the computer to 0.4.1 to create projects.",
-        "failed": "Could not reach the local link on this computer. Try again later."
+        "failed": "Could not reach the local link on this computer. Try again later.",
+        "remote": "You are not on the computer with the local link: the project is made on that computer, relayed through the cloud.",
+        "remoteOutdated": "Update the local link on that computer to 0.5.2 to create projects from another computer."
       },
       "auth": {
         "title": "This repository needs a login",
@@ -827,7 +834,8 @@
         "username": "User name (optional)",
         "token": "Access token",
         "remember": "Remember on this computer (saved by the computer's git credential manager; not asked again)",
-        "retry": "Clone with this token"
+        "retry": "Clone with this token",
+        "remoteLead": "Git on that computer has no login for this repository. Fill it in on that computer, or enter an access token here: it is relayed through the cloud to the local link on that computer, used once and not stored. Use a short-lived token limited to this repository."
       }
     },
     "page": {

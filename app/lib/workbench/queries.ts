@@ -15,13 +15,17 @@ import {
   workspacesSchema,
 } from '@/contracts/workbench-v2'
 import { credentialSchema, provisionedSandboxSchema } from '@/contracts/workbench-settings'
+import { useWorkbench } from './context'
 import { getJson, seg } from './http'
+import { linkSide } from './link-side'
 import {
+  connectLink,
   connectLocalAgent,
   probeLocalAgent,
   readDirectory,
   readFile,
   readSettings,
+  type LinkHandle,
   type LocalAgent,
 } from './local-agent'
 
@@ -168,7 +172,26 @@ export function useLocalAgent(environment: string | null) {
   })
 }
 
-export function useLocalDirectory(agent: LocalAgent | null, path: string | null) {
+// 看文件、新建项目用的句柄（账 165）：这台是装有本地 link 的电脑就直连回环口，是远程登录 link 的电脑就走工作台转发。
+// 本地知识库、这台电脑上的设置只在装有本地 link 的电脑上用，照旧走 useLocalAgent
+export function useLinkHandle(environment: string | null) {
+  const { csrfToken } = useWorkbench()
+  const presence = useLocalPresence()
+  const local = useLocalLink()
+  const side = linkSide(
+    presence.isSuccess ? (presence.data?.presence ?? null) : presence.isError ? null : undefined,
+    local.isSuccess ? local.data.assigned : local.isError ? null : undefined,
+  )
+  return useQuery({
+    queryKey: [...workbenchKeys.agentService(environment ?? ''), side ?? 'pending'],
+    enabled: environment !== null && side !== undefined,
+    retry: false,
+    staleTime: 30_000,
+    queryFn: () => connectLink(environment!, side!, csrfToken),
+  })
+}
+
+export function useLocalDirectory(agent: LinkHandle | null, path: string | null) {
   return useQuery({
     queryKey: workbenchKeys.directory(agent?.info.userId ?? '', path ?? ''),
     enabled: agent !== null && path !== null,
@@ -178,7 +201,7 @@ export function useLocalDirectory(agent: LocalAgent | null, path: string | null)
   })
 }
 
-export function useLocalFile(agent: LocalAgent | null, path: string | null) {
+export function useLocalFile(agent: LinkHandle | null, path: string | null) {
   return useQuery({
     queryKey: workbenchKeys.file(agent?.info.userId ?? '', path ?? ''),
     enabled: agent !== null && path !== null,

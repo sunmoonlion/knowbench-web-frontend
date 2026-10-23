@@ -15,11 +15,12 @@ import {
 import { Input } from '@/components/ui/input'
 import {
   canMakeProjects,
+  isRemote,
   cloneRepository,
   localProblemCode,
   makeFolder,
 } from '@/lib/workbench/local-agent'
-import { useLocalAgent, useMachines } from '@/lib/workbench/queries'
+import { useLinkHandle, useMachines } from '@/lib/workbench/queries'
 import { cn } from '@/lib/utils'
 
 import { useProjectActions } from '../api/projects'
@@ -74,8 +75,10 @@ export function NewProjectDialog({
   const machine = picked ?? onlyMachine(all)
   const roots = rootsOf(all, machine)
   const workspace = root && roots.includes(root) ? root : roots.length === 1 ? roots[0] : null
-  const local = useLocalAgent(workspace ? machine : null)
+  // 这台是装有本地 link 的电脑就直连回环口；是远程登录 link 的电脑就经工作台转发（账 165）
+  const local = useLinkHandle(workspace ? machine : null)
   const agent = local.data && canMakeProjects(local.data) ? local.data : null
+  const remote = !!local.data && isRemote(local.data)
   const relative = mode === 'clone' && !path.trim() ? repoFolder(url) : path
   const wrong = pathProblem(relative)
   const ready =
@@ -150,8 +153,10 @@ export function NewProjectDialog({
           ? t(`agent.${localProblemCode(local.error)}`)
           : t('agent.failed')
         : !agent
-          ? t('agent.outdated')
-          : null
+          ? t(remote ? 'agent.remoteOutdated' : 'agent.outdated')
+          : remote
+            ? t('agent.remote')
+            : null
 
   return (
     <Dialog open={open} onOpenChange={close}>
@@ -319,7 +324,9 @@ export function NewProjectDialog({
           {mode === 'clone' && asking ? (
             <fieldset className="space-y-3 rounded-lg border p-3">
               <legend className="px-1 text-sm font-medium">{t('auth.title')}</legend>
-              <p className="text-muted-foreground text-[13px]">{t('auth.lead')}</p>
+              <p className="text-muted-foreground text-[13px]">
+                {t(remote ? 'auth.remoteLead' : 'auth.lead')}
+              </p>
               <div>
                 <label htmlFor="project-username" className={label}>
                   {t('auth.username')}

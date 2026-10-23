@@ -532,12 +532,16 @@
       "problem": {
         "no_agent_here": "你现在用的这台电脑上没有在运行的本地 link，看不到文件。文件只能在装着本地 link 的那台电脑上看——它不经过云端。",
         "other_account": "这台电脑上的本地 link 配给的是别的账号。",
-        "agent_offline": "这个账号还没有给哪份本地 link 颁发令牌。",
+        "agent_offline": "装有本地 link 的电脑上，本地 link 没连着（或还没颁发令牌），看不了文件。",
         "agent_service_unconfigured": "这个站点还没开本机访问。",
         "ticket_invalid": "本地 link 没认本机访问票，刷新页面再试。",
         "keys_unavailable": "本地 link 取不到站点公钥，稍后再试。",
         "rate_limited": "点得太快，稍等一下。",
-        "other": "没有读到。"
+        "other": "没有读到。",
+        "agent_outdated": "那台电脑上的本地 link 版本太旧，看不了文件。",
+        "agent_busy": "那台电脑上的本地 link 正忙，稍后再试。",
+        "agent_service_failed": "连不上那台电脑上的本地 link，稍后再试。",
+        "outside_whitelist": "这个位置不在那台电脑的白名单里，看不了。"
       },
       "noLibrary": "这台电脑还没选本地知识库目录。",
       "export": {
@@ -548,7 +552,8 @@
         "failed": "导出没成功，请再试一次。",
         "sheetSource": "出处",
         "notes": "按成稿原样导出，数没有改动。"
-      }
+      },
+      "remoteNote": "你现在用的不是装有本地 link 的那台电脑：文件内容经云端转发给你看，不落盘。"
     }
   },
   "expert": {
@@ -819,7 +824,9 @@
         "no_agent_here": "要在装着本地 link 的那台电脑上新建项目：文件夹建在那台电脑上，你现在用的这台电脑上没有在运行的本地 link。",
         "other_account": "这台电脑上的本地 link 配给的是别的账号，不能在这里新建。",
         "outdated": "电脑上的本地 link 要更新到 0.4.1 才能新建项目。",
-        "failed": "连不上这台电脑上的本地 link，请稍后再试。"
+        "failed": "连不上这台电脑上的本地 link，请稍后再试。",
+        "remote": "你现在用的不是装有本地 link 的那台电脑：项目会建在那台电脑上，经云端转发去做。",
+        "remoteOutdated": "那台电脑上的本地 link 要更新到 0.5.2，才能在别的电脑上新建项目。"
       },
       "auth": {
         "title": "这个仓库要登录",
@@ -827,7 +834,8 @@
         "username": "用户名（可以不填）",
         "token": "访问令牌",
         "remember": "记住在这台电脑上（交给电脑上的 git 凭据管理器保存，下次不再问）",
-        "retry": "用这个令牌拉取"
+        "retry": "用这个令牌拉取",
+        "remoteLead": "那台电脑上的 git 没有这个仓库的登录。可以回到那台电脑上填，或者在这里填一个访问令牌：令牌会经云端转发给那台电脑上的本地 link，只用这一次、不落盘。请用只能访问这个仓库的短期令牌。"
       }
     },
     "page": {

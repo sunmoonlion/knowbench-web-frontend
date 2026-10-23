@@ -24,12 +24,14 @@ let calls: Call[] = []
 let capabilities: string[]
 let agentHere: boolean
 let clone: (body: Record<string, unknown>) => { status: number; body: unknown }
+let serviceCapabilities: string[]
 
 beforeEach(() => {
   calls = []
   capabilities = ['local-fs-v1', 'local-project-v1']
   agentHere = true
   clone = (body) => ({ status: 200, body: { path: body.path, branch: 'main' } })
+  serviceCapabilities = ['service-v1', 'service-projects-v1']
   forgetTicket(ENV)
   vi.stubGlobal(
     'fetch',
@@ -68,6 +70,15 @@ beforeEach(() => {
       if (where === `${LOCAL}/local/v1/projects/folder`)
         return json(200, { path: body.path, created: true })
       if (where === `${LOCAL}/local/v1/projects/clone`) {
+        const answer = clone(body)
+        return json(answer.status, answer.body)
+      }
+      // 远程登录 link 的电脑（账 165）：经工作台转发给那台电脑上的本地 link
+      if (where === `http://testserver/api/workbench/environments/${ENV}/service`)
+        return json(200, { roots: [ROOT], capabilities: serviceCapabilities })
+      if (where === `http://testserver/api/workbench/environments/${ENV}/remote/projects/folder`)
+        return json(200, { path: body.path, created: true })
+      if (where === `http://testserver/api/workbench/environments/${ENV}/remote/projects/clone`) {
         const answer = clone(body)
         return json(answer.status, answer.body)
       }
@@ -165,10 +176,55 @@ describe('新建项目：先请电脑上的代理建好，再登记（0024）', 
     expect(calls.some((each) => each.url.endsWith('/api/workbench/projects'))).toBe(false)
   })
 
-  it('这台电脑上没有代理、或代理是旧版：说清楚，不能建', async () => {
+  it('这台电脑上没有本地 link：是远程登录 link 的电脑，项目经工作台转发建在那台电脑上', async () => {
     agentHere = false
+    const onCreated = dialog()
+    expect(await screen.findByText(t.agent.remote)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText(t.path), { target: { value: '财务预测' } })
+    const submit = screen.getByRole('button', { name: t.submit })
+    await waitFor(() => expect(submit).toBeEnabled())
+    fireEvent.click(submit)
+    await waitFor(() => expect(onCreated).toHaveBeenCalledWith(PROJECT))
+    expect(posts().map((each) => each.url)).toEqual([
+      `http://testserver/api/workbench/environments/${ENV}/remote/projects/folder`,
+      'http://testserver/api/workbench/projects',
+    ])
+  })
+
+  it('远程拉私有仓库：先用那台电脑 git 现有的登录；要令牌时提醒令牌经云端转发', async () => {
+    agentHere = false
+    let tries = 0
+    clone = (body) =>
+      ++tries === 1
+        ? { status: 401, body: { code: 'auth_required', message: 'auth_required' } }
+        : { status: 200, body: { path: body.path, branch: 'main' } }
+    const onCreated = dialog()
+    fireEvent.click(await screen.findByRole('button', { name: t.modeClone }))
+    type(t.repo, 'https://example.com/team/report.git')
+    const submit = screen.getByRole('button', { name: t.submitClone })
+    await waitFor(() => expect(submit).toBeEnabled())
+    fireEvent.click(submit)
+    expect(await screen.findByText(t.auth.remoteLead)).toBeInTheDocument()
+    expect(screen.queryByText(t.auth.lead)).toBeNull()
+    type(t.auth.token, 'tok-secret')
+    fireEvent.click(screen.getByRole('button', { name: t.auth.retry }))
+    await waitFor(() => expect(onCreated).toHaveBeenCalledWith(PROJECT))
+    const clones = posts().filter((each) => each.url.endsWith('/remote/projects/clone'))
+    expect(clones.map((each) => each.body)).toEqual([
+      { url: 'https://example.com/team/report.git', path: `${ROOT}\\report` },
+      {
+        url: 'https://example.com/team/report.git',
+        path: `${ROOT}\\report`,
+        auth: { token: 'tok-secret', remember: false },
+      },
+    ])
+  })
+
+  it('远程而那台电脑上的本地 link 是旧版：请更新到 0.5.2，不能建', async () => {
+    agentHere = false
+    serviceCapabilities = ['service-v1']
     dialog()
-    expect(await screen.findByText(t.agent.no_agent_here)).toBeInTheDocument()
+    expect(await screen.findByText(t.agent.remoteOutdated)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: t.submit })).toBeDisabled()
     expect(posts()).toEqual([])
   })

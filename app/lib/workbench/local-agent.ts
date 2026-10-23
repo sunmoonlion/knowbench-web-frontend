@@ -129,6 +129,79 @@ export async function ticketFor(
 
 export type LocalAgent = { port: number; ticket: LocalTicket; info: LocalInfo }
 
+// 浏览器不在装有本地 link 的电脑上（远程登录 link 的电脑，账 165、会合点备忘第十一节）：看文件、新建项目改走
+// 工作台 → 会合点服务流 → 那台电脑上的本地 link。内容经云端转发、不落盘，页面要提醒。本地知识库目录不经这条路。
+export type RemoteLink = {
+  remote: true
+  environment: string
+  csrfToken: string
+  info: LocalInfo
+}
+export type LinkHandle = LocalAgent | RemoteLink
+export const isRemote = (link: LinkHandle): link is RemoteLink => 'remote' in link
+
+const serviceHelloSchema = z
+  .object({ roots: z.array(z.string()), capabilities: z.array(z.string()).optional() })
+  .loose()
+const SERVICE_PROJECTS = 'service-projects-v1'
+
+export async function connectRemoteLink(
+  environment: string,
+  csrfToken: string,
+  fetchImpl: Fetch = fetch,
+): Promise<RemoteLink> {
+  const hello = await getJson(
+    serviceHelloSchema,
+    `/api/workbench/environments/${seg(environment)}/service`,
+    fetchImpl,
+  )
+  return {
+    remote: true,
+    environment,
+    csrfToken,
+    info: {
+      userId: `remote:${environment}`,
+      roots: hello.roots,
+      libraryDir: null,
+      // 0.5.2 起本地 link 的服务流能新建项目；老版本只能看
+      capabilities: (hello.capabilities ?? []).includes(SERVICE_PROJECTS)
+        ? [PROJECT_CAPABILITY]
+        : [],
+    },
+  }
+}
+
+// 这台是装有本地 link 的电脑就直连回环口；探到的本地 link 不是这个账号的、或这台根本没有，就走远程（账 165）
+export async function connectLink(
+  environment: string,
+  side: 'local' | 'remote' | 'try-local',
+  csrfToken: string,
+  fetchImpl: Fetch = fetch,
+): Promise<LinkHandle> {
+  if (side === 'remote') return connectRemoteLink(environment, csrfToken, fetchImpl)
+  try {
+    return await connectLocalAgent(environment, fetchImpl)
+  } catch (error) {
+    if (error instanceof LocalAgentError && ['no_agent_here', 'other_account'].includes(error.code))
+      return connectRemoteLink(environment, csrfToken, fetchImpl)
+    throw error
+  }
+}
+
+const remoteBase = (link: RemoteLink) =>
+  `/api/workbench/environments/${seg(link.environment)}/remote`
+const remoteFileSchema = z
+  .object({
+    content: z.string(),
+    size: z.number(),
+    mtime: z.number().nullable().optional(),
+    eof: z.boolean(),
+  })
+  .loose()
+const remoteDirectorySchema = z
+  .object({ entries: directorySchema.shape.entries, truncated: z.boolean().optional() })
+  .loose()
+
 // 探口 → 要票 → 问代理是谁。代理接的不是这个账号就说明白，不装作能看
 export async function connectLocalAgent(
   environment: string,
@@ -193,11 +266,19 @@ async function localJson<T>(
   return parsed.data
 }
 
-export function readDirectory(
-  agent: LocalAgent,
+export async function readDirectory(
+  agent: LinkHandle,
   path: string,
   fetchImpl: Fetch = fetch,
 ): Promise<Directory> {
+  if (isRemote(agent)) {
+    const listed = await getJson(
+      remoteDirectorySchema,
+      `${remoteBase(agent)}/fs/dir?path=${encodeURIComponent(path)}`,
+      fetchImpl,
+    )
+    return { path, entries: listed.entries, truncated: listed.truncated }
+  }
   return localJson(
     directorySchema,
     agent.port,
@@ -212,11 +293,21 @@ export type FileChunk = { bytes: Uint8Array; size: number; eof: boolean; mtime: 
 
 // 文件内容是原始字节，不是 base64；总长、是否读完在响应头里
 export async function readFile(
-  agent: LocalAgent,
+  agent: LinkHandle,
   path: string,
   { offset = 0, length = MAX_READ_BYTES }: { offset?: number; length?: number } = {},
   fetchImpl: Fetch = fetch,
 ): Promise<FileChunk> {
+  if (isRemote(agent)) {
+    // 服务流里是 base64（和本地 link 的 fs/readFile 一样）
+    const chunk = await getJson(
+      remoteFileSchema,
+      `${remoteBase(agent)}/fs/file?path=${encodeURIComponent(path)}&offset=${offset}&length=${length}`,
+      fetchImpl,
+    )
+    const bytes = Uint8Array.from(atob(chunk.content), (c) => c.charCodeAt(0))
+    return { bytes, size: chunk.size, eof: chunk.eof, mtime: chunk.mtime ?? null }
+  }
   const response = await localFetch(
     agent.port,
     agent.ticket,
@@ -276,16 +367,24 @@ export function writeSettings(
 
 // 新建项目（0024）：代理在工作区里建好文件夹、或拉好仓库，网页再去工作台登记。代理是 0.4.1 起才有这两个口
 export const PROJECT_CAPABILITY = 'local-project-v1'
-export const canMakeProjects = (agent: LocalAgent) =>
+export const canMakeProjects = (agent: LinkHandle) =>
   (agent.info.capabilities ?? []).includes(PROJECT_CAPABILITY)
 
 export function makeFolder(
-  agent: LocalAgent,
+  agent: LinkHandle,
   path: string,
   fetchImpl: Fetch = fetch,
 ): Promise<{ path: string; created: boolean }> {
+  const schema = z.object({ path: z.string(), created: z.boolean() }).loose()
+  if (isRemote(agent))
+    return sendJson(
+      schema,
+      `${remoteBase(agent)}/projects/folder`,
+      { csrfToken: agent.csrfToken, body: { path } },
+      fetchImpl,
+    )
   return localJson(
-    z.object({ path: z.string(), created: z.boolean() }).loose(),
+    schema,
     agent.port,
     agent.ticket,
     '/local/v1/projects/folder',
@@ -300,16 +399,26 @@ export function makeFolder(
 
 export type CloneAuth = { username?: string; token: string; remember?: boolean }
 
-// 令牌只发往 127.0.0.1 上的代理，用这一次；不经工作台。拉大仓库要几分钟，取消就断开请求，代理那头停 git、删半截
+// 装有本地 link 的电脑上：令牌只发往 127.0.0.1 上的本地 link，用这一次，不经工作台。远程登录 link 的电脑上：先不带令牌
+// （用那台电脑上 git 现有的登录）；要令牌时经工作台转发、不落盘，页面先提醒（账 165）。拉大仓库要几分钟，取消就断开请求：
+// 回环口那头本地 link 停 git、删半截；远程时只是不再等，那台电脑上可能还在拉
 export async function cloneRepository(
-  agent: LocalAgent,
+  agent: LinkHandle,
   request: { url: string; path: string; auth?: CloneAuth },
   signal?: AbortSignal,
   fetchImpl: Fetch = fetch,
 ): Promise<{ path: string; branch: string | null }> {
+  const schema = z.object({ path: z.string(), branch: z.string().nullable() }).loose()
   try {
+    if (isRemote(agent))
+      return await sendJson(
+        schema,
+        `${remoteBase(agent)}/projects/clone`,
+        { csrfToken: agent.csrfToken, body: request, signal },
+        fetchImpl,
+      )
     return await localJson(
-      z.object({ path: z.string(), branch: z.string().nullable() }).loose(),
+      schema,
       agent.port,
       agent.ticket,
       '/local/v1/projects/clone',

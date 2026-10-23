@@ -20,12 +20,13 @@ import {
   treeRoots,
   type TreeRoot,
 } from '@/lib/workbench/file-tree'
-import { localProblemCode, type LocalAgent } from '@/lib/workbench/local-agent'
-import { useLocalAgent, useLocalDirectory } from '@/lib/workbench/queries'
+import { isRemote, localProblemCode, type LinkHandle } from '@/lib/workbench/local-agent'
+import { useLinkHandle, useLocalAgent, useLocalDirectory } from '@/lib/workbench/queries'
 import { cn } from '@/lib/utils'
 
 // 右边栏「文件」（0017 §五、0022 乙案）：根是那台电脑的白名单目录加本地知识库目录，当前项目默认展开，
-// 目录点开才去读——浏览器直接问本机 127.0.0.1 上的代理，文件不经云端。只读。
+// 目录点开才去读。只读。浏览器在装有本地 link 的电脑上：直接问本机 127.0.0.1 上的本地 link，不经云端；
+// 在远程登录 link 的电脑上：经工作台转发，内容经云端、不落盘，顶上提醒一句（账 165）。本地知识库只在本机看。
 // 这台电脑上没代理 / 接的是别的账号 / 没配对 时各说一句，不装作空。
 export function FileTree({
   environment,
@@ -42,7 +43,9 @@ export function FileTree({
   scope?: 'all' | 'library'
 }) {
   const t = useTranslations('work')
-  const link = useLocalAgent(environment)
+  const local = useLocalAgent(scope === 'library' ? environment : null)
+  const anywhere = useLinkHandle(scope === 'library' ? null : environment)
+  const link = scope === 'library' ? local : anywhere
   if (environment === null) {
     return <p className="text-muted-foreground leading-6">{t('files.noComputer')}</p>
   }
@@ -68,19 +71,24 @@ export function FileTree({
     )
   }
   return (
-    <ul className="space-y-1" role="tree" aria-label={t('panel.files')}>
-      {roots.map((root) => (
-        <RootNode
-          key={root.path}
-          agent={link.data}
-          root={root}
-          expand={pathsToExpand(root.path, directory)}
-          selected={selected}
-          onSelect={onSelect}
-          openByDefault={root.kind === 'workspace' || scope === 'library'}
-        />
-      ))}
-    </ul>
+    <>
+      {isRemote(link.data) ? (
+        <p className="text-muted-foreground mb-2 text-xs leading-5">{t('files.remoteNote')}</p>
+      ) : null}
+      <ul className="space-y-1" role="tree" aria-label={t('panel.files')}>
+        {roots.map((root) => (
+          <RootNode
+            key={root.path}
+            agent={link.data}
+            root={root}
+            expand={pathsToExpand(root.path, directory)}
+            selected={selected}
+            onSelect={onSelect}
+            openByDefault={root.kind === 'workspace' || scope === 'library'}
+          />
+        ))}
+      </ul>
+    </>
   )
 }
 
@@ -95,6 +103,10 @@ export function ServiceProblem({ error }: { error: unknown }) {
     'ticket_invalid',
     'keys_unavailable',
     'rate_limited',
+    'agent_outdated',
+    'agent_busy',
+    'agent_service_failed',
+    'outside_whitelist',
   ]
   return (
     <p role="alert" className="text-muted-foreground leading-6">
@@ -111,7 +123,7 @@ function RootNode({
   onSelect,
   openByDefault,
 }: {
-  agent: LocalAgent
+  agent: LinkHandle
   root: TreeRoot
   expand: string[]
   selected: string | null
@@ -156,7 +168,7 @@ function DirNode({
   onSelect,
   depth,
 }: {
-  agent: LocalAgent
+  agent: LinkHandle
   path: string
   label: React.ReactNode
   initiallyOpen: boolean
@@ -244,7 +256,7 @@ function EntryNode({
   onSelect,
   depth,
 }: {
-  agent: LocalAgent
+  agent: LinkHandle
   parent: string
   entry: DirectoryEntry
   expand: string[]

@@ -20,7 +20,7 @@ import { ChangesPanel } from './changes-panel'
 import { DossierPanel } from './dossier-panel'
 import { FileTree, ServiceProblem } from './file-tree'
 import { FileView } from './file-view'
-import { useLocalAgent } from '@/lib/workbench/queries'
+import { useLinkHandle } from '@/lib/workbench/queries'
 
 export type SideTab = 'dossier' | 'files' | 'changes'
 
@@ -240,7 +240,7 @@ function OpenedFile({
   path: string
   onBack: () => void
 }) {
-  const link = useLocalAgent(environment)
+  const link = useLinkHandle(environment)
   if (!link.data) return link.error ? <ServiceProblem error={link.error} /> : null
   return <FileView agent={link.data} path={path} onBack={onBack} />
 }

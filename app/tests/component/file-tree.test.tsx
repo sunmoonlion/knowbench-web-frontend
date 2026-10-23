@@ -124,8 +124,10 @@ describe('右边栏「文件」：直接问本机代理，文件不经云端', (
     expect(within(tree).getByText('本地知识库')).toBeInTheDocument()
     expect(await within(tree).findByText('笔记.md')).toBeInTheDocument()
     expect(within(tree).getByText('README.md')).toBeInTheDocument()
-    // 文件内容只向 127.0.0.1 要，工作台那边只被要了一张票
-    const cloud = seen.filter((each) => !each.origin).map((each) => each.url)
+    // 文件内容只向 127.0.0.1 要，工作台那边只被要了一张票（另有一次问「配给当前账号的那份本地 link」，账 143）
+    const cloud = seen
+      .filter((each) => !each.origin && !each.url.endsWith('/api/workbench/local-link'))
+      .map((each) => each.url)
     expect(cloud).toEqual([`http://testserver/api/workbench/environments/${ENV}/local-ticket`])
     // 每一次敲代理都带着票；探口那次不用
     for (const each of seen.filter((each) => each.origin && !each.url.endsWith('/presence'))) {
@@ -221,22 +223,60 @@ describe('右边栏「文件」：直接问本机代理，文件不经云端', (
     expect(aside.style.width).toBe('384px')
   })
 
-  it('这台电脑上没有代理：说明白，不去要票', async () => {
+  // 账 165：浏览器不在装有本地 link 的电脑上，看文件改走工作台转发（经云端、不落盘），顶上提醒；不去要回环口的票
+  const remote = () => {
+    answers[`http://testserver/api/workbench/environments/${ENV}/service`] = {
+      status: 200,
+      body: { agent: 'sunmoon-agent', roots: ['C:\\r'], capabilities: ['service-v1'] },
+    }
+    answers[`http://testserver/api/workbench/environments/${ENV}/remote/fs/dir`] = (url) => ({
+      status: 200,
+      body: {
+        entries:
+          url.searchParams.get('path') === 'C:\\r'
+            ? [{ name: '远程.md', type: 'file', size: 3 }]
+            : [],
+        truncated: false,
+      },
+    })
+  }
+
+  it('这台电脑上没有本地 link：是远程登录 link 的电脑，经工作台转发看，提醒内容经云端', async () => {
     delete answers[`${LOCAL}/presence`]
+    remote()
     panel(ENV, null)
     fireEvent.click(screen.getByRole('button', { name: '文件' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('没有在运行的本地 link')
+    const tree = await screen.findByRole('tree', { name: '文件' })
+    expect(await within(tree).findByText('远程.md')).toBeInTheDocument()
+    expect(screen.getByText(messages.work.files.remoteNote)).toBeInTheDocument()
+    // 本地知识库不经这条路
+    expect(within(tree).queryByText('本地知识库')).toBeNull()
     expect(seen.some((each) => each.url.includes('local-ticket'))).toBe(false)
+    expect(seen.some((each) => each.url.includes('/remote/fs/dir?path='))).toBe(true)
   })
 
-  it('代理接的是别的账号：说明白', async () => {
+  it('本机本地 link 配给的是别的账号：对这个账号也是远程登录 link 的电脑', async () => {
     answers[`${LOCAL}/local/v1/info`] = {
       status: 200,
       body: { userId: 'u-someone-else', roots: ['C:\\r'] },
     }
+    remote()
     panel(ENV, null)
     fireEvent.click(screen.getByRole('button', { name: '文件' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('别的账号')
+    expect(await screen.findByText(messages.work.files.remoteNote)).toBeInTheDocument()
+  })
+
+  it('远程时那台电脑上的本地 link 没连着：说明白', async () => {
+    delete answers[`${LOCAL}/presence`]
+    answers[`http://testserver/api/workbench/environments/${ENV}/service`] = {
+      status: 503,
+      body: { code: 'agent_offline', message: 'agent offline' },
+    }
+    panel(ENV, null)
+    fireEvent.click(screen.getByRole('button', { name: '文件' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      messages.work.files.problem.agent_offline,
+    )
   })
 
   it('收起的右栏，点顶上的展开钮能展开，回到收起前那一栏（所有者 2026-10-18）', async () => {
