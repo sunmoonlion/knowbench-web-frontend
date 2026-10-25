@@ -1043,6 +1043,7 @@
       "collect": "Collected",
       "purchase": "Bought"
     },
+    "noResale": "No resale",
     "error": {
       "inUse": "This file is in use by an expert or a conversation; delete it when that is done.",
       "typeNotAllowed": "Only PDF, Excel (xlsx, xls), CSV, text and Markdown are accepted.",

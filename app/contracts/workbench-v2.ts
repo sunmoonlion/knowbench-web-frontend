@@ -659,6 +659,7 @@ export const cloudItemSchema = z
     sha256: z.string(),
     origin: z.enum(['upload', 'collect', 'purchase']),
     created_at: z.string(),
+    no_resale: z.boolean().optional(),
   })
   .loose()
 export type CloudItem = z.infer<typeof cloudItemSchema>

@@ -113,6 +113,11 @@ export function LibraryScreen() {
                 <span className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 text-xs">
                   {t(`origin.${item.origin}`)}
                 </span>
+                {item.no_resale ? (
+                  <span className="shrink-0 rounded border px-1.5 py-0.5 text-xs">
+                    {t('noResale')}
+                  </span>
+                ) : null}
                 <span className="min-w-0 flex-1 truncate font-medium">{item.name}</span>
                 <span className="text-muted-foreground shrink-0 text-right text-[13px]">
                   {[

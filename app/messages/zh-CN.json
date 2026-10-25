@@ -1043,6 +1043,7 @@
       "collect": "代采",
       "purchase": "买来"
     },
+    "noResale": "不许转卖",
     "error": {
       "inUse": "这份资料正被用着（请专家或对话里选用了），用完再删。",
       "typeNotAllowed": "只收 PDF、Excel（xlsx、xls）、CSV、文本和 Markdown。",
