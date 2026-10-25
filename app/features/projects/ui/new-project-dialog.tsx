@@ -118,7 +118,12 @@ export function NewProjectDialog({
             url: url.trim(),
             path: directory,
             auth: asking
-              ? { token, remember, ...(username.trim() ? { username: username.trim() } : {}) }
+              ? {
+                  token,
+                  // 远程：令牌只用这一次、不落盘，不问记不记住（Fable 评审 P1-4）
+                  ...(remote ? {} : { remember }),
+                  ...(username.trim() ? { username: username.trim() } : {}),
+                }
               : undefined,
           },
           controller.signal,
@@ -350,15 +355,17 @@ export function NewProjectDialog({
                   onChange={(event) => setToken(event.target.value)}
                 />
               </div>
-              <label className="flex items-start gap-2 text-[13px]">
-                <input
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(event) => setRemember(event.target.checked)}
-                  className="mt-0.5"
-                />
-                {t('auth.remember')}
-              </label>
+              {remote ? null : (
+                <label className="flex items-start gap-2 text-[13px]">
+                  <input
+                    type="checkbox"
+                    checked={remember}
+                    onChange={(event) => setRemember(event.target.checked)}
+                    className="mt-0.5"
+                  />
+                  {t('auth.remember')}
+                </label>
+              )}
             </fieldset>
           ) : null}
 

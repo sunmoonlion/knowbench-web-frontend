@@ -206,6 +206,8 @@ describe('新建项目：先请电脑上的代理建好，再登记（0024）', 
     fireEvent.click(submit)
     expect(await screen.findByText(t.auth.remoteLead)).toBeInTheDocument()
     expect(screen.queryByText(t.auth.lead)).toBeNull()
+    // 远程：令牌只用这一次、不落盘，不问记不记住（Fable 评审 P1-4）
+    expect(screen.queryByLabelText(t.auth.remember)).toBeNull()
     type(t.auth.token, 'tok-secret')
     fireEvent.click(screen.getByRole('button', { name: t.auth.retry }))
     await waitFor(() => expect(onCreated).toHaveBeenCalledWith(PROJECT))
@@ -215,7 +217,7 @@ describe('新建项目：先请电脑上的代理建好，再登记（0024）', 
       {
         url: 'https://example.com/team/report.git',
         path: `${ROOT}\\report`,
-        auth: { token: 'tok-secret', remember: false },
+        auth: { token: 'tok-secret' },
       },
     ])
   })
