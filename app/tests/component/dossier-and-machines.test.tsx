@@ -113,6 +113,26 @@ describe('我的电脑', () => {
     ).toBeVisible()
   })
 
+  it('机器离线：能移除这台电脑（账 179），连着的没有这个按钮', async () => {
+    scenario = 'offline'
+    page(<MachinesScreen />)
+    const button = await screen.findByRole('button', { name: '移除这台电脑' })
+    button.click()
+    await waitFor(() =>
+      expect(
+        calls.some(
+          (c) => c.method === 'DELETE' && /\/api\/workbench\/environments\/[^/]+$/.test(c.path),
+        ),
+      ).toBe(true),
+    )
+  })
+
+  it('机器在线：没有「移除这台电脑」', async () => {
+    page(<MachinesScreen />)
+    await screen.findByText('本地 link 连着')
+    expect(screen.queryByRole('button', { name: '移除这台电脑' })).toBeNull()
+  })
+
   it('还没有电脑：照五步做', async () => {
     scenario = 'empty'
     page(<MachinesScreen />)

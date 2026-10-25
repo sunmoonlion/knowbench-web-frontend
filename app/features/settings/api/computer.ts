@@ -58,7 +58,12 @@ export function issueInstallCommand(
   csrfToken: string,
   fetchImpl: Fetch = fetch,
 ): Promise<InstallCommand> {
-  return sendJson(installCommandSchema, '/api/workbench/agent/install-command', { csrfToken }, fetchImpl)
+  return sendJson(
+    installCommandSchema,
+    '/api/workbench/agent/install-command',
+    { csrfToken },
+    fetchImpl,
+  )
 }
 export function lookupPairing(
   csrfToken: string,
@@ -90,6 +95,17 @@ export function denyPairing(csrfToken: string, id: string, fetchImpl: Fetch = fe
     pairingDecisionSchema,
     `/api/workbench/agent-pairing/${encodeURIComponent(id)}/deny`,
     { csrfToken },
+    fetchImpl,
+  )
+}
+
+const removedMachineSchema = z.object({ environment_id: z.string(), removed: z.literal(true) })
+// 账 179：移除一台没连着的电脑（账 175 合并后旧配对的记录也在列表里）；连着的后端回 409
+export function removeMachine(csrfToken: string, id: string, fetchImpl: Fetch = fetch) {
+  return sendJson(
+    removedMachineSchema,
+    `/api/workbench/environments/${encodeURIComponent(id)}`,
+    { csrfToken, method: 'DELETE' },
     fetchImpl,
   )
 }

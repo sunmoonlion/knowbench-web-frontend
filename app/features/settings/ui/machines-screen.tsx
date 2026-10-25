@@ -1,7 +1,7 @@
 'use client'
 
 import { CheckIcon, CircleIcon } from 'lucide-react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useFormatter, useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -12,7 +12,7 @@ import { useMachines } from '@/lib/workbench/queries'
 import { cn } from '@/lib/utils'
 import type { PairingLookup } from '@/contracts/workbench-settings'
 
-import { approvePairing, denyPairing, lookupPairing } from '../api/computer'
+import { approvePairing, denyPairing, lookupPairing, removeMachine } from '../api/computer'
 import { isOnline, progress } from '../model/guide'
 import { formatPairingCode, pairingCodeComplete } from '../model/onboarding'
 import { AgentDownloadPanel, AgentZipFallback } from './agent-download'
@@ -203,6 +203,16 @@ function MachineList() {
   const t = useTranslations('machines')
   const format = useFormatter()
   const machines = useMachines(5000)
+  const { csrfToken } = useWorkbench()
+  const client = useQueryClient()
+  const [removeFailed, setRemoveFailed] = useState<string | null>(null)
+  // 账 179：没连着的电脑可以移除（账 175 合并后旧配对的记录也在列表里）
+  const remove = useMutation({
+    mutationFn: (id: string) => removeMachine(csrfToken, id),
+    onMutate: () => setRemoveFailed(null),
+    onSuccess: () => void client.invalidateQueries({ queryKey: ['workbench'] }),
+    onError: (_error, id) => setRemoveFailed(id),
+  })
   const label = 'text-muted-foreground'
   return (
     // 一个账号同一时刻一台电脑（所有者 2026-10-12 定甲）：这一块就是那台电脑的全部，不另列清单
@@ -236,6 +246,23 @@ function MachineList() {
                 </span>
               </header>
               {online ? null : <p className="text-sm text-amber-700">{t('offlineNote')}</p>}
+              {online ? null : (
+                <p className="text-sm">
+                  <button
+                    type="button"
+                    className="underline underline-offset-3 disabled:opacity-50"
+                    disabled={remove.isPending}
+                    onClick={() => remove.mutate(machine.id)}
+                  >
+                    {remove.isPending && remove.variables === machine.id
+                      ? t('removing')
+                      : t('remove')}
+                  </button>
+                  {removeFailed === machine.id ? (
+                    <span className="ml-2 text-red-700">{t('removeFailed')}</span>
+                  ) : null}
+                </p>
+              )}
               <dl className="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-1 text-sm">
                 <dt className={label}>{t('agent')}</dt>
                 <dd>{machine.agent_version ?? t('unknown')}</dd>
