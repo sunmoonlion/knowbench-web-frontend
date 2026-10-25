@@ -536,6 +536,7 @@
         "no_agent_here": "No local link is running on the computer you are using, so files cannot be shown. Files are only visible on the computer that runs the local link; they never go through the cloud.",
         "other_account": "The local link on this computer is assigned to another account.",
         "agent_offline": "The local link on the computer is not connected (or has no token yet), so files cannot be shown.",
+        "machine_not_connected": "This computer is not connected right now: the local link connected for you is on another computer. Open the local link on this one, or choose the one that is connected.",
         "agent_service_unconfigured": "This site has not enabled local access yet.",
         "ticket_invalid": "The local link did not accept the local access ticket; reload and try again.",
         "keys_unavailable": "The local link could not fetch the site's public key; try again later.",
@@ -824,6 +825,7 @@
       "machineOffline": " (local link not connected)",
       "problem": {
         "absolute": "The subfolder must be relative to the workspace, not an absolute path.",
+        "machine_not_connected": "This computer is not connected right now: the local link connected for you is on another computer.",
         "upward": "The subfolder must not go upwards (no ..).",
         "project_exists": "This folder is already a project.",
         "project_path_invalid": "This subfolder is not valid.",

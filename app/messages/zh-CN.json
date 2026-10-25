@@ -536,6 +536,7 @@
         "no_agent_here": "你现在用的这台电脑上没有在运行的本地 link，看不到文件。文件只能在装着本地 link 的那台电脑上看——它不经过云端。",
         "other_account": "这台电脑上的本地 link 配给的是别的账号。",
         "agent_offline": "装有本地 link 的电脑上，本地 link 没连着（或还没颁发令牌），看不了文件。",
+        "machine_not_connected": "选的这台电脑现在没连着：你此刻连着的是另一台电脑上的本地 link。到这台电脑上打开本地 link，或者换选连着的那台。",
         "agent_service_unconfigured": "这个站点还没开本机访问。",
         "ticket_invalid": "本地 link 没认本机访问票，刷新页面再试。",
         "keys_unavailable": "本地 link 取不到站点公钥，稍后再试。",
@@ -824,6 +825,7 @@
       "machineOffline": "（本地 link 没连着）",
       "problem": {
         "absolute": "子目录要写相对工作区的路径，不能是绝对路径。",
+        "machine_not_connected": "选的这台电脑现在没连着：你此刻连着的是另一台电脑上的本地 link。",
         "upward": "子目录不能往上走（不能有 ..）。",
         "project_exists": "这个目录已经是一个项目了。",
         "project_path_invalid": "这个子目录写得不对。",
