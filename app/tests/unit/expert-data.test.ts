@@ -66,11 +66,13 @@ describe('选数据', () => {
     ).toEqual(['statements'])
   })
 
-  it('上次选的按这一版的声明放回去；交给后端按声明的次序', () => {
+  it('上次选的按这一版的声明放回去；交给后端按声明的次序；本地的不再带上', () => {
     const picks = picksFromLast(
       [reports, tables],
       [
+        // 本地知识库已退役（SDD 0043 第 4.1 节）
         { need: 'statements', source: 'local', name: 'x.csv', path: 'C:\\kb\\x.csv' },
+        { need: 'statements', source: 'cloud', name: 'y.csv', item_id: 'i2' },
         { need: 'gone', source: 'cloud', name: 'old.pdf', item_id: 'i0' },
         { need: 'annual_reports', source: 'cloud', name: 'a.pdf', item_id: 'i1' },
       ],
@@ -78,7 +80,7 @@ describe('选数据', () => {
     expect(Object.keys(picks).sort()).toEqual(['annual_reports', 'statements'])
     expect(choicesOf([reports, tables], picks)).toEqual([
       { need: 'annual_reports', source: 'cloud', name: 'a.pdf', item_id: 'i1' },
-      { need: 'statements', source: 'local', name: 'x.csv', path: 'C:\\kb\\x.csv' },
+      { need: 'statements', source: 'cloud', name: 'y.csv', item_id: 'i2' },
     ])
   })
 

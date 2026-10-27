@@ -17,10 +17,11 @@ import { useConversationEvents } from '@/lib/workbench/conversation-events'
 import { byFile, timeline } from '@/lib/workbench/timeline'
 import { useClock } from '@/lib/workbench/use-clock'
 
-import { useReview, useRun, useRunActions, useRunStep } from '../api/run'
+import { useReview, useRun, useRunActions, useRunStep, useTaskData } from '../api/run'
 import { shownStep, tokenOf } from '../model/run'
 import { amountText, NowStrip, StepDetail, StepRail } from './parts'
 import { ReviewPanel } from './review-panel'
+import { TaskDataPanel } from './task-data-panel'
 
 // 专家处理中。三栏：步骤、这一步的细节、委托单。
 // 顶上一直摆着：做到第几步、花了多少、现在在干什么、为什么、没有卡住；随时能停。
@@ -31,6 +32,7 @@ export function ExpertRunScreen({ task }: { task: string }) {
   // 每来一条事件就重取一次：步骤的状态、花了多少、现在在干什么都跟着变
   const beat = events.length
   const run = useRun(task, beat)
+  const data = useTaskData(task, beat)
   const act = useRunActions(task)
   const [picked, setPicked] = useState<number | null>(null)
   const [confirming, setConfirming] = useState(false)
@@ -96,6 +98,15 @@ export function ExpertRunScreen({ task }: { task: string }) {
       </header>
 
       {now ? <NowStrip now={now} clock={clock} /> : null}
+      {data.data ? (
+        <TaskDataPanel
+          data={data.data}
+          busy={act.confirmData.isPending || act.declineData.isPending}
+          failed={act.confirmData.isError || act.declineData.isError}
+          onConfirm={() => act.confirmData.mutate()}
+          onDecline={() => act.declineData.mutate()}
+        />
+      ) : null}
       {sheet.chosen_data?.length ? (
         <p
           className="text-muted-foreground shrink-0 truncate border-b px-4 py-1.5 text-xs"

@@ -83,7 +83,8 @@ export function picksFromLast(needs: DataNeed[], last: DataChoice[]): Picks {
   let picks: Picks = {}
   for (const choice of last) {
     const need = needs.find((each) => each.key === choice.need)
-    if (!need) continue
+    // 本地知识库已退役（SDD 0043 第 4.1 节）：上次选的本地文件不再默认带上
+    if (!need || choice.source !== 'cloud') continue
     picks = toggle(picks, need, {
       source: choice.source,
       name: choice.name ?? choice.item_id ?? baseNameOf(choice.path ?? ''),

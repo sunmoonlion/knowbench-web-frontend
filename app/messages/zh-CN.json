@@ -570,7 +570,7 @@
       "spent": "已花 {amount}",
       "estimated": "估算",
       "data": "用的数据：{names}",
-      "dataItem": "{name}（{source, select, cloud {云端} other {本地}}）"
+      "dataItem": "{name}（{source, select, cloud {云端} knowbase {资料库} other {本地}}）"
     },
     "stop": {
       "stopping": "停下中…",
@@ -659,7 +659,29 @@
       "answered": "你已经答复了"
     },
     "loading": "加载中…",
-    "failedToLoad": "没有取到这件委托。"
+    "failedToLoad": "没有取到这件委托。",
+    "data": {
+      "title": "用的数据",
+      "waiting": "在等这几项数据：{items}。数据服务取齐了专家自动接着做。",
+      "waitingPlain": "在等数据服务取数据，取齐了专家自动接着做。",
+      "demand": "进度：{status, select, accepted {已受理} fetching {正在取} ready {已取齐} partial {取到一部分} unsatisfiable {取不到} failed {没取成} cancelled {已取消} other {—}}",
+      "failed": "数据没取到：{reason}",
+      "incomplete": "缺了的可选项（专家照做，结果里会说明）：{items}",
+      "pinned": "钉住的 {count} 份：{names}",
+      "requested": "专家这一步还要：{items}。确认了就去签、去取，专家停在这里等你。",
+      "confirm": "确认，去取",
+      "confirming": "正在确认…",
+      "decline": "不要了，照现有的做",
+      "declined": "这几项不要了",
+      "requestStatus": {
+        "pending": "等你确认",
+        "supplying": "正在取",
+        "done": "已加上",
+        "declined": "不要了",
+        "failed": "没取到"
+      },
+      "problem": "没有办成，请再试一次。"
+    }
   },
   "expertHome": {
     "title": "专家",
@@ -770,6 +792,47 @@
         "excel": "Excel",
         "csv": "CSV",
         "text": "文本"
+      }
+    },
+    "listed": {
+      "title": "要用的数据",
+      "lead": "这位专家要：{needs}。填上要分析的公司，先列出每一样用哪份；缺的会交给数据服务去取，齐了专家自动接着做。",
+      "bound": "专家还自带 {count} 份资料。",
+      "subjects": "要分析的公司",
+      "subjectsHint": "证券代码，如 600519.SH；几家用逗号隔开",
+      "badSubjects": "认不出：{codes}。证券代码写成 600519.SH、000001.SZ、00700.HK 这样。",
+      "list": "列出数据",
+      "listing": "正在列…",
+      "relist": "重新列",
+      "required": "必填",
+      "optional": "可选",
+      "dropped": "不用这一项",
+      "drop": "不用这一项",
+      "undrop": "还是要用",
+      "choose": "选一份",
+      "asListed": "用列出的那份",
+      "pick": "{name}用哪一份",
+      "candidate": "{name}（第 {version} 版）",
+      "fetchNote": "缺的 {count} 项请专家时一并确认，交给数据服务去取；取齐之前专家先等着，齐了自动接着做。",
+      "status": {
+        "resolved": "已有",
+        "to_confirm": "缺，要去取",
+        "ambiguous": "有几份，要选一份",
+        "not_shown": "在 knowbase 里还没放开给 knowbench",
+        "not_collectable": "采不来，要到 knowbase 上传",
+        "waiting": "正在取",
+        "unusable": "不能用"
+      },
+      "problem": {
+        "requiredDropped": "必填的不能不用。",
+        "noSupply": "现在还不能去取，先到 knowbase 上传这一份。",
+        "not_shown": "到 knowbase 把这份放开给 knowbench 再列一次。",
+        "not_collectable": "这种资料采不来，到 knowbase 上传后再列一次。",
+        "waiting": "这一份正在取，过一会儿再列一次。",
+        "unusable": "这份资料已禁用或许可不允许这样用。",
+        "data_choice_invalid": "这位专家现在不能这样列数据。",
+        "reauth_required": "登录过期了，请重新登录再列。",
+        "other": "没有列出来，请再试一次。"
       }
     }
   },
@@ -1217,25 +1280,5 @@
     "collapseSidebar": "折叠侧边栏",
     "expandSidebar": "展开侧边栏",
     "expandSide": "展开右栏"
-  },
-  "cloudData": {
-    "button": "云端知识库",
-    "buttonWith": "云端知识库 · {count} 份",
-    "title": "这段对话选用云端知识库",
-    "lead": "选几份给这段对话用，模型只读你选的这几份；改选随时生效，过一天要再选一次。",
-    "loading": "加载中…",
-    "failed": "没有取到云端知识库，请稍后再试。",
-    "empty": "云端知识库里还没有能读成文字的资料（PDF、Excel、CSV、文本）。先到「云端知识库」上传。",
-    "note": "选用期间这几份不能在云端知识库里删除；不用了取消勾选再保存。",
-    "cancel": "取消",
-    "save": "{count, plural, =0 {不用了} other {选用 # 份}}",
-    "saving": "正在保存…",
-    "problem": {
-      "data_choice_invalid": "有一份读不成文字或已不在云端知识库里，请改选。",
-      "reauth_required": "登录过期了，请重新登录再选。",
-      "user_data_unavailable": "云端知识库暂时连不上，请稍后再试。",
-      "knowbase_unconfigured": "云端知识库还没开通。",
-      "other": "没有保存，请再试一次。"
-    }
   }
 }

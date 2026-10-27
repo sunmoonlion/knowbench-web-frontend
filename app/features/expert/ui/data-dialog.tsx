@@ -13,20 +13,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { FileTree } from '@/components/workbench/file-tree'
 import type { DataNeed } from '@/contracts/workbench-v2'
 import { useCloudLibrary } from '@/lib/workbench/cloud-library'
 import { cn } from '@/lib/utils'
 
-import {
-  baseNameOf,
-  cloudFor,
-  identityOf,
-  pickProblems,
-  type Picks,
-  takes,
-  toggle,
-} from '../model/data'
+import { cloudFor, identityOf, pickProblems, type Picks, toggle } from '../model/data'
 
 // 专家要的一样数据怎么说：几份、必填还是可选、什么格式
 export function NeedLine({ need }: { need: DataNeed }) {
@@ -44,22 +35,20 @@ export function NeedLine({ need }: { need: DataNeed }) {
   )
 }
 
-// 请专家时选数据（SDD 0042 第五节第 6 项）：按声明逐样从云端知识库或本地知识库选。
-// 项目里的文件不算（那是产出）；本地知识库只在装着本地 link 的这台电脑上看得到。
+// 请专家时选数据（SDD 0042 第五节第 6 项）：清单 v1 专家的兼容分支，按声明逐样从云端知识库选。
+// 本地知识库已退役（SDD 0043 第 4.1 节）；清单 v2 的专家改走列清单（listed-data）。
 export function DataDialog({
   open,
   onOpenChange,
   needs,
   picks,
   onChange,
-  environment,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   needs: DataNeed[]
   picks: Picks
   onChange: (picks: Picks) => void
-  environment: string | null
 }) {
   const t = useTranslations('askExpert.data')
   const [active, setActive] = useState<string | null>(null)
@@ -70,17 +59,6 @@ export function DataDialog({
   if (!need) return null
   const picked = picks[need.key] ?? []
   const chosen = new Set(picked.map(identityOf))
-
-  function pickLocal(path: string) {
-    const name = baseNameOf(path)
-    if (!takes(need!, name)) {
-      setNotice(t('notTaken', { name }))
-      return
-    }
-    const next = toggle(picks, need!, { source: 'local', name, path })
-    setNotice(next === picks ? t('full', { max: need!.max_count }) : null)
-    onChange(next)
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -213,19 +191,6 @@ export function DataDialog({
                   })}
                 </ul>
               )}
-            </div>
-
-            <div>
-              <p className="text-muted-foreground mb-1.5 text-xs font-medium">{t('local')}</p>
-              <div className="rounded-lg border p-2 text-[13px]">
-                <FileTree
-                  environment={environment}
-                  directory={null}
-                  selected={null}
-                  onSelect={pickLocal}
-                  scope="library"
-                />
-              </div>
             </div>
           </section>
         </div>

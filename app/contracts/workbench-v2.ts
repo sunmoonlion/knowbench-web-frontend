@@ -696,27 +696,112 @@ export const dataChoiceSchema = z
   })
   .loose()
 export type DataChoice = z.infer<typeof dataChoiceSchema>
-// 这段对话选用的云端知识库（SDD 0042 第四节）：凭「会话」运行授权，到期要再选
-export const sessionCloudDataSchema = z
-  .object({
-    items: z.array(
-      z
-        .object({
-          item_id: z.string(),
-          name: z.string(),
-          media_type: z.string(),
-          size_bytes: z.number().int(),
-          sha256: z.string(),
-        })
-        .loose(),
-    ),
-    expires_at: z.string().nullable(),
-  })
-  .loose()
-export type SessionCloudData = z.infer<typeof sessionCloudDataSchema>
 export const dataNeedsSchema = z
   .object({ needs: z.array(dataNeedSchema), last: z.array(dataChoiceSchema) })
   .loose()
+
+// ---------------- 清单 v2 的专家（SDD 0043 第三节）----------------
+// 请这位专家：填主体 → knowbase 按声明解析 → 开跑前列出（可换、有歧义的要选、可选的可去掉）
+export const listedNeedSchema = z
+  .object({
+    key: z.string(),
+    name: z.string(),
+    doc_type: z.string(),
+    period: z.object({ kind: z.string() }).loose(),
+    required: z.boolean().default(true),
+    description: z.string().default(''),
+  })
+  .loose()
+export type ListedNeed = z.infer<typeof listedNeedSchema>
+export const listedNeedsSchema = z
+  .object({
+    contract: z.literal('knowbot-manifest/v2'),
+    needs: z.array(listedNeedSchema),
+    bound: z.number().int(),
+  })
+  .loose()
+export const listedCandidateSchema = z
+  .object({
+    material_id: z.string(),
+    version_no: z.number().int(),
+    basis: z.string(),
+    name: z.string().default(''),
+    disclosed_on: z.string().nullable().optional(),
+  })
+  .loose()
+export type ListedCandidate = z.infer<typeof listedCandidateSchema>
+export const listedStatusSchema = z.enum([
+  'resolved',
+  'not_shown',
+  'to_confirm',
+  'not_collectable',
+  'ambiguous',
+  'waiting',
+  'unusable',
+])
+export type ListedStatus = z.infer<typeof listedStatusSchema>
+export const listedItemSchema = z
+  .object({
+    ref: z.string(),
+    need_key: z.string(),
+    key: z
+      .object({
+        subject: z.string(),
+        doc_type: z.string(),
+        period_start: z.string().nullable(),
+        period_end: z.string().nullable(),
+      })
+      .loose(),
+    status: listedStatusSchema,
+    chosen: z.array(listedCandidateSchema),
+    candidates: z.array(listedCandidateSchema),
+    reason: z.string().nullable(),
+  })
+  .loose()
+export type ListedItem = z.infer<typeof listedItemSchema>
+export const dataPlanSchema = z
+  .object({
+    resolution: z
+      .object({
+        resolution_id: z.string(),
+        revision: z.number().int(),
+        items: z.array(listedItemSchema),
+      })
+      .loose(),
+    supply_enabled: z.boolean(),
+    bound: z.number().int(),
+    to_confirm: z.number().int(),
+    problems: z.array(z.string()),
+    incomplete: z.array(z.string()),
+  })
+  .loose()
+export type DataPlan = z.infer<typeof dataPlanSchema>
+// 委托用的数据（清单 v2）：钉了哪几份、在等哪几项、专家新要了什么
+export const taskDataSchema = z
+  .object({
+    listed: z.boolean(),
+    status: z.enum(['ready', 'waiting', 'failed', 'cancelled']).optional(),
+    waiting_for: z.array(z.string()).default([]),
+    demand_status: z.string().nullable().optional(),
+    reason: z.string().nullable().optional(),
+    incomplete: z.array(z.string()).default([]),
+    requests: z
+      .array(
+        z
+          .object({
+            id: z.string(),
+            labels: z.array(z.string()),
+            status: z.string(),
+          })
+          .loose(),
+      )
+      .default([]),
+    pinned: z
+      .array(z.object({ name: z.string(), need: z.string().nullable() }).loose())
+      .default([]),
+  })
+  .loose()
+export type TaskData = z.infer<typeof taskDataSchema>
 
 // ---------------- 长期记忆：关于这位用户的几条事实（0019 §四）----------------
 export const memorySchema = z

@@ -1,6 +1,6 @@
 'use client'
 
-export { useAsk, useDataNeeds, usePacks } from '@/lib/workbench/expert-desk'
+export { useAsk, useDataNeeds, useDataPlan, usePacks } from '@/lib/workbench/expert-desk'
 
 import { useQuery } from '@tanstack/react-query'
 

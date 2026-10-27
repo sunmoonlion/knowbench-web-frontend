@@ -15,7 +15,6 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from '@/components/ui/message-scroller'
-import { CloudDataButton } from '@/components/workbench/cloud-data-button'
 import { Composer } from '@/components/workbench/composer'
 import { ConversationTitle } from '@/components/workbench/conversation-title'
 import { ActivityLine } from '@/components/workbench/activity-line'
@@ -154,10 +153,6 @@ export function WorkScreen({
             disabledReason={expert ? t('expertBusy') : null}
             footer={cost}
           >
-            <CloudDataButton
-              session={session ? id : null}
-              disabled={line.live !== null || expert}
-            />
             <Button
               variant="outline"
               size="sm"

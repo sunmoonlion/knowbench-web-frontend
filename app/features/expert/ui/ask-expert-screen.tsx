@@ -18,7 +18,9 @@ import { cn } from '@/lib/utils'
 import { useAsk, useDataNeeds, usePacks, useSaid } from '../api/desk'
 import { askBlocker, busyConversation, sees } from '../model/ask'
 import { choicesOf, pickProblems, type Picks, picksFromLast } from '../model/data'
+import { blockingItems, choiceOf } from '../model/listed'
 import { DataDialog, NeedLine } from './data-dialog'
+import { type Listed, ListedData } from './listed-data'
 
 const QUESTION = 'workbench.question'
 const label = 'text-muted-foreground mb-1.5 text-xs font-medium'
@@ -52,6 +54,8 @@ export function AskExpertScreen({
   const needs = useDataNeeds(chosen, projectId)
   const [picksBy, setPicksBy] = useState<Record<string, Picks>>({})
   const [choosingData, setChoosingData] = useState(false)
+  // 清单 v2 的专家（SDD 0043）：列出的清单与在上面的选择，每位专家各记各的
+  const [listedBy, setListedBy] = useState<Record<string, Listed | null>>({})
   // 用户自己打的字。没打过的时候用带进来的那句
   const [typed, setTyped] = useState<string | null>(null)
   // 同一页交两次用同一个号：后端认得出是同一次
@@ -65,17 +69,24 @@ export function AskExpertScreen({
   const question = typed ?? (from ? said.data?.last : fromHome) ?? ''
 
   const pack = (packs.data ?? []).find((each) => each.id === chosen)
-  const declared = needs.data?.needs ?? []
-  const picks =
-    (chosen ? picksBy[chosen] : undefined) ?? picksFromLast(declared, needs.data?.last ?? [])
+  const v2 = needs.data?.kind === 'v2' ? needs.data : null
+  const v1 = needs.data?.kind === 'v1' ? needs.data : null
+  const declared = v1?.needs ?? []
+  const picks = (chosen ? picksBy[chosen] : undefined) ?? picksFromLast(declared, v1?.last ?? [])
+  const listed = chosen ? (listedBy[chosen] ?? null) : null
   const missing = pickProblems(declared, picks)
+  const listedProblems = v2
+    ? listed
+      ? blockingItems(listed.plan, v2.needs, listed.picks, listed.dropped).length
+      : v2.needs.length
+    : 0
   const blocker = askBlocker({
     pack,
     question,
     project: project.data,
     sandboxes: sandboxes.data?.length,
     machines: machines.isSuccess ? machines.data.length : undefined,
-    dataProblems: missing.length,
+    dataProblems: missing.length + listedProblems,
   })
   const busyAt = busyConversation(project.data)
   const seen = sees(project.data, from)
@@ -91,6 +102,7 @@ export function AskExpertScreen({
         question: question.trim(),
         key,
         data: choicesOf(declared, picks),
+        dataV2: listed ? choiceOf(listed.plan, listed.picks, listed.dropped) : null,
       })
       window.sessionStorage.removeItem(QUESTION)
       router.push(
@@ -184,6 +196,16 @@ export function AskExpertScreen({
               ) : null}
             </section>
 
+            {v2 && v2.needs.length && pack ? (
+              <ListedData
+                expert={pack.id}
+                needs={v2.needs}
+                bound={v2.bound}
+                listed={listed}
+                onChange={(next) => chosen && setListedBy({ ...listedBy, [chosen]: next })}
+              />
+            ) : null}
+
             {declared.length ? (
               <section aria-label={t('data.title')}>
                 <p className={label}>{t('data.title')}</p>
@@ -225,7 +247,6 @@ export function AskExpertScreen({
                   needs={declared}
                   picks={picks}
                   onChange={(next) => chosen && setPicksBy({ ...picksBy, [chosen]: next })}
-                  environment={project.data?.project.environment_id ?? null}
                 />
               </section>
             ) : null}
