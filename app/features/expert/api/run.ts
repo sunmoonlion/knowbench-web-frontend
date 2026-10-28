@@ -2,14 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { z } from 'zod'
-
 import {
   acceptedSchema,
   reviewSchema,
   runSchema,
   runStepDetailSchema,
-  taskDataSchema,
 } from '@/contracts/workbench-v2'
 import { useWorkbench } from '@/lib/workbench/context'
 import { getJson, seg, sendJson } from '@/lib/workbench/http'
@@ -47,17 +44,6 @@ export function useReview(pending: string | null) {
   })
 }
 
-// 这件委托用的数据（清单 v2 的专家，SDD 0043）：钉了哪几份、在等哪几项、专家新要了什么
-export function useTaskData(task: string, beat: number) {
-  return useQuery({
-    queryKey: [...runKey(task), 'data', beat],
-    queryFn: () => getJson(taskDataSchema, `/api/workbench/tasks/${seg(task)}/data`),
-    placeholderData: (previous) => previous,
-  })
-}
-
-const dataRequestSchema = z.object({ status: z.string() }).loose()
-
 export function useRunActions(task: string) {
   const { csrfToken } = useWorkbench()
   const client = useQueryClient()
@@ -74,21 +60,6 @@ export function useRunActions(task: string) {
     stop: useMutation({
       mutationFn: () =>
         sendJson(acceptedSchema, `/api/workbench/tasks/${seg(task)}/cancel`, { csrfToken }),
-      onSuccess: changed,
-    }),
-    // 专家运行中新要的数据（0048 第五节）：确认了就去签、去取；不要的照现有的接着做
-    confirmData: useMutation({
-      mutationFn: () =>
-        sendJson(dataRequestSchema, `/api/workbench/tasks/${seg(task)}/data-requests/confirm`, {
-          csrfToken,
-        }),
-      onSuccess: changed,
-    }),
-    declineData: useMutation({
-      mutationFn: () =>
-        sendJson(dataRequestSchema, `/api/workbench/tasks/${seg(task)}/data-requests/decline`, {
-          csrfToken,
-        }),
       onSuccess: changed,
     }),
     answer: useMutation({

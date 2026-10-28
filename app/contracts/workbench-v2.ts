@@ -700,26 +700,37 @@ export const dataNeedsSchema = z
   .object({ needs: z.array(dataNeedSchema), last: z.array(dataChoiceSchema) })
   .loose()
 
-// ---------------- 清单 v2 的专家（SDD 0043 第三节）----------------
-// 请这位专家：填主体 → knowbase 按声明解析 → 开跑前列出（可换、有歧义的要选、可选的可去掉）
-export const listedNeedSchema = z
-  .object({
-    key: z.string(),
-    name: z.string(),
-    doc_type: z.string(),
-    period: z.object({ kind: z.string() }).loose(),
-    required: z.boolean().default(true),
-    description: z.string().default(''),
-  })
-  .loose()
-export type ListedNeed = z.infer<typeof listedNeedSchema>
+// ---------------- 清单 v2 的专家（SDD 0043 第三节，decisions ⑭）----------------
+// 清单 = 逻辑 + 作者挑选的数据：请专家页上不用选数据，只说专家自带几份；委托开跑先走
+// 第 0 步，模型按专家逻辑和问题提出要哪些数据，用户在委托页（或项目看板的卡片上）确认
 export const listedNeedsSchema = z
   .object({
     contract: z.literal('knowbot-manifest/v2'),
-    needs: z.array(listedNeedSchema),
     bound: z.number().int(),
   })
   .loose()
+// 一样数据（第 0 步或运行中提的，用户可以改）：主体为空就是不限主体
+export const dataRequestSchema = z
+  .object({
+    key: z.string(),
+    name: z.string(),
+    subject: z.string().nullable().optional(),
+    doc_type: z.string(),
+    period: z
+      .object({
+        kind: z.string(),
+        start: z.string().nullable().optional(),
+        end: z.string().nullable().optional(),
+        count: z.number().int().nullable().optional(),
+        months: z.number().int().nullable().optional(),
+      })
+      .loose(),
+    required: z.boolean().default(false),
+    reading: z.string().default('original'),
+    description: z.string().default(''),
+  })
+  .loose()
+export type DataRequest = z.infer<typeof dataRequestSchema>
 export const listedCandidateSchema = z
   .object({
     material_id: z.string(),
@@ -746,10 +757,10 @@ export const listedItemSchema = z
     need_key: z.string(),
     key: z
       .object({
-        subject: z.string(),
+        subject: z.string().nullable().optional(),
         doc_type: z.string(),
-        period_start: z.string().nullable(),
-        period_end: z.string().nullable(),
+        period_start: z.string().nullable().optional(),
+        period_end: z.string().nullable().optional(),
       })
       .loose(),
     status: listedStatusSchema,
@@ -759,28 +770,11 @@ export const listedItemSchema = z
   })
   .loose()
 export type ListedItem = z.infer<typeof listedItemSchema>
-export const dataPlanSchema = z
-  .object({
-    resolution: z
-      .object({
-        resolution_id: z.string(),
-        revision: z.number().int(),
-        items: z.array(listedItemSchema),
-      })
-      .loose(),
-    supply_enabled: z.boolean(),
-    bound: z.number().int(),
-    to_confirm: z.number().int(),
-    problems: z.array(z.string()),
-    incomplete: z.array(z.string()),
-  })
-  .loose()
-export type DataPlan = z.infer<typeof dataPlanSchema>
-// 委托用的数据（清单 v2）：钉了哪几份、在等哪几项、专家新要了什么
+// 委托用的数据（清单 v2）：在定数据、钉了哪几份、在等哪几项、专家提出了什么、没取到的
 export const taskDataSchema = z
   .object({
     listed: z.boolean(),
-    status: z.enum(['ready', 'waiting', 'failed', 'cancelled']).optional(),
+    status: z.enum(['planning', 'ready', 'waiting', 'failed', 'cancelled']).optional(),
     waiting_for: z.array(z.string()).default([]),
     demand_status: z.string().nullable().optional(),
     reason: z.string().nullable().optional(),
@@ -792,6 +786,9 @@ export const taskDataSchema = z
             id: z.string(),
             labels: z.array(z.string()),
             status: z.string(),
+            needs: z.array(dataRequestSchema).default([]),
+            items: z.array(listedItemSchema).default([]),
+            missing: z.array(z.string()).default([]),
           })
           .loose(),
       )
@@ -802,6 +799,38 @@ export const taskDataSchema = z
   })
   .loose()
 export type TaskData = z.infer<typeof taskDataSchema>
+export type DataRequestItem = TaskData['requests'][number]
+
+// 项目的看板（请专家方案设计第 4.8 节）：委托按列，卡片写清等谁、等什么
+export const boardColumnKeys = [
+  'queued',
+  'running',
+  'waiting_you',
+  'waiting_others',
+  'done',
+  'ended',
+] as const
+export const boardCardSchema = z
+  .object({
+    task_id: uuid,
+    session_id: uuid,
+    question: z.string(),
+    expert: z.string(),
+    state: z.string(),
+    state_word: z.string().nullable().optional(),
+    waiting: z.object({ who: z.string(), what: z.string() }).nullable(),
+    started_at: z.string().nullable().optional(),
+    ended_at: z.string().nullable().optional(),
+  })
+  .loose()
+export type BoardCard = z.infer<typeof boardCardSchema>
+export const boardSchema = z
+  .object({
+    project_id: z.string(),
+    columns: z.array(z.object({ key: z.enum(boardColumnKeys), cards: z.array(boardCardSchema) })),
+  })
+  .loose()
+export type Board = z.infer<typeof boardSchema>
 
 // ---------------- 长期记忆：关于这位用户的几条事实（0019 §四）----------------
 export const memorySchema = z

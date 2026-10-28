@@ -666,12 +666,12 @@
       "waitingPlain": "在等数据服务取数据，取齐了专家自动接着做。",
       "demand": "进度：{status, select, accepted {已受理} fetching {正在取} ready {已取齐} partial {取到一部分} unsatisfiable {取不到} failed {没取成} cancelled {已取消} other {—}}",
       "failed": "数据没取到：{reason}",
-      "incomplete": "缺了的可选项（专家照做，结果里会说明）：{items}",
+      "incomplete": "数据不全（专家照做，结果里会写明）：{items}",
       "pinned": "钉住的 {count} 份：{names}",
-      "requested": "专家这一步还要：{items}。确认了就去签、去取，专家停在这里等你。",
+      "requested": "专家按你的问题提出要这些数据。你可以换一份、改主体或年份、去掉、自己加一样；确认了才去签、去取，专家停在这里等你。",
       "confirm": "确认，去取",
       "confirming": "正在确认…",
-      "decline": "不要了，照现有的做",
+      "decline": "都不要，照现有的做",
       "declined": "这几项不要了",
       "requestStatus": {
         "pending": "等你确认",
@@ -680,7 +680,58 @@
         "declined": "不要了",
         "failed": "没取到"
       },
-      "problem": "没有办成，请再试一次。"
+      "problem": "没有办成，请再试一次。",
+      "planning": "专家在按你的问题定要哪些数据，定好了列在这里等你确认。",
+      "essential": "必需",
+      "anySubject": "不限主体",
+      "anyPeriod": "不限期间",
+      "dropped": "不要这一样",
+      "changed": "改过，确认时重新找",
+      "drop": "不要这一样",
+      "undrop": "还是要",
+      "edit": "改",
+      "editDone": "好",
+      "editCancel": "算了",
+      "subject": "主体",
+      "subjectHint": "如 600519.SH；空着是不限主体",
+      "from": "从哪年",
+      "to": "到哪年",
+      "add": "自己加一样",
+      "addDone": "加上",
+      "remove": "去掉",
+      "docTypeLabel": "类型",
+      "docType": {
+        "annual_report": "年报",
+        "semiannual_report": "半年报",
+        "q1_report": "一季报",
+        "q3_report": "三季报",
+        "interim_announcement": "临时公告",
+        "prospectus": "招股书",
+        "research_company": "公司研报",
+        "statistical_bulletin": "统计公报",
+        "business_rule": "业务规则"
+      },
+      "choose": "选一份",
+      "asListed": "用列出的那份",
+      "pick": "{name}用哪一份",
+      "candidate": "{name}（第 {version} 版）",
+      "unchosen": "有 {count} 样对得上好几份，选一份或者不要它，才能确认。",
+      "missing": "这几样没取到：{items}。",
+      "goOn": "照现有的接着做",
+      "stopHint": "不想做了，就停下这件委托。",
+      "status": {
+        "resolved": "已有",
+        "to_confirm": "缺，要去取",
+        "ambiguous": "有几份，要选一份",
+        "not_shown": "在 knowbase 里还没放开给 knowbench",
+        "not_collectable": "采不来，要到 knowbase 上传",
+        "waiting": "正在取",
+        "unusable": "不能用"
+      },
+      "problems": {
+        "data_choice_invalid": "这样确认不了：换选的要在候选里，改的主体和年份要写对。",
+        "reauth_required": "登录过期了，请重新登录再确认。"
+      }
     }
   },
   "expertHome": {
@@ -794,46 +845,10 @@
         "text": "文本"
       }
     },
-    "listed": {
+    "byQuestion": {
       "title": "要用的数据",
-      "lead": "这位专家要：{needs}。填上要分析的公司，先列出每一样用哪份；缺的会交给数据服务去取，齐了专家自动接着做。",
-      "bound": "专家还自带 {count} 份资料。",
-      "subjects": "要分析的公司",
-      "subjectsHint": "证券代码，如 600519.SH；几家用逗号隔开",
-      "badSubjects": "认不出：{codes}。证券代码写成 600519.SH、000001.SZ、00700.HK 这样。",
-      "list": "列出数据",
-      "listing": "正在列…",
-      "relist": "重新列",
-      "required": "必填",
-      "optional": "可选",
-      "dropped": "不用这一项",
-      "drop": "不用这一项",
-      "undrop": "还是要用",
-      "choose": "选一份",
-      "asListed": "用列出的那份",
-      "pick": "{name}用哪一份",
-      "candidate": "{name}（第 {version} 版）",
-      "fetchNote": "缺的 {count} 项请专家时一并确认，交给数据服务去取；取齐之前专家先等着，齐了自动接着做。",
-      "status": {
-        "resolved": "已有",
-        "to_confirm": "缺，要去取",
-        "ambiguous": "有几份，要选一份",
-        "not_shown": "在 knowbase 里还没放开给 knowbench",
-        "not_collectable": "采不来，要到 knowbase 上传",
-        "waiting": "正在取",
-        "unusable": "不能用"
-      },
-      "problem": {
-        "requiredDropped": "必填的不能不用。",
-        "noSupply": "现在还不能去取，先到 knowbase 上传这一份。",
-        "not_shown": "到 knowbase 把这份放开给 knowbench 再列一次。",
-        "not_collectable": "这种资料采不来，到 knowbase 上传后再列一次。",
-        "waiting": "这一份正在取，过一会儿再列一次。",
-        "unusable": "这份资料已禁用或许可不允许这样用。",
-        "data_choice_invalid": "这位专家现在不能这样列数据。",
-        "reauth_required": "登录过期了，请重新登录再列。",
-        "other": "没有列出来，请再试一次。"
-      }
+      "lead": "不用先选数据。请专家后，专家先按你的问题列出要哪些数据，你在委托页确认（能换、能改、能去掉、能加）后才去取、才开始做。",
+      "bound": "专家还自带 {count} 份资料（作者挑选的）。"
     }
   },
   "reviewPage": {
@@ -983,6 +998,35 @@
       "problem": "没有做成，请再试一次。",
       "handbacks": "专家交回",
       "noHandbacks": "专家还没有交回过。成稿都在项目文件里。"
+    },
+    "board": {
+      "list": "列表",
+      "board": "看板",
+      "loading": "正在读看板…",
+      "failed": "看板没读出来。",
+      "empty": "这一列没有",
+      "column": {
+        "queued": "排队",
+        "running": "在跑",
+        "waiting_you": "等你",
+        "waiting_others": "等别人",
+        "done": "完成",
+        "ended": "没成"
+      },
+      "who": {
+        "you": "等你",
+        "data_service": "等数据服务"
+      },
+      "what": {
+        "confirm_data": "确认要用的数据",
+        "decide_missing": "定没取到的怎么办",
+        "fetch_data": "在取数据",
+        "answer": "回答专家的问题",
+        "approve": "批准一步操作",
+        "budget": "加预算",
+        "machine": "开电脑"
+      },
+      "open": "打开"
     }
   },
   "machines": {

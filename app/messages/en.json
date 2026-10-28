@@ -666,12 +666,12 @@
       "waitingPlain": "Waiting for the data service; the expert carries on once the data arrives.",
       "demand": "Progress: {status, select, accepted {accepted} fetching {fetching} ready {all fetched} partial {partly fetched} unsatisfiable {not available} failed {failed} cancelled {cancelled} other {—}}",
       "failed": "The data could not be fetched: {reason}",
-      "incomplete": "Optional items missing (the expert goes on and says so): {items}",
+      "incomplete": "Data incomplete (the expert goes on and says so in the result): {items}",
       "pinned": "{count} pinned: {names}",
-      "requested": "For this step the expert also needs: {items}. Confirm and they are signed or fetched; the expert waits here for you.",
+      "requested": "For your question the expert proposes this data. You can switch to another copy, change the company or years, drop an item or add one; nothing is signed or fetched until you confirm, and the expert waits here.",
       "confirm": "Confirm and fetch",
       "confirming": "Confirming…",
-      "decline": "Not needed, go on with what there is",
+      "decline": "None of it, go on with what there is",
       "declined": "Not needed",
       "requestStatus": {
         "pending": "Waiting for you",
@@ -680,7 +680,58 @@
         "declined": "Not needed",
         "failed": "Not available"
       },
-      "problem": "That did not go through; try again."
+      "problem": "That did not go through; try again.",
+      "planning": "The expert is working out which data your question needs; it will be listed here for you to confirm.",
+      "essential": "essential",
+      "anySubject": "any company",
+      "anyPeriod": "any period",
+      "dropped": "Not this one",
+      "changed": "Changed; looked up again when you confirm",
+      "drop": "Not this one",
+      "undrop": "Keep it",
+      "edit": "Change",
+      "editDone": "Done",
+      "editCancel": "Never mind",
+      "subject": "Company",
+      "subjectHint": "e.g. 600519.SH; empty means any",
+      "from": "From year",
+      "to": "To year",
+      "add": "Add an item",
+      "addDone": "Add",
+      "remove": "Remove",
+      "docTypeLabel": "Type",
+      "docType": {
+        "annual_report": "Annual report",
+        "semiannual_report": "Semi-annual report",
+        "q1_report": "Q1 report",
+        "q3_report": "Q3 report",
+        "interim_announcement": "Interim announcement",
+        "prospectus": "Prospectus",
+        "research_company": "Company research",
+        "statistical_bulletin": "Statistical bulletin",
+        "business_rule": "Business rule"
+      },
+      "choose": "Choose one",
+      "asListed": "Use the one listed",
+      "pick": "Which copy for {name}",
+      "candidate": "{name} (version {version})",
+      "unchosen": "{count} item(s) match several copies; choose one or drop it before confirming.",
+      "missing": "These did not arrive: {items}.",
+      "goOn": "Go on with what there is",
+      "stopHint": "To give up, stop this request.",
+      "status": {
+        "resolved": "Have it",
+        "to_confirm": "Missing; to be fetched",
+        "ambiguous": "Several copies; choose one",
+        "not_shown": "Not shown to knowbench in knowbase yet",
+        "not_collectable": "Cannot be fetched; upload it in knowbase",
+        "waiting": "Being fetched",
+        "unusable": "Cannot be used"
+      },
+      "problems": {
+        "data_choice_invalid": "Cannot confirm this: a switched copy must be one of the candidates, and the company and years must be valid.",
+        "reauth_required": "Your login has expired; sign in again and confirm."
+      }
     }
   },
   "expertHome": {
@@ -794,46 +845,10 @@
         "text": "Text"
       }
     },
-    "listed": {
-      "title": "Data to use",
-      "lead": "This expert needs: {needs}. Enter the companies to analyse and list what will be used; anything missing is fetched by the data service and the expert carries on once it arrives.",
-      "bound": "The expert also brings {count} materials of its own.",
-      "subjects": "Companies to analyse",
-      "subjectsHint": "Security codes, e.g. 600519.SH; separate several with commas",
-      "badSubjects": "Not recognised: {codes}. Write codes like 600519.SH, 000001.SZ or 00700.HK.",
-      "list": "List the data",
-      "listing": "Listing…",
-      "relist": "List again",
-      "required": "required",
-      "optional": "optional",
-      "dropped": "Not used",
-      "drop": "Don't use this",
-      "undrop": "Use it after all",
-      "choose": "Choose one",
-      "asListed": "Use the listed one",
-      "pick": "Which one to use for {name}",
-      "candidate": "{name} (version {version})",
-      "fetchNote": "The {count} missing items are confirmed when you ask the expert and fetched by the data service; the expert waits until they arrive and then carries on.",
-      "status": {
-        "resolved": "Available",
-        "to_confirm": "Missing, will be fetched",
-        "ambiguous": "Several match, choose one",
-        "not_shown": "Not shown to knowbench in knowbase yet",
-        "not_collectable": "Cannot be fetched; upload it in knowbase",
-        "waiting": "Being fetched",
-        "unusable": "Cannot be used"
-      },
-      "problem": {
-        "requiredDropped": "A required item cannot be left out.",
-        "noSupply": "It cannot be fetched yet; upload it in knowbase first.",
-        "not_shown": "Show it to knowbench in knowbase, then list again.",
-        "not_collectable": "This kind cannot be fetched; upload it in knowbase, then list again.",
-        "waiting": "It is being fetched; list again in a while.",
-        "unusable": "This material is disabled or its licence does not allow this use.",
-        "data_choice_invalid": "This expert cannot list data this way now.",
-        "reauth_required": "Your sign-in expired; sign in again and list.",
-        "other": "Could not list the data; try again."
-      }
+    "byQuestion": {
+      "title": "Data it will use",
+      "lead": "No need to choose data now. After you ask, the expert first lists the data your question needs; you confirm it on the request page (switch, change, drop or add) before anything is fetched or started.",
+      "bound": "It also brings {count} item(s) of its own, chosen by its author."
     }
   },
   "reviewPage": {
@@ -983,6 +998,35 @@
       "problem": "It did not work. Please try again.",
       "handbacks": "Expert handbacks",
       "noHandbacks": "No expert has handed back yet. Deliverables live in the project files."
+    },
+    "board": {
+      "list": "List",
+      "board": "Board",
+      "loading": "Loading the board…",
+      "failed": "Could not load the board.",
+      "empty": "Nothing here",
+      "column": {
+        "queued": "Queued",
+        "running": "Running",
+        "waiting_you": "Waiting for you",
+        "waiting_others": "Waiting for others",
+        "done": "Done",
+        "ended": "Did not finish"
+      },
+      "who": {
+        "you": "You",
+        "data_service": "Data service"
+      },
+      "what": {
+        "confirm_data": "confirm the data to use",
+        "decide_missing": "decide about what did not arrive",
+        "fetch_data": "fetching data",
+        "answer": "answer the expert",
+        "approve": "approve a step",
+        "budget": "raise the budget",
+        "machine": "turn on the computer"
+      },
+      "open": "Open"
     }
   },
   "machines": {

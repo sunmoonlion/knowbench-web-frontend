@@ -23,6 +23,7 @@ import { routes } from '@/lib/workbench/routes'
 import { cn } from '@/lib/utils'
 
 import { useProjectActions } from '../api/projects'
+import { ProjectBoard } from './project-board'
 
 function amount(value: string, currency: string) {
   const micros = toMicros(value)
@@ -38,6 +39,9 @@ export function ProjectScreen({ project: id }: { project: string }) {
   const detail = useProjectDetail(id)
   const act = useProjectActions()
   const [archiving, setArchiving] = useState(false)
+  // 委托看列表还是看板（请专家方案设计第 4.8 节）
+  const [view, setView] = useState<'list' | 'board'>('list')
+  const tb = useTranslations('projects.board')
 
   if (!detail.data) {
     return (
@@ -179,8 +183,24 @@ export function ProjectScreen({ project: id }: { project: string }) {
               </section>
 
               <section aria-label={t('handbacks')}>
-                <h2 className={heading}>{t('handbacks')}</h2>
-                {tasks.length === 0 ? (
+                <div className="mb-2 flex items-center gap-2">
+                  <h2 className="text-sm font-medium">{t('handbacks')}</h2>
+                  <div className="flex-1" />
+                  {(['list', 'board'] as const).map((each) => (
+                    <Button
+                      key={each}
+                      size="sm"
+                      variant={view === each ? 'secondary' : 'ghost'}
+                      aria-pressed={view === each}
+                      onClick={() => setView(each)}
+                    >
+                      {tb(each)}
+                    </Button>
+                  ))}
+                </div>
+                {view === 'board' ? (
+                  <ProjectBoard project={id} />
+                ) : tasks.length === 0 ? (
                   <p className="text-muted-foreground text-sm">{t('noHandbacks')}</p>
                 ) : (
                   <ul className="divide-y rounded-xl border">

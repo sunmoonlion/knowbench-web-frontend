@@ -13,15 +13,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { WorkSidePanel } from '@/components/workbench/side-panel'
+import { TaskDataPanel } from '@/components/workbench/task-data-panel'
 import { useConversationEvents } from '@/lib/workbench/conversation-events'
+import { useTaskData } from '@/lib/workbench/task-data'
 import { byFile, timeline } from '@/lib/workbench/timeline'
 import { useClock } from '@/lib/workbench/use-clock'
 
-import { useReview, useRun, useRunActions, useRunStep, useTaskData } from '../api/run'
+import { useReview, useRun, useRunActions, useRunStep } from '../api/run'
 import { shownStep, tokenOf } from '../model/run'
 import { amountText, NowStrip, StepDetail, StepRail } from './parts'
 import { ReviewPanel } from './review-panel'
-import { TaskDataPanel } from './task-data-panel'
 
 // 专家处理中。三栏：步骤、这一步的细节、委托单。
 // 顶上一直摆着：做到第几步、花了多少、现在在干什么、为什么、没有卡住；随时能停。
@@ -98,15 +99,7 @@ export function ExpertRunScreen({ task }: { task: string }) {
       </header>
 
       {now ? <NowStrip now={now} clock={clock} /> : null}
-      {data.data ? (
-        <TaskDataPanel
-          data={data.data}
-          busy={act.confirmData.isPending || act.declineData.isPending}
-          failed={act.confirmData.isError || act.declineData.isError}
-          onConfirm={() => act.confirmData.mutate()}
-          onDecline={() => act.declineData.mutate()}
-        />
-      ) : null}
+      {data.data ? <TaskDataPanel task={task} data={data.data} /> : null}
       {sheet.chosen_data?.length ? (
         <p
           className="text-muted-foreground shrink-0 truncate border-b px-4 py-1.5 text-xs"
