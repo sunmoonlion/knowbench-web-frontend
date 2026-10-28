@@ -79,7 +79,11 @@ export function TaskDataPanel({
         </p>
       ) : null}
 
-      {request ? (
+      {request && data.confirm_in === 'knowlab' ? (
+        <p className="text-amber-700 dark:text-amber-400" data-testid="task-data-elsewhere">
+          {t('confirmInKnowlab', { items: request.labels.join('、') })}
+        </p>
+      ) : request ? (
         <div className="space-y-1.5" data-testid="task-data-request">
           <p className="text-amber-700 dark:text-amber-400">{t('requested')}</p>
           <ul className="space-y-1.5">

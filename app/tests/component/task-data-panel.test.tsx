@@ -49,6 +49,7 @@ const TASK = '11111111-1111-4111-8111-111111111111'
 const proposed: TaskData = {
   listed: true,
   status: 'ready',
+  confirm_in: 'here',
   waiting_for: [],
   incomplete: [],
   pinned: [{ name: '专家自带的资料', need: null }],
@@ -175,6 +176,16 @@ describe('确认专家提出的数据（decisions ⑭）', () => {
     expect(missing.getByText('这几样没取到：上一年比较：没取到。')).toBeInTheDocument()
     fireEvent.click(missing.getByRole('button', { name: '照现有的接着做' }))
     await waitFor(() => expect(calls[0].path).toMatch(/data-requests\/decline$/))
+  })
+})
+
+describe('测试委托（SDD 0046 第三节）', () => {
+  it('提出的数据去 knowlab 确认，这里不给确认按钮', () => {
+    wrap(<TaskDataPanel task={TASK} data={{ ...proposed, confirm_in: 'knowlab' }} />)
+    expect(screen.getByTestId('task-data-elsewhere')).toHaveTextContent(
+      '这是一次测试：专家要 最近一年的年报、上一年比较，去 knowlab 的测试页确认。',
+    )
+    expect(screen.queryByRole('button', { name: '确认，去取' })).toBeNull()
   })
 })
 

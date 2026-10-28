@@ -775,6 +775,8 @@ export const taskDataSchema = z
   .object({
     listed: z.boolean(),
     status: z.enum(['planning', 'ready', 'waiting', 'failed', 'cancelled']).optional(),
+    // 测试委托：提出的数据由作者在 knowlab 测试页确认（SDD 0046 第三节）
+    confirm_in: z.enum(['here', 'knowlab']).default('here'),
     waiting_for: z.array(z.string()).default([]),
     demand_status: z.string().nullable().optional(),
     reason: z.string().nullable().optional(),

@@ -731,7 +731,8 @@
       "problems": {
         "data_choice_invalid": "Cannot confirm this: a switched copy must be one of the candidates, and the company and years must be valid.",
         "reauth_required": "Your login has expired; sign in again and confirm."
-      }
+      },
+      "confirmInKnowlab": "This is a test: the expert asks for {items}; confirm it on the test page in knowlab."
     }
   },
   "expertHome": {

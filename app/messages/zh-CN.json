@@ -731,7 +731,8 @@
       "problems": {
         "data_choice_invalid": "这样确认不了：换选的要在候选里，改的主体和年份要写对。",
         "reauth_required": "登录过期了，请重新登录再确认。"
-      }
+      },
+      "confirmInKnowlab": "这是一次测试：专家要 {items}，去 knowlab 的测试页确认。"
     }
   },
   "expertHome": {
