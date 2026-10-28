@@ -1,4 +1,5 @@
-// 请写了数据需求声明的专家（SDD 0042 第五节第 6 项）：按声明选好数据才能交出，选的数据随请求带上
+// 请清单 v2 的专家（SDD 0043，decisions ⑭）：请专家页上不用选数据，请求里不带数据；
+// 要什么数据开跑后由第 0 步按问题提出、在委托页确认
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -29,44 +30,31 @@ function sample(path: string): unknown {
 }
 const project = manifest.pages.find((page) => page.title.startsWith('项目页'))!.path.split('/')[4]
 
-const NEEDS = {
-  contract_version: 'v2',
-  needs: [
-    {
-      key: 'annual_reports',
-      name: '年报',
-      description: '最近几年的年度报告全文',
-      formats: ['pdf'],
-      required: true,
-      min_count: 1,
-      max_count: 2,
-      tables: [],
-    },
+// 清单 v2 的分身与内置专家各一位（只要页面用到的字段）；专家清单不取样例，样例里有谁随生成器变
+const KNOWBOT = 'knowbot:11111111-2222-4333-8444-555555555555@1'
+const pack = (id: string, name: string) => ({
+  id,
+  name,
+  tagline: '看三张表',
+  solves: '看清这家公司这几年的经营',
+  does_not_solve: '买卖建议',
+  input: '一个问题',
+  output: '成稿',
+  uses_our_data: false,
+  status: 'ready',
+  source: id.startsWith('knowbot:') ? 'knowbot' : 'builtin',
+  steps: [
+    { index: 1, title: '定范围', summary: '按问题定范围', after_rejection: { text: '交你看' } },
   ],
-  last: [],
+})
+const PACKS = {
+  contract_version: 'v2',
+  budget: { currency: 'CNY', default: null },
+  packs: [pack(KNOWBOT, '财务分析与预测'), pack('BUILTIN', '内置的一位')],
 }
-const CLOUD = {
-  contract_version: 'v2',
-  items: [
-    {
-      item_id: 'i1',
-      name: '2024 年报.pdf',
-      media_type: 'application/pdf',
-      size_bytes: 10,
-      sha256: 'c'.repeat(64),
-      origin: 'upload',
-      created_at: '2026-10-23T12:00:00Z',
-    },
-    {
-      item_id: 't1',
-      name: '口径说明.txt',
-      media_type: 'text/plain; charset=utf-8',
-      size_bytes: 3,
-      sha256: 'd'.repeat(64),
-      origin: 'upload',
-      created_at: '2026-10-23T12:00:00Z',
-    },
-  ],
+const NEEDS: Record<string, unknown> = {
+  [KNOWBOT]: { contract_version: 'v2', contract: 'knowbot-manifest/v2', bound: 2 },
+  BUILTIN: { contract_version: 'v2', contract: null, bound: 0 },
 }
 
 type Call = { method: string; path: string; body: Record<string, unknown> }
@@ -91,8 +79,9 @@ beforeEach(() => {
         calls.push({ method, path, body: JSON.parse(String(init.body ?? '{}')) })
         return json({ task_id: '11111111-1111-4111-8111-111111111111' }, 201)
       }
-      if (path === '/api/workbench/packs/FIN_REVIEW/data-needs') return json(NEEDS)
-      if (path === '/api/workbench/cloud-library') return json(CLOUD)
+      if (path === '/api/workbench/packs') return json(PACKS)
+      const needs = /^\/api\/workbench\/packs\/(.+)\/data-needs$/.exec(path)
+      if (needs) return json(NEEDS[decodeURIComponent(needs[1])])
       const body = sample(path)
       return json(body ?? { code: 'not_found' }, body ? 200 : 404)
     }),
@@ -114,46 +103,24 @@ function page(children: React.ReactNode) {
   )
 }
 
-describe('请专家用自己的数据', () => {
-  it('必填的没选不能交；在弹框里从云端知识库选了，随请求带上', async () => {
-    page(<AskExpertScreen project={project} from={null} expert="FIN_REVIEW" />)
-    const data = within(await screen.findByRole('region', { name: '要用的数据' }))
-    expect(data.getByText('年报')).toBeInTheDocument()
-    expect(data.getByText('必填 · 选 1～2 份 · PDF')).toBeInTheDocument()
-    expect(data.getByText('还没选')).toBeInTheDocument()
+describe('请专家：数据按问题定', () => {
+  it('清单 v2 的专家不用选数据，说明自带几份；交出的请求不带数据', async () => {
+    page(<AskExpertScreen project={project} from={null} expert={KNOWBOT} />)
+    const data = within(await screen.findByTestId('ask-by-question'))
+    expect(data.getByText('专家还自带 2 份资料（作者挑选的）。')).toBeInTheDocument()
     const submit = screen.getByRole('button', { name: '交给专家' })
-    await waitFor(() => expect(screen.getByText('专家要的数据还没选好。')).toBeInTheDocument())
-    expect(submit).toBeDisabled()
-
-    fireEvent.click(data.getByRole('button', { name: '选数据' }))
-    const dialog = within(await screen.findByRole('dialog'))
-    // 只列格式对得上的：文本不是年报要的
-    const report = await dialog.findByRole('button', { name: /2024 年报\.pdf/ })
-    expect(dialog.queryByRole('button', { name: /口径说明/ })).toBeNull()
-    fireEvent.click(report)
-    expect(dialog.getByText('已选 1 份', { selector: 'span' })).toBeInTheDocument()
-    fireEvent.click(dialog.getByRole('button', { name: '好了' }))
-
     await waitFor(() => expect(submit).toBeEnabled())
-    expect(data.getByText('2024 年报.pdf')).toBeInTheDocument()
     fireEvent.click(submit)
     await waitFor(() => expect(calls).toHaveLength(1))
-    expect(calls[0].body.data).toEqual([{ need: 'annual_reports', source: 'cloud', item_id: 'i1' }])
+    expect(calls[0].body).toMatchObject({ expert: KNOWBOT, question: '看看这家公司这几年的年报' })
+    expect(calls[0].body).not.toHaveProperty('data')
   })
 
-  it('同一项目上次选的默认选上', async () => {
-    NEEDS.last = [
-      { need: 'annual_reports', source: 'cloud', name: '2024 年报.pdf', item_id: 'i1' },
-    ] as never
-    try {
-      page(<AskExpertScreen project={project} from={null} expert="FIN_REVIEW" />)
-      const data = within(await screen.findByRole('region', { name: '要用的数据' }))
-      expect(await data.findByText('2024 年报.pdf')).toBeInTheDocument()
-      expect(data.getByRole('button', { name: '改选' })).toBeInTheDocument()
-      const submit = screen.getByRole('button', { name: '交给专家' })
-      await waitFor(() => expect(submit).toBeEnabled())
-    } finally {
-      NEEDS.last = []
-    }
+  it('内置专家不用数据：没有数据那一节', async () => {
+    page(<AskExpertScreen project={project} from={null} expert="BUILTIN" />)
+    expect(await screen.findByRole('heading', { name: /内置的一位/ })).toBeInTheDocument()
+    const submit = screen.getByRole('button', { name: '交给专家' })
+    await waitFor(() => expect(submit).toBeEnabled())
+    expect(screen.queryByTestId('ask-by-question')).toBeNull()
   })
 })

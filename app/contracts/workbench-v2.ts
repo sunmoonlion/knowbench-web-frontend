@@ -649,63 +649,13 @@ export const reviewPlaceSchema = z
 
 export const createdProjectSchema = z.object({ id: uuid }).loose()
 
-// ---------------- 云端知识库（SDD 0042）：真源在 knowbase，经后端凭用户令牌转交 ----------------
-export const cloudItemSchema = z
-  .object({
-    item_id: z.string(),
-    name: z.string(),
-    media_type: z.string(),
-    size_bytes: z.number().int(),
-    sha256: z.string(),
-    origin: z.enum(['upload', 'collect', 'purchase']),
-    created_at: z.string(),
-    no_resale: z.boolean().optional(),
-  })
-  .loose()
-export type CloudItem = z.infer<typeof cloudItemSchema>
-export const cloudListSchema = z.object({ items: z.array(cloudItemSchema) }).loose()
-export const cloudCreatedSchema = z.object({ item: cloudItemSchema }).loose()
-
-// ---------------- 请专家用自己的数据（SDD 0042 第五节）----------------
-// 专家的数据需求声明：每样要什么格式、几份、必填还是可选；请专家时按它从本地或云端知识库选
-export const dataFormatSchema = z.enum(['pdf', 'excel', 'csv', 'text'])
-export type DataFormat = z.infer<typeof dataFormatSchema>
-export const dataNeedSchema = z
-  .object({
-    key: z.string(),
-    name: z.string(),
-    description: z.string(),
-    formats: z.array(dataFormatSchema),
-    required: z.boolean(),
-    min_count: z.number().int(),
-    max_count: z.number().int(),
-    tables: z.array(
-      z.object({ sheet: z.string().nullable(), columns: z.array(z.string()) }).loose(),
-    ),
-  })
-  .loose()
-export type DataNeed = z.infer<typeof dataNeedSchema>
-// 选的一份：云端是资料编号，本地是路径；name 只给页面看
-export const dataChoiceSchema = z
-  .object({
-    need: z.string(),
-    source: z.enum(['cloud', 'local']),
-    name: z.string().optional(),
-    item_id: z.string().optional(),
-    path: z.string().optional(),
-  })
-  .loose()
-export type DataChoice = z.infer<typeof dataChoiceSchema>
-export const dataNeedsSchema = z
-  .object({ needs: z.array(dataNeedSchema), last: z.array(dataChoiceSchema) })
-  .loose()
-
 // ---------------- 清单 v2 的专家（SDD 0043 第三节，decisions ⑭）----------------
 // 清单 = 逻辑 + 作者挑选的数据：请专家页上不用选数据，只说专家自带几份；委托开跑先走
-// 第 0 步，模型按专家逻辑和问题提出要哪些数据，用户在委托页（或项目看板的卡片上）确认
+// 第 0 步，模型按专家逻辑和问题提出要哪些数据，用户在委托页（或项目看板的卡片上）确认。
+// 内置专家不用数据：contract 是 null、bound 是 0
 export const listedNeedsSchema = z
   .object({
-    contract: z.literal('knowbot-manifest/v2'),
+    contract: z.literal('knowbot-manifest/v2').nullable(),
     bound: z.number().int(),
   })
   .loose()

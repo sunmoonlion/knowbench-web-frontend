@@ -100,10 +100,6 @@
    "path": "/zh-CN/workbench/settings"
   },
   {
-   "title": "云端知识库",
-   "path": "/zh-CN/workbench/library"
-  },
-  {
    "title": "我的电脑",
    "path": "/zh-CN/workbench/settings#computer"
   }
@@ -1740,14 +1736,6 @@
    "status": 200,
    "content_type": "application/json",
    "file": "0205.json"
-  },
-  {
-   "method": "GET",
-   "path": "/api/workbench/cloud-library",
-   "query": "",
-   "status": 200,
-   "content_type": "application/json",
-   "file": "cloud-library.json"
   },
   {
    "method": "GET",

@@ -9,7 +9,6 @@ import {
   conversationViewSchema,
   conversationsSchema,
   eventsPageSchema,
-  cloudListSchema,
   machinesSchema,
   overviewSchema,
   packsSchema,
@@ -43,7 +42,6 @@ const contracts: [RegExp, z.ZodType][] = [
   [/^\/api\/workbench\/expert\/overview$/, overviewSchema],
   [/^\/api\/workbench\/packs$/, packsSchema],
   [new RegExp(`^/api/workbench/projects/${ID}$`), projectDetailSchema],
-  [/^\/api\/workbench\/cloud-library$/, cloudListSchema],
 ]
 
 const fixtures = join(process.cwd(), 'preview/fixtures')

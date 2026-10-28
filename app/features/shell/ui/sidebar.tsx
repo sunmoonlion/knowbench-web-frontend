@@ -1,7 +1,6 @@
 'use client'
 
 import {
-  BookOpenIcon,
   BrainIcon,
   ChevronRightIcon,
   FolderIcon,
@@ -646,7 +645,6 @@ export function Sidebar() {
               active={href === pathname && entry.key !== 'pending'}
             >
               {entry.key === 'settings' ? <SettingsIcon className="size-3.5 shrink-0" /> : null}
-              {entry.key === 'library' ? <BookOpenIcon className="size-3.5 shrink-0" /> : null}
               {entry.key === 'memory' ? <BrainIcon className="size-3.5 shrink-0" /> : null}
               <span>{t(`foot.${entry.key}`)}</span>
               {entry.key === 'pending' && waiting > 0 ? (

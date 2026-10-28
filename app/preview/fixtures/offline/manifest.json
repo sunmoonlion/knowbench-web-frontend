@@ -391,14 +391,6 @@
   },
   {
    "method": "GET",
-   "path": "/api/workbench/cloud-library",
-   "query": "",
-   "status": 200,
-   "content_type": "application/json",
-   "file": "cloud-library.json"
-  },
-  {
-   "method": "GET",
    "path": "/api/workbench/agent/download",
    "query": "",
    "status": 200,

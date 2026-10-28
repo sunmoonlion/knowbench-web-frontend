@@ -140,18 +140,17 @@ describe('侧栏', () => {
   it('底部的条目由一份清单生成', () => {
     // 公共数据的入口不在用户侧（所有者 2026-10-07 定）：没有数据目录、申请入库
     // 「我的电脑」不再单列，灯在中段的电脑行上（0016 S2）
-    // 本地知识库（0019/0022）排在旧知识库（0011，等账 85 撤）前面
+    // 云端知识库页撤了（decisions ⑰）：资料在 knowbase，只留本地知识库
     expect(FOOT.map((entry) => entry.key)).toEqual([
       'pending',
       'localLibrary',
-      'library',
       'memory',
       'settings',
     ])
     const settings = FOOT.find((entry) => entry.key === 'settings')!
     expect(footHref(settings, 'zh-CN')).toBe('/zh-CN/workbench/settings/cloud')
-    const library = FOOT.find((entry) => entry.key === 'library')!
-    expect(footHref(library, 'zh-CN')).toBe('/zh-CN/workbench/library')
+    const local = FOOT.find((entry) => entry.key === 'localLibrary')!
+    expect(footHref(local, 'zh-CN')).toBe('/zh-CN/workbench/local-library')
   })
 })
 

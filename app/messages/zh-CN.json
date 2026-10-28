@@ -192,7 +192,6 @@
       "pending": "待我决定",
       "machines": "我的电脑",
       "settings": "设置",
-      "library": "云端知识库",
       "memory": "长期记忆",
       "localLibrary": "本地知识库"
     },
@@ -792,8 +791,7 @@
       "noSandbox": "还没有可用的沙箱：先登记模型的 key、拉起沙箱。",
       "offline": "你电脑上的本地 link 没连着，专家要在那台电脑上干活。",
       "busy": "这个项目里有一件事专家还在做。",
-      "noMachine": "还没有登记电脑。先接入电脑，再开始工作或请专家。",
-      "noData": "专家要的数据还没选好。"
+      "noMachine": "还没有登记电脑。先接入电脑，再开始工作或请专家。"
     },
     "toBusy": "去看看",
     "toSettings": "去设置",
@@ -803,49 +801,14 @@
       "project_required": "这段对话还没有放进项目。",
       "preview_no_sample": "预览里只能看，不能交出。",
       "other": "没有交出去，请再试一次。",
-      "data_required": "这位专家要的数据还没选。",
-      "data_choice_invalid": "选的数据不合这位专家的要求，请改选。",
+      "data_required": "请从专家页重新请这位专家。",
+      "data_choice_invalid": "这位专家要用的数据现在准备不了，请稍后再试或重新登录。",
       "reauth_required": "登录过期了，请重新登录再交。",
-      "user_data_unavailable": "知识库暂时读不到，请稍后再试。",
-      "agent_offline": "你电脑上的本地 link 没连着，读不到本地知识库。"
+      "user_data_unavailable": "数据服务暂时连不上，请稍后再试。"
     },
     "loading": "加载中…",
     "packsFailed": "没有取到专家清单，请刷新再试。",
     "preparing": "筹备中",
-    "data": {
-      "title": "要用的数据",
-      "lead": "这位专家要你提供下面这些数据。从本地知识库或云端知识库里选，专家只读你选的这几份。",
-      "choose": "选数据",
-      "change": "改选",
-      "none": "还没选",
-      "required": "必填",
-      "optional": "可选",
-      "count": "选 {min}～{max} 份",
-      "countOne": "选 {count} 份",
-      "tables": "要有：{tables}",
-      "dialogTitle": "选数据",
-      "dialogLead": "按专家要的逐样选。项目里的文件不算，那是专家写的产出。",
-      "picked": "已选 {count} 份",
-      "cloud": "云端知识库",
-      "local": "本地知识库（只在装着本地 link 的这台电脑上看得到）",
-      "loading": "加载中…",
-      "cloudEmpty": "云端知识库里没有这种格式的资料。",
-      "cloudFailed": "没有取到云端知识库，可以先从本地知识库选。",
-      "notTaken": "「{name}」不是这一样要的格式。",
-      "full": "这一样最多选 {max} 份，先拿掉一份再选。",
-      "remove": "拿掉「{name}」",
-      "done": "好了",
-      "source": {
-        "cloud": "云端",
-        "local": "本地"
-      },
-      "format": {
-        "pdf": "PDF",
-        "excel": "Excel",
-        "csv": "CSV",
-        "text": "文本"
-      }
-    },
     "byQuestion": {
       "title": "要用的数据",
       "lead": "不用先选数据。请专家后，专家先按你的问题列出要哪些数据，你在委托页确认（能换、能改、能去掉、能加）后才去取、才开始做。",
@@ -1134,42 +1097,6 @@
     "title": "结果",
     "open": "打开结果",
     "close": "收起结果"
-  },
-  "library": {
-    "title": "云端知识库",
-    "lead": "你上传的、托我们代采取回的、从 knowmart 买来的资料。存在云端，按账号走，换电脑也在；专家干活时可以选用。你电脑上的资料在「本地知识库」，专家交回的底稿在项目里。",
-    "loading": "加载中…",
-    "empty": "还没有资料。",
-    "emptyHint": "点右上角「上传」放进来：PDF、Excel、CSV、文本或 Markdown，单份不超过 50 MB。",
-    "note": "删掉的是这份资料本身；正被某次请专家、某段对话用着的，要等用完才能删。",
-    "upload": "上传",
-    "uploading": "正在上传…",
-    "pick": "选一份文件上传",
-    "uploaded": "已上传「{name}」。",
-    "removed": "已删掉「{name}」。",
-    "confirmRemove": "删掉「{name}」？删了就没有了。",
-    "download": "下载「{name}」",
-    "remove": "删掉「{name}」",
-    "signIn": "重新登录",
-    "origin": {
-      "upload": "上传",
-      "collect": "代采",
-      "purchase": "买来"
-    },
-    "noResale": "不许转卖",
-    "error": {
-      "inUse": "这份资料正被用着（请专家或对话里选用了），用完再删。",
-      "typeNotAllowed": "只收 PDF、Excel（xlsx、xls）、CSV、文本和 Markdown。",
-      "contentMismatch": "文件内容和扩展名对不上。",
-      "notUtf8": "文本文件要用 UTF-8 编码。",
-      "tooLarge": "单份不能超过 50 MB。",
-      "quotaExceeded": "云端知识库满了（1 GB），删掉一些再传。",
-      "emptyFile": "这是个空文件。",
-      "gone": "这份资料已经没有了。",
-      "reauth": "登录过期了，重新登录一下才能用云端知识库。",
-      "unavailable": "云端知识库暂时用不了，请稍后再试。",
-      "failed": "没有成功，请再试一次。"
-    }
   },
   "computerConnection": {
     "action": "接入电脑",
