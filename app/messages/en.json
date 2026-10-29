@@ -307,7 +307,7 @@
       "summon": "Pick an expert in knowmart"
     },
     "knowbot": {
-      "checking": "Checking the expert you picked in knowmart…",
+      "checking": "Checking the expert you picked…",
       "notFound": "That expert was not found: it may not be yours, or it is stopped.",
       "unavailable": "knowmart is unreachable right now. Please try again later.",
       "invalid": "This expert version cannot run in the workbench. Please contact us.",

@@ -38,11 +38,22 @@ function answer(status: number, body: unknown) {
   })
 }
 
-function stub(pin: () => Response) {
+const TASK = '11111111-1111-4111-8111-111111111111'
+const PROJECT = '22222222-2222-4222-8222-222222222222'
+const FOUND = {
+  task_id: TASK,
+  project_id: PROJECT,
+  question: '宁德时代这几年的毛利率怎么变的',
+  state: 'SUCCEEDED',
+  outcome: 'none',
+}
+
+function stub(pin: () => Response, gets: Record<string, unknown> = {}) {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
       const path = String(input).split('?')[0]
+      if (path in gets) return answer(200, gets[path])
       if (path === '/api/workbench/knowbots/pin') {
         const headers = new Headers(init.headers)
         calls.push({
@@ -97,6 +108,52 @@ describe('从 knowmart 选定分身回来', () => {
         csrf: 'csrf-for-test',
       },
     ])
+  })
+
+  it('从 knowlab 来、带着找专家那一轮：到那个项目的请专家页，问题填好、这位选好', async () => {
+    window.sessionStorage.clear()
+    search = new URLSearchParams({ knowbot: `${KNOWBOT}@1`, task: TASK, from: 'knowlab' })
+    stub(() => answer(200, { contract_version: 2, pack: PACK }), {
+      [`/api/workbench/find-expert/${TASK}`]: FOUND,
+      [`/api/workbench/projects/${PROJECT}`]: {
+        project: {
+          id: PROJECT,
+          environment_id: '33333333-3333-4333-8333-333333333333',
+          workspace_root: '/home/u',
+          path: 'catl',
+          title: '宁德时代',
+          directory: '/home/u/catl',
+          archived: false,
+          environment_name: '我的电脑',
+          online: true,
+        },
+        active_task_id: null,
+        conversations: [],
+        tasks: [],
+      },
+    })
+    page()
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith(
+        `/zh-CN/workbench/projects/${PROJECT}/expert/new?expert=${encodeURIComponent(PACK.id)}`,
+      ),
+    )
+    expect(window.sessionStorage.getItem('workbench.question')).toBe(FOUND.question)
+  })
+
+  it('那一轮取不到（不是你的、项目没了）：回专家首页，照常选好这一位', async () => {
+    window.sessionStorage.clear()
+    search = new URLSearchParams({ knowbot: `${KNOWBOT}@1`, task: TASK })
+    stub(() => answer(200, { contract_version: 2, pack: PACK }), {
+      [`/api/workbench/find-expert/${TASK}`]: FOUND,
+    })
+    page()
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith(
+        `/zh-CN/workbench?mode=expert&expert=${encodeURIComponent(PACK.id)}`,
+      ),
+    )
+    expect(window.sessionStorage.getItem('workbench.question')).toBeNull()
   })
 
   it('ignores links without a well-formed knowbot', () => {

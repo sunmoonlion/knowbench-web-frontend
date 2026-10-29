@@ -307,7 +307,7 @@
       "summon": "去 knowmart 选专家"
     },
     "knowbot": {
-      "checking": "正在核对你从 knowmart 选的专家……",
+      "checking": "正在核对你选的专家……",
       "notFound": "没找到这位专家：可能不是你的，或已停用。",
       "unavailable": "knowmart 暂时连不上，请稍后再试。",
       "invalid": "这一版专家在工作台跑不了，请联系我们。",
