@@ -27,6 +27,18 @@ export function askBlocker(input: {
   return null
 }
 
+// 「让 AI 找」交不出去的原因：同上，只是不用先选专家（找专家那一轮也在项目里跑）
+export function findBlocker(input: {
+  question: string
+  project: ProjectDetail | undefined
+  sandboxes: number | undefined
+  machines?: number
+}): AskBlocker | null {
+  const blocker = askBlocker({ ...input, pack: undefined })
+  if (blocker !== 'noExpert') return blocker
+  return input.question.trim() ? null : 'noQuestion'
+}
+
 // 专家正在做的那件事在哪段对话里
 export function busyConversation(project: ProjectDetail | undefined): string | null {
   return project?.conversations.find((each) => each.active_task_id !== null)?.id ?? null

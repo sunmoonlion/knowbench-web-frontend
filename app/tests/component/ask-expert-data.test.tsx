@@ -77,9 +77,23 @@ beforeEach(() => {
         })
       if (method !== 'GET') {
         calls.push({ method, path, body: JSON.parse(String(init.body ?? '{}')) })
-        return json({ task_id: '11111111-1111-4111-8111-111111111111' }, 201)
+        return json(
+          {
+            task_id: '11111111-1111-4111-8111-111111111111',
+            session_id: '22222222-2222-4222-8222-222222222222',
+          },
+          201,
+        )
       }
       if (path === '/api/workbench/packs') return json(PACKS)
+      if (path.startsWith('/api/workbench/find-expert/')) {
+        return json({
+          task_id: '11111111-1111-4111-8111-111111111111',
+          project_id: project,
+          question: '看看这家公司这几年的年报',
+          state: 'RUNNING',
+        })
+      }
       const needs = /^\/api\/workbench\/packs\/(.+)\/data-needs$/.exec(path)
       if (needs) return json(NEEDS[decodeURIComponent(needs[1])])
       const body = sample(path)
@@ -114,6 +128,17 @@ describe('请专家：数据按问题定', () => {
     await waitFor(() => expect(calls).toHaveLength(1))
     expect(calls[0].body).toMatchObject({ expert: KNOWBOT, question: '看看这家公司这几年的年报' })
     expect(calls[0].body).not.toHaveProperty('data')
+  })
+
+  it('「让 AI 找」不用先选专家：带着问题开一轮找专家', async () => {
+    page(<AskExpertScreen project={project} from={null} expert={null} />)
+    const find = screen.getByRole('button', { name: '让 AI 找' })
+    await waitFor(() => expect(find).toBeEnabled())
+    fireEvent.click(find)
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect(calls[0].path).toBe(`/api/workbench/projects/${project}/find-expert`)
+    expect(calls[0].body).toMatchObject({ question: '看看这家公司这几年的年报' })
+    expect(await screen.findByRole('status')).toHaveTextContent('正在按各位专家自己写的范围')
   })
 
   it('内置专家不用数据：没有数据那一节', async () => {

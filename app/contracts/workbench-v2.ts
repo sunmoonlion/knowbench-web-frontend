@@ -24,6 +24,8 @@ export const conversationSchema = z
     active_task_id: uuid.nullable(),
     created_at: z.string(),
     last_active_at: z.string().nullable(),
+    // 怎么来的：direct_answer 是找专家没找到、用户让自己的模型直接答的（请专家方案设计第 4.9 节）
+    origin: z.enum(['direct_answer']).nullable().optional(),
   })
   .loose()
 export type Conversation = z.infer<typeof conversationSchema>
@@ -851,3 +853,42 @@ export const localSettingsSchema = z
   })
   .loose()
 export type LocalSettings = z.infer<typeof localSettingsSchema>
+
+// ---------------- AI 请专家（请专家方案设计第 4.9 节） ----------------
+export const findStartedSchema = z.object({ task_id: uuid, session_id: uuid }).loose()
+const pickSchema = z
+  .object({
+    knowbot_id: z.string(),
+    version: z.string(),
+    name: z.string(),
+    tagline: z.string(),
+    price: z.string().nullable(),
+    free: z.boolean(),
+    reason: z.string(),
+  })
+  .loose()
+export type ExpertPick = z.infer<typeof pickSchema>
+export const findResultSchema = z
+  .object({
+    task_id: uuid,
+    project_id: z.string(),
+    question: z.string(),
+    state: z.string(),
+    error: z.string().optional(),
+    // 没结束时没有下面几项
+    outcome: z.enum(['summon', 'candidates', 'none']).optional(),
+    picks: z.array(pickSchema).optional(),
+    recommend: z
+      .object({ action: z.enum(['direct', 'incubate']), reason: z.string() })
+      .nullable()
+      .optional(),
+    demand: z.object({ title: z.string(), problem: z.string() }).nullable().optional(),
+  })
+  .loose()
+export type FindResult = z.infer<typeof findResultSchema>
+export const demandPublishedSchema = z
+  .object({ demand: z.object({ demand_id: z.string() }).loose() })
+  .loose()
+export const incubationAskedSchema = z
+  .object({ request_id: z.string(), title: z.string().optional(), created: z.boolean() })
+  .loose()

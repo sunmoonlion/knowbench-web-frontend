@@ -27,6 +27,7 @@ import { isBuilt, routes } from '@/lib/workbench/routes'
 
 import { useConversation, useConversationActions } from '@/lib/workbench/conversation'
 import { running, thread } from '../model/thread'
+import { DirectAnswerNote } from './direct-answer-note'
 import { Turn } from './turn'
 
 type Asking = 'project' | 'work' | 'expert' | null
@@ -113,6 +114,7 @@ export function ChatScreen({
           <span className="text-[13px] text-amber-600">{tc('stream.offline')}</span>
         ) : null}
       </header>
+      {session?.origin === 'direct_answer' ? <DirectAnswerNote conversation={id} /> : null}
 
       <div className="flex min-h-0 flex-1">
         <div className="flex min-w-0 flex-1 flex-col">

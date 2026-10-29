@@ -10,13 +10,15 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ConnectComputerLink } from '@/components/workbench/connect-computer'
 import { useWorkbench } from '@/lib/workbench/context'
+import { useStartFind } from '@/lib/workbench/find-expert'
 import { WorkbenchError } from '@/lib/workbench/http'
 import { useMachines, useProjectDetail, useSandboxes } from '@/lib/workbench/queries'
 import { routes } from '@/lib/workbench/routes'
 import { cn } from '@/lib/utils'
 
 import { useAsk, useDataNeeds, usePacks, useSaid } from '../api/desk'
-import { askBlocker, busyConversation, sees } from '../model/ask'
+import { askBlocker, busyConversation, findBlocker, sees } from '../model/ask'
+import { FindExpertPanel } from './find-expert-panel'
 
 const QUESTION = 'workbench.question'
 const label = 'text-muted-foreground mb-1.5 text-xs font-medium'
@@ -44,6 +46,9 @@ export function AskExpertScreen({
   const machines = useMachines()
   const said = useSaid(from)
   const ask = useAsk()
+  const startFind = useStartFind()
+  // 「让 AI 找」那一轮的任务号：有了就在专家清单上方显示结果
+  const [findTask, setFindTask] = useState<string | null>(null)
 
   const [chosen, setChosen] = useState<string | null>(expert)
   // 清单 v2 的专家（decisions ⑭）：不用选数据，只说专家自带几份
@@ -64,6 +69,12 @@ export function AskExpertScreen({
   const v2 = needs.data?.contract === 'knowbot-manifest/v2' ? needs.data : null
   const blocker = askBlocker({
     pack,
+    question,
+    project: project.data,
+    sandboxes: sandboxes.data?.length,
+    machines: machines.isSuccess ? machines.data.length : undefined,
+  })
+  const findBlocked = findBlocker({
     question,
     project: project.data,
     sandboxes: sandboxes.data?.length,
@@ -94,6 +105,21 @@ export function AskExpertScreen({
     }
   }
 
+  // 让你的模型按专家自己写的范围替你找（请专家方案设计第 4.9 节）
+  async function find() {
+    if (findBlocked !== null || startFind.isPending) return
+    try {
+      const started = await startFind.mutateAsync({
+        project: projectId,
+        question: question.trim(),
+        key: crypto.randomUUID(),
+      })
+      setFindTask(started.task_id)
+    } catch {
+      // 原因显示在按钮下面
+    }
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -104,7 +130,28 @@ export function AskExpertScreen({
             </h1>
 
             <section>
-              <p className={label}>{t('who')}</p>
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <p className={cn(label, 'mb-0')}>{t('who')}</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={findBlocked !== null || startFind.isPending || findTask !== null}
+                  title={findBlocked ? t(`blocker.${findBlocked}`) : t('findHint')}
+                  onClick={() => void find()}
+                >
+                  {startFind.isPending ? t('finding') : t('find')}
+                </Button>
+              </div>
+              {startFind.isError ? (
+                <p role="alert" className="text-destructive mb-2 text-[13px]">
+                  {t('findFailed')}
+                </p>
+              ) : null}
+              {findTask ? (
+                <div className="mb-3">
+                  <FindExpertPanel task={findTask} project={projectId} from={from} />
+                </div>
+              ) : null}
               <ul className="grid gap-2 sm:grid-cols-2">
                 {(packs.data ?? []).map((each) => {
                   // 筹备中的专家：看得见、读得到它要做什么，请不了
