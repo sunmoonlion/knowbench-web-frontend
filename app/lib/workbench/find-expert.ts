@@ -85,13 +85,14 @@ export function useDirectAnswer() {
 }
 
 // 浏览器里记两样，给后面的页面用：直接答的那段对话是哪一轮找专家来的（聊天页上好接着点「孵化」）；
-// AI 替用户请了哪位、理由（专家处理中那一页顶上照实写）。取不到就当没有。
+// AI 替用户请了哪位、理由（专家处理中那一页顶上照实写）。记在这个浏览器里（关了标签页也在），
+// 换了浏览器就没有；取不到就当没有。
 const DIRECT = 'workbench.directAnswer.'
 const SUMMONED = 'workbench.aiSummoned.'
 
 function remember(prefix: string, conversation: string, value: unknown) {
   try {
-    window.sessionStorage.setItem(prefix + conversation, JSON.stringify(value))
+    window.localStorage.setItem(prefix + conversation, JSON.stringify(value))
   } catch {
     // 浏览器不让存：页面照常，只是少一句说明
   }
@@ -99,7 +100,7 @@ function remember(prefix: string, conversation: string, value: unknown) {
 
 function recall<T>(prefix: string, conversation: string): T | null {
   try {
-    const raw = window.sessionStorage.getItem(prefix + conversation)
+    const raw = window.localStorage.getItem(prefix + conversation)
     return raw ? (JSON.parse(raw) as T) : null
   } catch {
     return null

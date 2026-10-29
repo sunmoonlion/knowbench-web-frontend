@@ -54,6 +54,7 @@ beforeEach(() => {
   calls = []
   push.mockReset()
   window.sessionStorage.clear()
+  window.localStorage.clear()
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
@@ -184,7 +185,7 @@ describe('让 AI 找', () => {
 
 describe('直接答的那段对话', () => {
   it('顶上照实说不是专家答的；记得哪一轮来的就能孵化，附上这段对话', async () => {
-    window.sessionStorage.setItem(`workbench.directAnswer.${TALK}`, JSON.stringify({ task: TASK }))
+    window.localStorage.setItem(`workbench.directAnswer.${TALK}`, JSON.stringify({ task: TASK }))
     page(<DirectAnswerNote conversation={TALK} />)
     expect(screen.getByRole('note')).toHaveTextContent('这是你的模型直接答的，不是专家')
     fireEvent.click(screen.getByRole('button', { name: '孵化一个专家（附这份回答）' }))
