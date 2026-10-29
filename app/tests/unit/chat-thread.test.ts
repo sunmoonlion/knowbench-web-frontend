@@ -60,7 +60,8 @@ describe('聊天：事件变成一轮一轮', () => {
       failed: true,
       running: false,
     })
-    expect(third.missing).toEqual([{ code: '600436', dataset: 'sh600436-financials' }])
+    // 不再另记「没有数据」（decisions 10-29「发版前补齐」①）：只看模型的回答
+    expect(third).not.toHaveProperty('missing')
     expect(third.answer?.text).toContain('还没有入库')
     expect(running(turns)).toBeNull()
   })

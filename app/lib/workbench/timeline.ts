@@ -74,7 +74,6 @@ export type Entry =
       // 请求摘要（SHA-256）的前 12 位，和电脑上弹窗里的那一串对得上
       digest: string
     }
-  | { kind: 'missing'; key: string; code: string; dataset: string | null }
   // 交给专家、专家交回。交回时带上这件委托怎么结束的，好告诉用户去「工作底稿」看；
   // 打回是受理时就没接（一步没做、没有底稿），带上为什么，不叫人去看底稿
   | {
@@ -210,18 +209,6 @@ export function timeline(events: readonly ConversationEvent[]): Timeline {
           entries.push({ kind: 'notice', key: `notice:${event.cursor}`, what: 'failed' })
         }
         break
-      case 'data.missing': {
-        const code = text(payload.security_code)
-        if (code && !entries.some((entry) => entry.kind === 'missing' && entry.code === code)) {
-          entries.push({
-            kind: 'missing',
-            key: `missing:${code}`,
-            code,
-            dataset: text(payload.dataset) || null,
-          })
-        }
-        break
-      }
       case 'interaction/opened': {
         const prompt = (payload.prompt ?? {}) as Item
         const subject = (payload.subject ?? prompt.subject ?? {}) as Item

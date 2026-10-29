@@ -21,7 +21,6 @@
    },
    "why": "这个动作超出了当前允许的范围，要你点头才做",
    "failed": [],
-   "missing_data": null,
    "expires_at": "2026-10-12T14:02:52.612666Z",
    "created_at": "2026-10-12T13:02:52.613050Z"
   },
@@ -65,12 +64,6 @@
      "message": "范围内没有任何一期的数据"
     }
    ],
-   "missing_data": {
-    "market": null,
-    "source": "expert",
-    "dataset": null,
-    "security_code": "600436"
-   },
    "expires_at": "2026-10-15T13:02:48.960976Z",
    "created_at": "2026-10-12T13:02:48.960305Z"
   },
@@ -106,7 +99,6 @@
      "message": "有勾稽规则不平，不往下算"
     }
    ],
-   "missing_data": null,
    "expires_at": "2026-10-15T13:02:48.682624Z",
    "created_at": "2026-10-12T13:02:48.681892Z"
   }

@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Marker, MarkerContent } from '@/components/ui/marker'
-import { MissingDataCard } from '@/components/workbench/missing-data-card'
 import { ChangeLine, StepLine } from '@/components/workbench/step-line'
 import type { Waiting } from '@/contracts/workbench-v2'
 import { relativeTo } from '@/lib/workbench/items'
@@ -404,8 +403,6 @@ export function TimelineEntry({
         </Marker>
       )
     }
-    case 'missing':
-      return <MissingDataCard code={entry.code} dataset={entry.dataset} />
     case 'handover':
       return (
         <div className="space-y-2">

@@ -395,11 +395,6 @@
         "failed": "没有改成"
       }
     },
-    "missing": {
-      "title": "{code} 的数据还没有入库",
-      "body": "我们的数据里还没有这家公司，所以查不到。缺的数据集：",
-      "later": "入库由我们来做；有了数据再问。"
-    },
     "problem": {
       "backend_unavailable": "连不上服务，请稍后再试。",
       "preview_no_sample": "预览里只能看，不能发。",

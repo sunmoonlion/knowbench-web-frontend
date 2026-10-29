@@ -6,7 +6,6 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { MissingDataCard } from '@/components/workbench/missing-data-card'
 import type { Review } from '@/contracts/workbench-v2'
 
 export type ReviewAnswer = { decision: string; answer?: Record<string, unknown> }
@@ -67,13 +66,6 @@ export function ReviewPanel({
             ))}
           </ul>
         </div>
-      ) : null}
-
-      {review.missing_data ? (
-        <MissingDataCard
-          code={review.missing_data.security_code}
-          dataset={review.missing_data.dataset}
-        />
       ) : null}
 
       {review.subject?.after_decline ? (

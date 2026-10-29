@@ -395,11 +395,6 @@
         "failed": "not applied"
       }
     },
-    "missing": {
-      "title": "No data for {code} yet",
-      "body": "This company is not in our data yet, so nothing can be queried. Missing dataset:",
-      "later": "We add companies on our side; ask again once the data is in."
-    },
     "problem": {
       "backend_unavailable": "Cannot reach the service. Try again later.",
       "preview_no_sample": "The preview is read-only.",

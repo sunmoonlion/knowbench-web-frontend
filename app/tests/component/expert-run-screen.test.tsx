@@ -171,11 +171,4 @@ describe('专家处理中', () => {
     // 等你决定的时候不说「还在进行」
     expect(screen.queryByText(/这一步已经做了/)).toBeNull()
   })
-
-  it('专家发现没有数据：审查面里有去申请入库的路', async () => {
-    page(conversationOf('专家停下来了：没有数据'))
-    const review = within(await screen.findByRole('region', { name: '这家公司还没有数据' }))
-    expect(review.getByText('600436 的数据还没有入库')).toBeInTheDocument()
-    expect(review.getByRole('button', { name: '数据已经入库了，接着做' })).toBeInTheDocument()
-  })
 })

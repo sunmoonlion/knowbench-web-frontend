@@ -429,10 +429,6 @@ export const reviewSchema = z
           .loose(),
         why: z.string().nullable(),
         failed: z.array(z.object({ label: z.string(), message: z.string() }).loose()),
-        missing_data: z
-          .object({ security_code: z.string(), dataset: z.string().nullable() })
-          .loose()
-          .nullable(),
         pending: z
           .object({
             title: z.string(),

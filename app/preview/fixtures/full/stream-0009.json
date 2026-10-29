@@ -671,22 +671,6 @@
   "created_at": "2026-10-12T13:02:48.951169+00:00"
  },
  {
-  "id": "54c7c15f-89f7-5816-935f-8872b590fa8e",
-  "session_id": "f12f11d1-c5ab-500d-a8ae-386aa5364f48",
-  "cursor": 30,
-  "kind": "data",
-  "type": "data.missing",
-  "payload": {
-   "market": null,
-   "source": "expert",
-   "dataset": null,
-   "security_code": "600436"
-  },
-  "task_id": "2a01542e-376c-535f-ba1a-aa5d28c46cca",
-  "attempt_id": "02bba996-2682-5aa4-81a4-7243cd3044e9",
-  "created_at": "2026-10-12T13:02:48.955097+00:00"
- },
- {
   "id": "451518b7-8939-5382-85a9-8fa24509bdf2",
   "session_id": "f12f11d1-c5ab-500d-a8ae-386aa5364f48",
   "cursor": 31,
@@ -729,13 +713,7 @@
       "non_empty(dataset): 这家公司未入库：没有对应的数据集",
       "non_empty(data_version): 没有数据版本",
       "list_min(periods): 范围内没有任何一期的数据"
-     ],
-     "missing_data": {
-      "market": null,
-      "source": "expert",
-      "dataset": null,
-      "security_code": "600436"
-     }
+     ]
     },
     "evidence": [],
     "question": "数据入库之后可以接着做。现在可以先不答：委托停在这里，不再花钱",
@@ -749,13 +727,7 @@
      "non_empty(dataset): 这家公司未入库：没有对应的数据集",
      "non_empty(data_version): 没有数据版本",
      "list_min(periods): 范围内没有任何一期的数据"
-    ],
-    "missing_data": {
-     "market": null,
-     "source": "expert",
-     "dataset": null,
-     "security_code": "600436"
-    }
+    ]
    },
    "interaction_id": "81108b8f-3022-5de7-860c-36662e2db6fb"
   },

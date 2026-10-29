@@ -838,22 +838,6 @@
    "created_at": "2026-10-12T13:02:51.557903+00:00"
   },
   {
-   "id": "3f0424a8-b543-549e-9faa-657a70fac169",
-   "session_id": "3ad15f47-e433-5ab0-b668-72afa9b2fba6",
-   "cursor": 38,
-   "kind": "data",
-   "type": "data.missing",
-   "payload": {
-    "market": "sh",
-    "source": "tool",
-    "dataset": "sh600436-financials",
-    "security_code": "600436"
-   },
-   "task_id": null,
-   "attempt_id": null,
-   "created_at": "2026-10-12T13:02:51.562266+00:00"
-  },
-  {
    "id": "adfb3c78-9c17-57bf-b5d5-d0b2124e6d83",
    "session_id": "3ad15f47-e433-5ab0-b668-72afa9b2fba6",
    "cursor": 39,

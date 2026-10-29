@@ -43,13 +43,7 @@
       "non_empty(dataset): 这家公司未入库：没有对应的数据集",
       "non_empty(data_version): 没有数据版本",
       "list_min(periods): 范围内没有任何一期的数据"
-     ],
-     "missing_data": {
-      "market": null,
-      "source": "expert",
-      "dataset": null,
-      "security_code": "600436"
-     }
+     ]
     },
     "evidence": [],
     "question": "数据入库之后可以接着做。现在可以先不答：委托停在这里，不再花钱",

@@ -20,8 +20,6 @@ export type TurnStatus = 'queued' | 'running' | 'completed' | 'interrupted' | 'f
 // 模型这会儿在干什么。只在这一轮还在跑的时候有
 export type Activity = 'waiting' | 'thinking' | 'data' | 'file' | 'writing'
 
-export type MissingData = { code: string; dataset: string | null }
-
 export type TurnView = {
   key: string
   turnId: string | null
@@ -29,7 +27,6 @@ export type TurnView = {
   at: string
   steps: Step[]
   answer: { id: string; text: string } | null
-  missing: MissingData[]
   status: TurnStatus
   activity: Activity | null
 }
@@ -64,7 +61,6 @@ export function thread(events: readonly ConversationEvent[]): TurnView[] {
         at: event.created_at,
         steps: [],
         answer: null,
-        missing: [],
         status: 'queued',
         activity: 'waiting',
       })
@@ -97,11 +93,6 @@ export function thread(events: readonly ConversationEvent[]): TurnView[] {
       if (live && text(payload.kind).startsWith('turn')) {
         turn.status = 'failed'
         turn.activity = null
-      }
-    } else if (event.type === 'data.missing') {
-      const code = text(payload.security_code)
-      if (code && !turn.missing.some((each) => each.code === code)) {
-        turn.missing.push({ code, dataset: text(payload.dataset) || null })
       }
     } else if (event.type === 'item/started' || event.type === 'item/completed') {
       const item = (payload.item ?? {}) as Item

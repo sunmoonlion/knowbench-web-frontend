@@ -40,12 +40,6 @@
     "message": "范围内没有任何一期的数据"
    }
   ],
-  "missing_data": {
-   "market": null,
-   "source": "expert",
-   "dataset": null,
-   "security_code": "600436"
-  },
   "expires_at": "2026-10-15T13:02:48.960976Z",
   "created_at": "2026-10-12T13:02:48.960305Z",
   "pending": {

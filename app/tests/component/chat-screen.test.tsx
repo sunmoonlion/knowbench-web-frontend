@@ -137,15 +137,15 @@ describe('聊天页', () => {
     expect(screen.queryByRole('complementary', { name: '结果' })).toBeNull()
   })
 
-  it('一段答完了的聊天：三轮、没有数据的卡片、花了多少', async () => {
+  it('一段答完了的聊天：三轮、花了多少', async () => {
     page()
     expect(await screen.findByText('片仔癀 2025 年的毛利率是多少？')).toBeInTheDocument()
     // 第一句话出现两处：气泡里，和顶部的标题（对话的名字默认取第一句话）
     await waitFor(() =>
       expect(screen.getAllByText('毛利率和净利率有什么区别？用三句话说清楚。')).toHaveLength(2),
     )
-    // 没有数据：一张卡片，能去申请入库（链接要等跨应用的地址取到，这里没有，所以是说明）
-    expect(screen.getByText('600436 的数据还没有入库')).toBeInTheDocument()
+    // 「没有数据」卡片已删（decisions 10-29「发版前补齐」①）：查不到的照模型的回答说
+    expect(screen.queryByText('600436 的数据还没有入库')).toBeNull()
     // 过程收成一行；模型的思考不出现
     expect(screen.getByRole('button', { name: /查了 1 次数据/ })).toBeInTheDocument()
     expect(document.body.textContent).not.toContain('The user is asking')

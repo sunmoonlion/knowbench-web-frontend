@@ -8,7 +8,6 @@ import { Markdown } from '@/components/common/markdown'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
 import { Marker, MarkerContent } from '@/components/ui/marker'
 import { Message, MessageContent } from '@/components/ui/message'
-import { MissingDataCard } from '@/components/workbench/missing-data-card'
 import { StepLine } from '@/components/workbench/step-line'
 import { cn } from '@/lib/utils'
 
@@ -81,9 +80,6 @@ export function Turn({ turn }: { turn: TurnView }) {
       <Message>
         <MessageContent>
           <Process turn={turn} />
-          {turn.missing.map((missing) => (
-            <MissingDataCard key={missing.code} {...missing} />
-          ))}
           {turn.answer ? <Markdown>{turn.answer.text}</Markdown> : null}
           {turn.status === 'interrupted' ? (
             <Marker>
