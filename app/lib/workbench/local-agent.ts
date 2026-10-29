@@ -133,7 +133,7 @@ export async function ticketFor(
 export type LocalAgent = { port: number; ticket: LocalTicket; info: LocalInfo }
 
 // 浏览器不在装有本地 link 的电脑上（远程登录 link 的电脑，账 165、会合点备忘第十一节）：看文件、新建项目改走
-// 工作台 → 会合点服务流 → 那台电脑上的本地 link。内容经云端转发、不落盘，页面要提醒。本地知识库目录不经这条路。
+// 工作台 → 会合点服务流 → 那台电脑上的本地 link。内容经云端转发、不落盘，页面要提醒。
 export type RemoteLink = {
   remote: true
   environment: string
@@ -165,7 +165,6 @@ export async function connectRemoteLink(
     info: {
       userId: `remote:${environment}`,
       roots: hello.roots,
-      libraryDir: null,
       // 0.5.2 起本地 link 的服务流能新建项目；老版本只能看
       capabilities: (hello.capabilities ?? []).includes(SERVICE_PROJECTS)
         ? [PROJECT_CAPABILITY]
@@ -345,7 +344,6 @@ export type SettingsChange = {
   rootChoices?: string[]
   ceiling?: { sandbox: string; network: boolean }
   autostart?: boolean
-  libraryDir?: string | null
 }
 
 // 放宽的项代理会在那台电脑上弹窗问本人；这里只是把「想改成什么」送过去

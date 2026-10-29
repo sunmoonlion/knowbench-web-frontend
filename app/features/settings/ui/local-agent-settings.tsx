@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 
 import { isOnline } from '../model/guide'
 
-// 「这台电脑上的设置」（0021 §二之 3，0022 乙案）：白名单目录、上限、自启、本地知识库目录存在电脑上的代理里。
+// 「这台电脑上的设置」（0021 §二之 3，0022 乙案）：白名单目录、上限、自启存在电脑上的代理里。
 // 在这里改是直接送到那台电脑（经回环口）；放宽的改动代理会在电脑上弹确认窗，用户点了才写，写完代理自己重启。
 // 不在那台电脑上、代理没跑、接的是别的账号：只显示代理上次报来的，并说清为什么改不了。
 type Draft = {
@@ -23,7 +23,6 @@ type Draft = {
   sandbox: string
   network: boolean
   autostart: boolean
-  libraryDir: string
 }
 
 function fromSettings(settings: LocalSettings): Draft {
@@ -33,7 +32,6 @@ function fromSettings(settings: LocalSettings): Draft {
     sandbox: settings.ceiling.sandbox,
     network: settings.ceiling.network,
     autostart: settings.autostart ?? false,
-    libraryDir: settings.libraryDir ?? '',
   }
 }
 
@@ -47,7 +45,6 @@ export function changesBetween(base: Draft, next: Draft): SettingsChange {
     change.ceiling = { sandbox: next.sandbox, network: next.network }
   }
   if (base.autostart !== next.autostart) change.autostart = next.autostart
-  if (base.libraryDir !== next.libraryDir) change.libraryDir = next.libraryDir || null
   return change
 }
 
@@ -57,7 +54,6 @@ export function widens(base: Draft, next: Draft): boolean {
   if (next.roots.some((root) => !base.roots.map(lower).includes(lower(root)))) return true
   if (base.sandbox === 'read-only' && next.sandbox === 'workspace-write') return true
   if (!base.network && next.network) return true
-  if (next.libraryDir && lower(next.libraryDir) !== lower(base.libraryDir)) return true
   if (!base.autostart && next.autostart) return true
   return false
 }
@@ -269,26 +265,6 @@ function SettingsForm({
           </label>
         </div>
       </div>
-      <label className="block">
-        <span className="font-medium">{t('libraryDir')}</span>
-        <div className="mt-1 flex gap-2">
-          <Input
-            value={draft.libraryDir}
-            onChange={(event) => setDraft((d) => ({ ...d, libraryDir: event.target.value }))}
-            placeholder={t('libraryDirPlaceholder')}
-            className="font-mono text-xs"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setDraft((d) => ({ ...d, libraryDir: '' }))}
-            disabled={!draft.libraryDir}
-          >
-            {t('clear')}
-          </Button>
-        </div>
-      </label>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" size="sm" disabled={!dirty || save.isPending}>
           {save.isPending ? t('saving') : t('save')}

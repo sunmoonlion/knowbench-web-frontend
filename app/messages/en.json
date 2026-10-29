@@ -192,8 +192,7 @@
       "pending": "Waiting for me",
       "machines": "My computers",
       "settings": "Settings",
-      "memory": "Memory",
-      "localLibrary": "Local library"
+      "memory": "Memory"
     },
     "computers": "Computers and projects",
     "computer": {
@@ -520,7 +519,6 @@
       "noComputer": "This conversation is not on any computer, so there are no files to show.",
       "loading": "Loading…",
       "noRoots": "The local link on this computer has no folders selected yet. Pick them in the tray under Settings for this computer.",
-      "library": "Local library",
       "empty": "Empty folder",
       "truncated": "Too many items; only the first 2000 are listed",
       "back": "Back to the file tree",
@@ -541,7 +539,6 @@
         "agent_service_failed": "Could not reach the local link on that computer; try again later.",
         "outside_whitelist": "This place is not in that computer's whitelist."
       },
-      "noLibrary": "This computer has no local library directory yet.",
       "export": {
         "word": "Download Word",
         "excel": "Download Excel",
@@ -1207,7 +1204,7 @@
     },
     "computer": {
       "local": "Settings on this computer",
-      "localLead": "Folders, limits, run at logon and the local library directory live in the local link on your computer. Changes made here go straight to that computer, not through the cloud; widening changes (adding a folder, raising the limit, enabling network, setting the library directory, turning on run at logon) need one confirmation on that computer, after which the local link restarts itself.",
+      "localLead": "Folders, limits and run at logon live in the local link on your computer. Changes made here go straight to that computer, not through the cloud; widening changes (adding a folder, raising the limit, enabling network, turning on run at logon) need one confirmation on that computer, after which the local link restarts itself.",
       "roots": "Allowed folders",
       "noRoots": "No folders yet",
       "sandboxMode": "Sandbox mode",
@@ -1226,9 +1223,6 @@
         "workspace-write": "Write only inside the whitelisted folders"
       },
       "autostart": "Run at logon",
-      "libraryDir": "Local library directory",
-      "libraryDirPlaceholder": "One directory; leave empty for none",
-      "clear": "Clear",
       "save": "Save to the computer",
       "saving": "Sending to the computer…",
       "confirmOnComputer": "This widens access: enter the code in the confirmation window on the computer and allow it.",
@@ -1267,13 +1261,6 @@
     },
     "baseUrl": "Endpoint (optional)",
     "baseUrlHint": "A self-hosted or proxied OpenAI-compatible endpoint; https only, no local or private addresses. Leave empty for the vendor default."
-  },
-  "localLibrary": {
-    "title": "Local library",
-    "lead": "A directory on your computer for material you want to keep; work and expert conversations can read it. This page reads straight from your computer, nothing goes to the cloud, so it is only visible on the computer that runs the local link.",
-    "noComputer": "No computer is connected yet.",
-    "noDir": "No local library directory has been chosen yet.",
-    "goComputer": "Set it under My computer"
   },
   "panes": {
     "sidebar": "Drag to resize the sidebar",

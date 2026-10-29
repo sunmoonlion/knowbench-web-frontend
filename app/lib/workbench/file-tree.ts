@@ -31,15 +31,12 @@ export function isUnder(path: string, root: string): boolean {
   return a === b || a.startsWith(b.endsWith(sep) ? b : b + sep)
 }
 
-export type TreeRoot = { path: string; kind: 'workspace' | 'library' }
+export type TreeRoot = { path: string }
 
-// 树根 = 代理白名单里的目录 + 本地知识库目录（0019）；当前项目所在的那个根排最前
-export function treeRoots(
-  info: Pick<LocalInfo, 'roots' | 'libraryDir'>,
-  directory: string | null,
-): TreeRoot[] {
-  const roots: TreeRoot[] = info.roots.map((path) => ({ path, kind: 'workspace' as const }))
-  if (info.libraryDir) roots.push({ path: info.libraryDir, kind: 'library' })
+// 树根 = 代理白名单里的目录；当前项目所在的那个根排最前。本地知识库目录随数据拓扑第四版①删了
+// （0043 第 4.1 节）：用户的资料在 knowbase
+export function treeRoots(info: Pick<LocalInfo, 'roots'>, directory: string | null): TreeRoot[] {
+  const roots: TreeRoot[] = info.roots.map((path) => ({ path }))
   if (!directory) return roots
   return [...roots].sort(
     (x, y) => Number(isUnder(directory, y.path)) - Number(isUnder(directory, x.path)),

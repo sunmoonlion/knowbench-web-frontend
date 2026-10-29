@@ -142,7 +142,6 @@ beforeEach(() => {
           version: '0.4.0',
           userId: 'u-abc',
           roots: ['D:\\研究'],
-          libraryDir: null,
         })
       if (path === 'http://127.0.0.1:47811/local/v1/settings' && init.method === 'PUT') {
         localPuts.push(JSON.parse(String(init.body)))
@@ -155,7 +154,6 @@ beforeEach(() => {
           rootChoices: ['D:\\研究', 'D:\\笔记'],
           ceiling: { sandbox: 'workspace-write', network: false },
           autostart: true,
-          libraryDir: null,
           version: '0.4.0',
         })
       return Response.json({ code: 'not_found' }, { status: 404 })

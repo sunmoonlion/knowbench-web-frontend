@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  BookOpenIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  FileIcon,
-  FolderIcon,
-  LoaderIcon,
-} from 'lucide-react'
+import { ChevronDownIcon, ChevronRightIcon, FileIcon, FolderIcon, LoaderIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 
@@ -21,31 +14,26 @@ import {
   type TreeRoot,
 } from '@/lib/workbench/file-tree'
 import { isRemote, localProblemCode, type LinkHandle } from '@/lib/workbench/local-agent'
-import { useLinkHandle, useLocalAgent, useLocalDirectory } from '@/lib/workbench/queries'
+import { useLinkHandle, useLocalDirectory } from '@/lib/workbench/queries'
 import { cn } from '@/lib/utils'
 
-// 右边栏「文件」（0017 §五、0022 乙案）：根是那台电脑的白名单目录加本地知识库目录，当前项目默认展开，
+// 右边栏「文件」（0017 §五、0022 乙案）：根是那台电脑的白名单目录，当前项目默认展开，
 // 目录点开才去读。只读。浏览器在装有本地 link 的电脑上：直接问本机 127.0.0.1 上的本地 link，不经云端；
-// 在远程登录 link 的电脑上：经工作台转发，内容经云端、不落盘，顶上提醒一句（账 165）。本地知识库只在本机看。
+// 在远程登录 link 的电脑上：经工作台转发，内容经云端、不落盘，顶上提醒一句（账 165）。
 // 这台电脑上没代理 / 接的是别的账号 / 没配对 时各说一句，不装作空。
 export function FileTree({
   environment,
   directory,
   selected,
   onSelect,
-  scope = 'all',
 }: {
   environment: string | null
   directory: string | null
   selected: string | null
   onSelect: (path: string) => void
-  // 'library'：只画本地知识库那个根（本地知识库页用）
-  scope?: 'all' | 'library'
 }) {
   const t = useTranslations('work')
-  const local = useLocalAgent(scope === 'library' ? environment : null)
-  const anywhere = useLinkHandle(scope === 'library' ? null : environment)
-  const link = scope === 'library' ? local : anywhere
+  const link = useLinkHandle(environment)
   if (environment === null) {
     return <p className="text-muted-foreground leading-6">{t('files.noComputer')}</p>
   }
@@ -60,15 +48,9 @@ export function FileTree({
   if (link.isError) {
     return <ServiceProblem error={link.error} />
   }
-  const roots = treeRoots(link.data.info, directory).filter((root) =>
-    scope === 'library' ? root.kind === 'library' : true,
-  )
+  const roots = treeRoots(link.data.info, directory)
   if (roots.length === 0) {
-    return (
-      <p className="text-muted-foreground leading-6">
-        {t(scope === 'library' ? 'files.noLibrary' : 'files.noRoots')}
-      </p>
-    )
+    return <p className="text-muted-foreground leading-6">{t('files.noRoots')}</p>
   }
   return (
     <>
@@ -84,7 +66,6 @@ export function FileTree({
             expand={pathsToExpand(root.path, directory)}
             selected={selected}
             onSelect={onSelect}
-            openByDefault={root.kind === 'workspace' || scope === 'library'}
           />
         ))}
       </ul>
@@ -121,16 +102,13 @@ function RootNode({
   expand,
   selected,
   onSelect,
-  openByDefault,
 }: {
   agent: LinkHandle
   root: TreeRoot
   expand: string[]
   selected: string | null
   onSelect: (path: string) => void
-  openByDefault: boolean
 }) {
-  const t = useTranslations('work')
   return (
     <li>
       <DirNode
@@ -138,17 +116,13 @@ function RootNode({
         path={root.path}
         label={
           <span className="flex min-w-0 items-center gap-1.5">
-            {root.kind === 'library' ? (
-              <BookOpenIcon className="size-3.5 shrink-0" />
-            ) : (
-              <FolderIcon className="size-3.5 shrink-0" />
-            )}
+            <FolderIcon className="size-3.5 shrink-0" />
             <span className="truncate font-medium" title={root.path}>
-              {root.kind === 'library' ? t('files.library') : root.path}
+              {root.path}
             </span>
           </span>
         }
-        initiallyOpen={openByDefault}
+        initiallyOpen
         expand={expand}
         selected={selected}
         onSelect={onSelect}

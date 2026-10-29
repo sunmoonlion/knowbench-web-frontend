@@ -811,7 +811,6 @@ export const localInfoSchema = z
     version: z.string().optional(),
     userId: z.string(),
     roots: z.array(z.string()),
-    libraryDir: z.string().nullable().optional(),
     capabilities: z.array(z.string()).optional(),
     lastSettingsChange: z.string().nullable().optional(),
   })
@@ -843,7 +842,6 @@ export const localSettingsSchema = z
     rootChoices: z.array(z.string()).optional(),
     ceiling: z.object({ sandbox: z.string(), network: z.boolean() }).loose(),
     autostart: z.boolean().optional(),
-    libraryDir: z.string().nullable().optional(),
     version: z.string().optional(),
     lastSettingsChange: z.string().nullable().optional(),
   })

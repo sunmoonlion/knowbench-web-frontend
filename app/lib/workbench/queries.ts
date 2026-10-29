@@ -173,7 +173,7 @@ export function useLocalAgent(environment: string | null) {
 }
 
 // 看文件、新建项目用的句柄（账 165）：这台是装有本地 link 的电脑就直连回环口，是远程登录 link 的电脑就走工作台转发。
-// 本地知识库、这台电脑上的设置只在装有本地 link 的电脑上用，照旧走 useLocalAgent
+// 这台电脑上的设置只在装有本地 link 的电脑上用，照旧走 useLocalAgent
 export function useLinkHandle(environment: string | null) {
   const { csrfToken } = useWorkbench()
   const presence = useLocalPresence()

@@ -25,8 +25,6 @@ export const routes = {
   settings: (locale: string, section: SettingsSection = 'cloud') => at(locale, 'settings', section),
   // 接入电脑是第三类；旧的 settings#computer 由 SettingsRedirect 转过来
   computer: (locale: string) => at(locale, 'settings', 'computer'),
-  // 本地知识库（0019 §二，0022 乙案）：用户电脑上的那个目录，网页直连代理回环口翻看
-  localLibrary: (locale: string) => at(locale, 'local-library'),
   // 长期记忆（0019 §四）
   memory: (locale: string) => at(locale, 'memory'),
 }
@@ -52,7 +50,6 @@ export type Page =
   | 'expert'
   | 'machines'
   | 'settings'
-  | 'localLibrary'
   | 'memory'
 
 const BUILT: ReadonlySet<Page> = new Set([
@@ -65,7 +62,6 @@ const BUILT: ReadonlySet<Page> = new Set([
   'askExpert',
   'machines',
   'settings',
-  'localLibrary',
   'memory',
 ])
 

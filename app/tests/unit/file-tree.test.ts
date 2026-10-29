@@ -26,14 +26,9 @@ describe('文件树的路径算术（Windows 与 POSIX 都认）', () => {
     expect(isUnder('/home/me', '/home/me')).toBe(true)
   })
 
-  it('树根：白名单目录 + 本地知识库；当前项目所在的根排最前', () => {
-    const info = { roots: ['D:\\notes', 'C:\\r'], libraryDir: 'E:\\lib' }
-    expect(treeRoots(info, 'C:\\r\\恒瑞医药').map((r) => r.path)).toEqual([
-      'C:\\r',
-      'D:\\notes',
-      'E:\\lib',
-    ])
-    expect(treeRoots(info, 'C:\\r\\恒瑞医药')[2].kind).toBe('library')
+  it('树根：白名单目录；当前项目所在的根排最前', () => {
+    const info = { roots: ['D:\\notes', 'C:\\r'] }
+    expect(treeRoots(info, 'C:\\r\\恒瑞医药').map((r) => r.path)).toEqual(['C:\\r', 'D:\\notes'])
     expect(treeRoots({ roots: [] }, null)).toEqual([])
   })
 

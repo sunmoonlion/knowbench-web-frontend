@@ -42,7 +42,6 @@ beforeEach(() => {
         version: '0.4.0',
         userId: 'u-abc',
         roots: ['C:\\r'],
-        libraryDir: 'D:\\lib',
       },
     },
     [`${LOCAL}/local/v1/fs/dir`]: (url) => {
@@ -121,7 +120,6 @@ describe('右边栏「文件」：直接问本机代理，文件不经云端', (
     fireEvent.click(screen.getByRole('button', { name: '文件' }))
     const tree = await screen.findByRole('tree', { name: '文件' })
     expect(within(tree).getByText('C:\\r')).toBeInTheDocument()
-    expect(within(tree).getByText('本地知识库')).toBeInTheDocument()
     expect(await within(tree).findByText('笔记.md')).toBeInTheDocument()
     expect(within(tree).getByText('README.md')).toBeInTheDocument()
     // 文件内容只向 127.0.0.1 要，工作台那边只被要了一张票（另有一次问「配给当前账号的那份本地 link」，账 143）
@@ -249,8 +247,6 @@ describe('右边栏「文件」：直接问本机代理，文件不经云端', (
     const tree = await screen.findByRole('tree', { name: '文件' })
     expect(await within(tree).findByText('远程.md')).toBeInTheDocument()
     expect(screen.getByText(messages.work.files.remoteNote)).toBeInTheDocument()
-    // 本地知识库不经这条路
-    expect(within(tree).queryByText('本地知识库')).toBeNull()
     expect(seen.some((each) => each.url.includes('local-ticket'))).toBe(false)
     expect(seen.some((each) => each.url.includes('/remote/fs/dir?path='))).toBe(true)
   })
