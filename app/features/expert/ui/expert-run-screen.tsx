@@ -99,7 +99,6 @@ export function ExpertRunScreen({ task }: { task: string }) {
       </header>
 
       {now ? <NowStrip now={now} clock={clock} /> : null}
-      {data.data ? <TaskDataPanel task={task} data={data.data} /> : null}
       {sheet.chosen_data?.length ? (
         <p
           className="text-muted-foreground shrink-0 truncate border-b px-4 py-1.5 text-xs"
@@ -116,6 +115,7 @@ export function ExpertRunScreen({ task }: { task: string }) {
       <div className="flex min-h-0 flex-1">
         <StepRail steps={steps} shown={shown} onPick={setPicked} />
         <div className="min-w-0 flex-1 overflow-y-auto">
+          {data.data ? <TaskDataPanel task={task} data={data.data} /> : null}
           <StepDetail
             step={detail.data ?? steps.find((step) => step.index === shown)}
             loading={detail.isPending}
