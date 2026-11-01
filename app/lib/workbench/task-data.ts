@@ -49,6 +49,14 @@ export function useTaskDataActions(task: string) {
         }),
       onSuccess: changed,
     }),
+    // 「传好了，重新查」：去 knowbase 上传了采不来的那份，请 knowbase 重新解析
+    recheck: useMutation({
+      mutationFn: () =>
+        sendJson(answered, `/api/workbench/tasks/${seg(task)}/data-requests/recheck`, {
+          csrfToken,
+        }),
+      onSuccess: changed,
+    }),
     // 不要提出的这几样，或者没取到的照现有的接着做
     decline: useMutation({
       mutationFn: () =>
@@ -146,6 +154,23 @@ export function periodOf(item: ListedItem): string | null {
     return start.slice(0, 4)
   }
   return `${start} ~ ${end}`
+}
+
+// 去 knowbase 直达上传时按这一样的描述预填（没有的不带）
+export function uploadValues(item: ListedItem): Record<string, string> {
+  const { subject, doc_type, period_start, period_end, edition } = item.key
+  const out: Record<string, string> = { doc_type }
+  for (const [name, value] of Object.entries({ subject, period_start, period_end, edition })) {
+    if (typeof value === 'string' && value) out[name] = value
+  }
+  return out
+}
+
+// 预计多久的粗写法：不到一小时按分钟，不到一天按小时，再长按天（都往上取整）
+export function roughDuration(seconds: number): { unit: 'minutes' | 'hours' | 'days'; n: number } {
+  if (seconds < 3600) return { unit: 'minutes', n: Math.max(1, Math.ceil(seconds / 60)) }
+  if (seconds < 86400) return { unit: 'hours', n: Math.ceil(seconds / 3600) }
+  return { unit: 'days', n: Math.ceil(seconds / 86400) }
 }
 
 // 有歧义、又没选也没去掉的：确认不了

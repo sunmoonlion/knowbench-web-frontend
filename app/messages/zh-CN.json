@@ -723,7 +723,26 @@
         "data_choice_invalid": "这样确认不了：换选的要在候选里，改的主体和年份要写对。",
         "reauth_required": "登录过期了，请重新登录再确认。"
       },
-      "confirmInKnowlab": "这是一次测试：专家要 {items}，去 knowlab 的测试页确认。"
+      "confirmInKnowlab": "这是一次测试：专家要 {items}，去 knowlab 的测试页确认。",
+      "eta": "要去取的预计最多 {duration}（保守地按全部要新取算）。",
+      "duration": {
+        "minutes": "{n} 分钟",
+        "hours": "{n} 小时",
+        "days": "{n} 天"
+      },
+      "prematch": {
+        "available": "能取 · 预计 {duration}",
+        "availableNoEta": "能取 · 渠道暂停，预计算不出",
+        "license": "许可档：{license, select, self {只许本人用} via_expert {可以经专家给别人用} other {可以出售}}",
+        "readingsMissing": "要的读法这条渠道给不全",
+        "unavailable": "取不到：{reason, select, no_channel {这类数据还取不到} subject_unsupported {这个主体还取不到} site_rejected {网站审核没过} site_unregistered {网站还没登记，提了会进待审} other {暂时取不到}}",
+        "site_pending": "网站待审，审过才取",
+        "conditions_unmet": "能取的渠道都不满足条件"
+      },
+      "upload": "去 knowbase 上传",
+      "recheck": "传好了，重新查",
+      "rechecking": "正在重新查…",
+      "notSaved": "这份成稿没存进 knowbase：{name}——{reason}"
     }
   },
   "expertHome": {

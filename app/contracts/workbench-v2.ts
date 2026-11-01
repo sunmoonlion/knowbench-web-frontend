@@ -699,6 +699,19 @@ export const listedStatusSchema = z.enum([
   'unusable',
 ])
 export type ListedStatus = z.infer<typeof listedStatusSchema>
+// 预切合（knowfeed-supply-prematch/v1，SDD 0043 第 3.3 节第 1 条）：要去取的那一样能不能取、
+// 先试的渠道是哪一档许可、按队列估要多久（秒，算不出是 null）。knowfeed 问不到时没有这一栏
+export const licenseSchema = z.enum(['self', 'via_expert', 'sale'])
+export const prematchSchema = z
+  .object({
+    status: z.enum(['available', 'unavailable', 'site_pending', 'conditions_unmet']),
+    reason: z.string().nullable().optional(),
+    license: licenseSchema.nullable().optional(),
+    eta_seconds: z.number().int().nullable().optional(),
+    readings_missing: z.array(z.string()).default([]),
+  })
+  .loose()
+export type Prematch = z.infer<typeof prematchSchema>
 export const listedItemSchema = z
   .object({
     ref: z.string(),
@@ -709,12 +722,14 @@ export const listedItemSchema = z
         doc_type: z.string(),
         period_start: z.string().nullable().optional(),
         period_end: z.string().nullable().optional(),
+        edition: z.string().nullable().optional(),
       })
       .loose(),
     status: listedStatusSchema,
     chosen: z.array(listedCandidateSchema),
     candidates: z.array(listedCandidateSchema),
     reason: z.string().nullable(),
+    prematch: prematchSchema.optional(),
   })
   .loose()
 export type ListedItem = z.infer<typeof listedItemSchema>
@@ -738,6 +753,8 @@ export const taskDataSchema = z
             status: z.string(),
             needs: z.array(dataRequestSchema).default([]),
             items: z.array(listedItemSchema).default([]),
+            // 要去取的几项一共预计多久（秒；保守地按全部要新取算，预切合问到了才有）
+            eta_seconds: z.number().int().nullable().optional(),
             missing: z.array(z.string()).default([]),
           })
           .loose(),
@@ -745,6 +762,10 @@ export const taskDataSchema = z
       .default([]),
     pinned: z
       .array(z.object({ name: z.string(), need: z.string().nullable() }).loose())
+      .default([]),
+    // 成稿没存进 knowbase 的（写明原因，0043 第 2.6 节；委托页显示）
+    outputs_not_saved: z
+      .array(z.object({ path: z.string(), reason: z.string().nullable() }).loose())
       .default([]),
   })
   .loose()

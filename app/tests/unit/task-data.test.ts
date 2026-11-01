@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import type { DataRequestItem } from '@/contracts/workbench-v2'
-import { confirmBody, noChanges, periodOf, unchosen } from '@/lib/workbench/task-data'
+import {
+  confirmBody,
+  noChanges,
+  periodOf,
+  roughDuration,
+  unchosen,
+  uploadValues,
+} from '@/lib/workbench/task-data'
 
 const need = (key: string, start: string) => ({
   key,
@@ -85,5 +92,30 @@ describe('确认专家提出的数据（decisions ⑭）', () => {
     ).toEqual([])
     expect(periodOf(request.items[0])).toBe('2025')
     expect(periodOf({ ...request.items[0], key: { doc_type: 'business_rule' } })).toBeNull()
+  })
+})
+
+describe('预切合与直达上传（SDD 0043 第 3.2、3.3 节）', () => {
+  it('预计多久往上取整：分钟、小时、天', () => {
+    expect(roughDuration(20)).toEqual({ unit: 'minutes', n: 1 })
+    expect(roughDuration(301)).toEqual({ unit: 'minutes', n: 6 })
+    expect(roughDuration(3600)).toEqual({ unit: 'hours', n: 1 })
+    expect(roughDuration(90000)).toEqual({ unit: 'days', n: 2 })
+  })
+
+  it('去 knowbase 上传按描述预填，没有的不带', () => {
+    const one = item('i9', 'req1_9', '2024', 'not_collectable')
+    expect(uploadValues(one)).toEqual({
+      doc_type: 'annual_report',
+      subject: '600519.SH',
+      period_start: '2024-01-01',
+      period_end: '2024-12-31',
+    })
+    expect(
+      uploadValues({
+        ...one,
+        key: { doc_type: 'research_company', subject: null, edition: 'full' },
+      }),
+    ).toEqual({ doc_type: 'research_company', edition: 'full' })
   })
 })

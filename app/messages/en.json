@@ -723,7 +723,26 @@
         "data_choice_invalid": "Cannot confirm this: a switched copy must be one of the candidates, and the company and years must be valid.",
         "reauth_required": "Your login has expired; sign in again and confirm."
       },
-      "confirmInKnowlab": "This is a test: the expert asks for {items}; confirm it on the test page in knowlab."
+      "confirmInKnowlab": "This is a test: the expert asks for {items}; confirm it on the test page in knowlab.",
+      "eta": "Fetching what is missing may take up to {duration} (assuming all of it is fetched anew).",
+      "duration": {
+        "minutes": "{n, plural, one {# minute} other {# minutes}}",
+        "hours": "{n, plural, one {# hour} other {# hours}}",
+        "days": "{n, plural, one {# day} other {# days}}"
+      },
+      "prematch": {
+        "available": "Can be fetched · about {duration}",
+        "availableNoEta": "Can be fetched · the channel is paused, no estimate",
+        "license": "License: {license, select, self {Only for myself} via_expert {Others may use it through experts} other {May be sold}}",
+        "readingsMissing": "this channel cannot give every reading asked for",
+        "unavailable": "Cannot be fetched: {reason, select, no_channel {we cannot fetch this kind of data yet} subject_unsupported {we cannot fetch this subject yet} site_rejected {the site was not approved} site_unregistered {the site is not registered; asking puts it up for review} other {not for now}}",
+        "site_pending": "The site is under review; fetched once approved",
+        "conditions_unmet": "No channel that can fetch it meets the conditions"
+      },
+      "upload": "Upload it in knowbase",
+      "recheck": "Uploaded — check again",
+      "rechecking": "Checking again…",
+      "notSaved": "This draft was not saved to knowbase: {name} — {reason}"
     }
   },
   "expertHome": {

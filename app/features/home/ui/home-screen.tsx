@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils'
 
 import { useAsk, usePacks } from '@/lib/workbench/expert-desk'
 
+import { useOpenTaskFromRef } from '../api/open-task'
 import { useStart } from '../api/start'
 import { blockerOf, projectIsRequired } from '../model/start'
 
@@ -39,6 +40,8 @@ export function HomeScreen() {
   const mode: Mode = asked === 'work' || asked === 'expert' ? asked : 'chat'
   // 从项目页点「新聊天」「新工作」进来：项目已经选好
   const given = query.get('project')
+  // 从别的应用回来带着委托编号（knowbase 直达上传传完回到这里）：打开那件委托
+  useOpenTaskFromRef(query.get('ref'))
 
   const projects = useProjects()
   const machines = useMachines(5000)

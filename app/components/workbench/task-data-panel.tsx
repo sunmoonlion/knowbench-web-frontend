@@ -3,9 +3,10 @@
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 
+import { CrossAppLink } from '@/components/common/cross-app-link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import type { DataRequest, ListedItem, TaskData } from '@/contracts/workbench-v2'
+import type { DataRequest, ListedItem, Prematch, TaskData } from '@/contracts/workbench-v2'
 import { WorkbenchError } from '@/lib/workbench/http'
 import {
   type Changes,
@@ -15,8 +16,10 @@ import {
   noChanges,
   normalSubject,
   periodOf,
+  roughDuration,
   SUBJECT,
   unchosen,
+  uploadValues,
   useTaskDataActions,
 } from '@/lib/workbench/task-data'
 import { cn } from '@/lib/utils'
@@ -40,6 +43,8 @@ const THIS_YEAR = new Date().getFullYear()
 // 这件委托用的数据（清单 v2 的专家，SDD 0043、decisions ⑭）。委托页与项目看板的卡片共用。
 // 在定数据、在取、钉了哪几份；第 0 步或运行中专家提出的，等用户确认（能换一份、改主体或
 // 期间、去掉、自己加一样），也可以不要、照现有的做；没取到的，用户定接着做还是停。
+// 要去取的写明能不能取、预计多久、许可档（knowfeed 预切合，0043 第 3.3 节）；采不来的给去
+// knowbase 直达上传的链接。
 export function TaskDataPanel({
   task,
   data,
@@ -52,11 +57,14 @@ export function TaskDataPanel({
   const t = useTranslations('expert.data')
   const act = useTaskDataActions(task)
   const [changes, setChanges] = useState<Changes>(noChanges)
-  if (!data.listed) return null
+  const duration = useDuration()
+  if (!data.listed) return <NotSaved data={data} />
   const request = data.requests.find((each) => each.status === 'pending')
   const missing = data.requests.filter((each) => each.status === 'missing')
-  const busy = act.confirm.isPending || act.decline.isPending
-  const failure = (act.confirm.error ?? act.decline.error) as WorkbenchError | null
+  const busy = act.confirm.isPending || act.decline.isPending || act.recheck.isPending
+  const failure = (act.confirm.error ??
+    act.decline.error ??
+    act.recheck.error) as WorkbenchError | null
   const blocked = request ? unchosen(request, changes).length : 0
 
   return (
@@ -86,10 +94,18 @@ export function TaskDataPanel({
       ) : request ? (
         <div className="space-y-1.5" data-testid="task-data-request">
           <p className="text-amber-700 dark:text-amber-400">{t('requested')}</p>
+          {typeof request.eta_seconds === 'number' ? (
+            <p className="text-muted-foreground" data-testid="task-data-eta">
+              {t('eta', { duration: duration(request.eta_seconds) })}
+            </p>
+          ) : null}
           <ul className="space-y-1.5">
             {request.items.map((item) => (
               <ItemRow
                 key={item.ref}
+                task={task}
+                onRecheck={() => act.recheck.mutate()}
+                rechecking={act.recheck.isPending}
                 item={item}
                 need={request.needs.find((need) => need.key === item.need_key)}
                 changes={changes}
@@ -166,6 +182,7 @@ export function TaskDataPanel({
           {t('incomplete', { items: data.incomplete.join('；') })}
         </p>
       ) : null}
+      <NotSaved data={data} />
       {!compact && data.pinned.length ? (
         <p className="text-muted-foreground truncate">
           {t('pinned', {
@@ -178,12 +195,81 @@ export function TaskDataPanel({
   )
 }
 
+// 预计多久的写法（「5 分钟」「3 小时」）
+function useDuration() {
+  const t = useTranslations('expert.data')
+  return (seconds: number) => {
+    const { unit, n } = roughDuration(seconds)
+    return t(`duration.${unit}`, { n })
+  }
+}
+
+// 预切合的结果：能取的写预计与许可档，取不到的写为什么
+function PrematchLine({ prematch }: { prematch: Prematch }) {
+  const t = useTranslations('expert.data')
+  const duration = useDuration()
+  const parts: string[] = []
+  if (prematch.status === 'available') {
+    parts.push(
+      typeof prematch.eta_seconds === 'number'
+        ? t('prematch.available', { duration: duration(prematch.eta_seconds) })
+        : t('prematch.availableNoEta'),
+    )
+    if (prematch.license) parts.push(t('prematch.license', { license: prematch.license }))
+    if (prematch.readings_missing.length) parts.push(t('prematch.readingsMissing'))
+  } else if (prematch.status === 'unavailable') {
+    parts.push(t('prematch.unavailable', { reason: prematch.reason ?? 'other' }))
+  } else {
+    parts.push(t(`prematch.${prematch.status}`))
+  }
+  return (
+    <p
+      className={cn(
+        'mt-1 text-xs',
+        prematch.status === 'available'
+          ? 'text-muted-foreground'
+          : 'text-amber-700 dark:text-amber-400',
+      )}
+      data-testid="task-data-prematch"
+    >
+      {parts.join(' · ')}
+    </p>
+  )
+}
+
+// 成稿没存进 knowbase 的：一份一行，写明原因（内置专家的委托也显示）
+function NotSaved({ data }: { data: TaskData }) {
+  const t = useTranslations('expert.data')
+  if (!data.outputs_not_saved.length) return null
+  return (
+    <ul
+      className="text-muted-foreground space-y-0.5 text-[13px]"
+      data-testid="task-output-not-saved"
+    >
+      {data.outputs_not_saved.map((each) => (
+        <li key={each.path}>
+          {t('notSaved', {
+            name: each.path.split('/').pop() ?? each.path,
+            reason: each.reason ?? '—',
+          })}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function ItemRow({
+  task,
+  onRecheck,
+  rechecking,
   item,
   need,
   changes,
   onChange,
 }: {
+  task: string
+  onRecheck: () => void
+  rechecking: boolean
   item: ListedItem
   need: DataRequest | undefined
   changes: Changes
@@ -199,6 +285,8 @@ function ItemRow({
   const subject = edit?.subject !== undefined ? edit.subject : item.key.subject
   const period =
     edit?.from !== undefined ? `${edit.from}–${edit.to}` : (periodOf({ ...item }) ?? t('anyPeriod'))
+  // 采不来的给去 knowbase 直达上传；「不限主体」的没法说清要传哪一家，不给链接
+  const uploadable = item.status === 'not_collectable' && Boolean(item.key.subject)
   const value = (each: { material_id: string; version_no: number }) =>
     `${each.material_id}@${each.version_no}`
 
@@ -241,6 +329,29 @@ function ItemRow({
         <p className="text-muted-foreground mt-1 truncate">
           {chosen.map((each) => each.name || each.material_id).join(' · ')}
         </p>
+      ) : null}
+      {!off && !edit && item.status === 'to_confirm' && item.prematch ? (
+        <PrematchLine prematch={item.prematch} />
+      ) : null}
+      {!off && !edit && uploadable ? (
+        <CrossAppLink
+          to="knowbase.upload"
+          values={uploadValues(item)}
+          refValue={task}
+          className="mt-1 inline-block text-xs underline underline-offset-3"
+        >
+          {t('upload')}
+        </CrossAppLink>
+      ) : null}
+      {!off && !edit && uploadable ? (
+        <button
+          type="button"
+          className="text-muted-foreground ml-3 text-xs underline underline-offset-3"
+          disabled={rechecking}
+          onClick={onRecheck}
+        >
+          {rechecking ? t('rechecking') : t('recheck')}
+        </button>
       ) : null}
       {editing && need ? (
         <EditItem

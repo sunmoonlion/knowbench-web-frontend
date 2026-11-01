@@ -53,6 +53,7 @@ const proposed: TaskData = {
   waiting_for: [],
   incomplete: [],
   pinned: [{ name: '专家自带的资料', need: null }],
+  outputs_not_saved: [],
   requests: [
     {
       id: 'r1',
@@ -176,6 +177,182 @@ describe('确认专家提出的数据（decisions ⑭）', () => {
     expect(missing.getByText('这几样没取到：上一年比较：没取到。')).toBeInTheDocument()
     fireEvent.click(missing.getByRole('button', { name: '照现有的接着做' }))
     await waitFor(() => expect(calls[0].path).toMatch(/data-requests\/decline$/))
+  })
+})
+
+describe('预切合与直达上传（SDD 0043 第 3.2、3.3 节）', () => {
+  it('要去取的写明能不能取、预计多久、许可档；一共预计多久写在上面', () => {
+    const [have, want] = proposed.requests[0].items
+    wrap(
+      <TaskDataPanel
+        task={TASK}
+        data={{
+          ...proposed,
+          requests: [
+            {
+              ...proposed.requests[0],
+              eta_seconds: 5400,
+              items: [
+                have,
+                {
+                  ...want,
+                  prematch: {
+                    status: 'available',
+                    license: 'via_expert',
+                    eta_seconds: 300,
+                    readings_missing: [],
+                  },
+                },
+              ],
+            },
+          ],
+        }}
+      />,
+    )
+    expect(screen.getByTestId('task-data-eta')).toHaveTextContent(
+      '要去取的预计最多 2 小时（保守地按全部要新取算）。',
+    )
+    expect(screen.getByTestId('task-data-prematch')).toHaveTextContent(
+      '能取 · 预计 5 分钟 · 许可档：可以经专家给别人用',
+    )
+  })
+
+  it('取不到的写为什么；knowfeed 问不到时不写预计', () => {
+    const [have, want] = proposed.requests[0].items
+    const { unmount } = wrap(
+      <TaskDataPanel
+        task={TASK}
+        data={{
+          ...proposed,
+          requests: [
+            {
+              ...proposed.requests[0],
+              items: [
+                have,
+                {
+                  ...want,
+                  prematch: { status: 'unavailable', reason: 'no_channel', readings_missing: [] },
+                },
+              ],
+            },
+          ],
+        }}
+      />,
+    )
+    expect(screen.getByTestId('task-data-prematch')).toHaveTextContent('取不到：这类数据还取不到')
+    unmount()
+    wrap(<TaskDataPanel task={TASK} data={proposed} />)
+    expect(screen.queryByTestId('task-data-prematch')).toBeNull()
+    expect(screen.queryByTestId('task-data-eta')).toBeNull()
+  })
+
+  it('采不来的给去 knowbase 直达上传的链接，按描述预填、带委托编号', async () => {
+    replies['GET /api/web/v1/cross-app/links'] = {
+      app: 'knowbench',
+      targets: { knowbase: { web_base_url: 'https://knowbase.example' } },
+    }
+    const [have, want] = proposed.requests[0].items
+    wrap(
+      <TaskDataPanel
+        task={TASK}
+        data={{
+          ...proposed,
+          requests: [
+            {
+              ...proposed.requests[0],
+              items: [have, { ...want, status: 'not_collectable' }],
+            },
+          ],
+        }}
+      />,
+    )
+    const link = await screen.findByRole('link', { name: '去 knowbase 上传' })
+    const href = new URL(link.getAttribute('href')!)
+    expect(href.origin + href.pathname).toBe('https://knowbase.example/zh-CN/upload')
+    expect(Object.fromEntries(href.searchParams)).toEqual({
+      doc_type: 'annual_report',
+      subject: '600519.SH',
+      period_start: '2024-01-01',
+      period_end: '2024-12-31',
+      from: 'knowbench',
+      ref: TASK,
+    })
+    expect(link).toHaveAttribute('target', '_blank')
+  })
+})
+
+describe('上传回来与成稿没存进 knowbase（独立审 10-30 第二轮）', () => {
+  it('采不来的那一项给「传好了，重新查」，点了请后端重新解析', async () => {
+    const [have, want] = proposed.requests[0].items
+    wrap(
+      <TaskDataPanel
+        task={TASK}
+        data={{
+          ...proposed,
+          requests: [
+            { ...proposed.requests[0], items: [have, { ...want, status: 'not_collectable' }] },
+          ],
+        }}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: '传好了，重新查' }))
+    await waitFor(() =>
+      expect(calls.some((each) => each.path.endsWith('/data-requests/recheck'))).toBe(true),
+    )
+    expect(calls.find((each) => each.method === 'POST')!.path).toBe(
+      `/api/workbench/tasks/${TASK}/data-requests/recheck`,
+    )
+  })
+
+  it('不限主体的采不来条目不给直达上传，也不给重新查', () => {
+    const [have, want] = proposed.requests[0].items
+    wrap(
+      <TaskDataPanel
+        task={TASK}
+        data={{
+          ...proposed,
+          requests: [
+            {
+              ...proposed.requests[0],
+              items: [
+                have,
+                { ...want, status: 'not_collectable', key: { ...want.key, subject: null } },
+              ],
+            },
+          ],
+        }}
+      />,
+    )
+    expect(screen.queryByRole('link', { name: '去 knowbase 上传' })).toBeNull()
+    expect(screen.queryByRole('button', { name: '传好了，重新查' })).toBeNull()
+  })
+
+  it('成稿没存进 knowbase 的写明原因；没有清单的委托也显示', () => {
+    const notSaved = [
+      { path: '底稿/a/成稿.md', reason: '成稿交付后改过，和交付时的那份对不上，没写' },
+    ]
+    const { unmount } = wrap(
+      <TaskDataPanel task={TASK} data={{ ...proposed, outputs_not_saved: notSaved }} />,
+    )
+    expect(screen.getByTestId('task-output-not-saved')).toHaveTextContent(
+      '这份成稿没存进 knowbase：成稿.md——成稿交付后改过，和交付时的那份对不上，没写',
+    )
+    unmount()
+    wrap(
+      <TaskDataPanel
+        task={TASK}
+        data={{
+          listed: false,
+          confirm_in: 'here',
+          waiting_for: [],
+          incomplete: [],
+          requests: [],
+          pinned: [],
+          outputs_not_saved: notSaved,
+        }}
+      />,
+    )
+    expect(screen.getByTestId('task-output-not-saved')).toBeInTheDocument()
   })
 })
 
