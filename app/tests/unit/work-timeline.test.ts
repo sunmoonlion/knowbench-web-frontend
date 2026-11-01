@@ -8,6 +8,7 @@ import {
   byFile,
   liveDetail,
   phaseTally,
+  queuedTaskOf,
   splitArtifact,
   timeline,
 } from '@/features/work/model/timeline'
@@ -361,5 +362,33 @@ describe('专家每步交回的原文（账 148）', () => {
     expect(splitArtifact('{"a": 1}')).toEqual({ summary: null, raw: '{"a": 1}' })
     expect(splitArtifact('先把两份文件写进去。')).toBeNull()
     expect(splitArtifact('')).toBeNull()
+  })
+})
+
+describe('同项目专家排队', () => {
+  const task = '00000000-0000-4000-8000-000000000101'
+  const behind = '00000000-0000-4000-8000-000000000102'
+  const event = (type: string, payload: Record<string, unknown>, id = task): ConversationEvent => ({
+    ...work()[0],
+    type,
+    task_id: id,
+    payload,
+  })
+  const queued = event('task/queued', { task_id: task, behind })
+
+  it('还没有模型轮次的排队任务也有明确状态', () => {
+    expect(timeline([queued]).entries).toHaveLength(0)
+    expect(queuedTaskOf([queued])).toEqual({ task, behind })
+  })
+
+  it('前面任务的取消不等于本任务已经启动', () => {
+    expect(queuedTaskOf([queued, event('task/state', { to: 'CANCELLED' }, behind)])).toEqual({
+      task,
+      behind,
+    })
+  })
+
+  it.each(['VALIDATING', 'CANCELLED', 'REJECTED'])('本任务进入 %s 后去掉排队提示', (to) => {
+    expect(queuedTaskOf([queued, event('task/state', { to })])).toBeNull()
   })
 })

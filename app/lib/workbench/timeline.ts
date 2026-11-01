@@ -110,6 +110,35 @@ export type Timeline = {
   changes: ChangedFile[]
 }
 
+// 排队时尚未交出方向盘、没有模型 turn；不能因此把这段会话当成空白。
+export function queuedTaskOf(events: readonly ConversationEvent[]) {
+  let queued: { task: string; behind: string } | null = null
+  for (const event of events) {
+    const task = event.task_id || text(event.payload.task_id)
+    if (event.type === 'task/queued' || event.type === 'task/received') {
+      const behind = text(event.payload.behind) || text(event.payload.queued_behind)
+      if (task && behind) queued = { task, behind }
+    } else if (queued?.task === task) {
+      if (
+        event.type === 'wheel/handover' ||
+        (event.type === 'task/state' &&
+          [
+            'VALIDATING',
+            'QUEUED',
+            'RUNNING',
+            'WAITING',
+            'SUCCEEDED',
+            'FAILED',
+            'REJECTED',
+            'CANCELLED',
+          ].includes(text(event.payload.to)))
+      )
+        queued = null
+    }
+  }
+  return queued
+}
+
 export function timeline(events: readonly ConversationEvent[]): Timeline {
   const entries: Entry[] = []
   const changes = new Map<string, ChangeStep>()

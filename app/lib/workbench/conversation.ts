@@ -51,6 +51,14 @@ export function useConversationActions(conversation: string) {
     stop: useMutation({
       mutationFn: () => sendJson(acceptedSchema, `${base(conversation)}/interrupt`, { csrfToken }),
     }),
+    cancelQueuedTask: useMutation({
+      mutationFn: (task: string) =>
+        sendJson(acceptedSchema, `/api/workbench/tasks/${seg(task)}/cancel`, { csrfToken }),
+      onSuccess: async () => {
+        await changed()
+        await client.invalidateQueries({ queryKey: ['workbench', 'project'] })
+      },
+    }),
     rename: useMutation({
       mutationFn: (title: string) =>
         sendJson(acceptedSchema, base(conversation), {

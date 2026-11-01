@@ -414,6 +414,14 @@
     "directory": "Folder",
     "toEnd": "Back to latest",
     "empty": "Nothing started yet.",
+    "queue": {
+      "title": "Expert task queued",
+      "reason": "This project runs one expert at a time. This task starts automatically when the preceding task ends or is cancelled. If that task is waiting for data confirmation, review it first.",
+      "openProject": "View project tasks and the preceding expert",
+      "cancel": "Cancel this queued task",
+      "cancelling": "Cancelling…",
+      "cancelFailed": "The cancellation request failed. Please try again."
+    },
     "band": {
       "expert": "The expert is working"
     },

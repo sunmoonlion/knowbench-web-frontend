@@ -154,3 +154,55 @@ describe('工作页', () => {
     expect(document.body.textContent).not.toContain('SELECT')
   })
 })
+
+it('排队中的专家会话说明原因并链接项目任务，不显示空白未开始', async () => {
+  const conversation = idOf('工作（')
+  const originalFetch = globalThis.fetch
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: string, init: RequestInit = {}) => {
+      if (String(input).split('?')[0] === `/api/workbench/sessions/${conversation}/events`) {
+        return new Response(
+          JSON.stringify({
+            events: [
+              {
+                id: '00000000-0000-4000-8000-000000000201',
+                session_id: conversation,
+                cursor: 1,
+                kind: 'task',
+                type: 'task/queued',
+                task_id: '00000000-0000-4000-8000-000000000202',
+                attempt_id: null,
+                payload: { behind: '00000000-0000-4000-8000-000000000203' },
+                created_at: '2026-11-02T02:05:00+08:00',
+              },
+            ],
+            next_cursor: null,
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        )
+      }
+      return originalFetch(input, init)
+    }),
+  )
+  page(conversation)
+  expect(await screen.findByText('专家任务已排队')).toBeInTheDocument()
+  expect(screen.getByText(/同一项目一次处理一位专家/)).toBeInTheDocument()
+  expect(screen.queryByText('还没有开始。')).not.toBeInTheDocument()
+  const link = await screen.findByRole('link', { name: '查看项目任务，找到前面的专家' })
+  expect(link.getAttribute('href')).toMatch(/^\/zh-CN\/workbench\/projects\//)
+  fireEvent.click(screen.getByRole('button', { name: '取消这条排队任务' }))
+  await waitFor(() =>
+    expect(
+      calls.some(
+        (call) =>
+          call.method === 'POST' &&
+          call.path === '/api/workbench/tasks/00000000-0000-4000-8000-000000000202/cancel' &&
+          call.csrf === 'csrf-for-test',
+      ),
+    ).toBe(true),
+  )
+  expect(
+    calls.some((call) => call.path.includes('00000000-0000-4000-8000-000000000203/cancel')),
+  ).toBe(false)
+})

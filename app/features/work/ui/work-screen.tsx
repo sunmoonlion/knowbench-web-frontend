@@ -2,6 +2,7 @@
 
 import { FolderIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
@@ -26,7 +27,7 @@ import { WorkbenchError } from '@/lib/workbench/http'
 import { useProjects } from '@/lib/workbench/queries'
 import { isBuilt, routes } from '@/lib/workbench/routes'
 
-import { byFile, liveDetail, timeline } from '../model/timeline'
+import { byFile, liveDetail, queuedTaskOf, timeline } from '../model/timeline'
 import { TimelineEntry } from './entries'
 
 // 工作页：看它干活，随时插话，要紧的事由你点头。
@@ -52,6 +53,10 @@ export function WorkScreen({
   const [side, setSide] = useState<{ tab: SideTab; at: number } | null>(null)
 
   const line = timeline(events)
+  const queued = queuedTaskOf(events)
+  const cancellingQueued =
+    queued?.task === act.cancelQueuedTask.variables &&
+    (act.cancelQueuedTask.isPending || act.cancelQueuedTask.isSuccess)
   const session = conversation.data
   const project = session?.project_id
     ? (projects.data ?? []).find((each) => each.id === session.project_id)
@@ -97,7 +102,36 @@ export function WorkScreen({
             <MessageScroller className="flex-1">
               <MessageScrollerViewport>
                 <MessageScrollerContent className="mx-auto w-full max-w-3xl gap-3 px-4 py-6">
-                  {line.entries.length === 0 ? (
+                  {queued ? (
+                    <div role="status" className="rounded-lg border p-3 text-sm">
+                      <p className="font-medium">{t('queue.title')}</p>
+                      <p className="text-muted-foreground mt-1">{t('queue.reason')}</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 mr-3"
+                        disabled={cancellingQueued}
+                        onClick={() => act.cancelQueuedTask.mutate(queued.task)}
+                      >
+                        {t(cancellingQueued ? 'queue.cancelling' : 'queue.cancel')}
+                      </Button>
+                      {act.cancelQueuedTask.isError &&
+                      act.cancelQueuedTask.variables === queued.task ? (
+                        <p role="alert" className="text-destructive mt-1">
+                          {t('queue.cancelFailed')}
+                        </p>
+                      ) : null}
+                      {session?.project_id ? (
+                        <Link
+                          href={routes.project(locale, session.project_id)}
+                          className="mt-2 inline-block underline underline-offset-3"
+                        >
+                          {t('queue.openProject')}
+                        </Link>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {line.entries.length === 0 && !queued ? (
                     <Marker className="justify-center">
                       <MarkerContent>
                         {state === 'connecting' ? tc('stream.connecting') : t('empty')}
