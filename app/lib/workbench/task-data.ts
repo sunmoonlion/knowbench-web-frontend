@@ -82,7 +82,12 @@ export function normalSubject(text: string): string | null {
   return value.startsWith('org:') ? value : value.toUpperCase()
 }
 
-export type Edit = { subject?: string | null; from?: number; to?: number }
+export type Edit = {
+  subject?: string | null
+  from?: number
+  to?: number
+  source_query?: DataRequest['source_query']
+}
 export type Added = { doc_type: string; subject: string | null; from: number; to: number }
 export type Changes = {
   picks: Record<string, Pick>
@@ -99,6 +104,7 @@ function fixed(from: number, to: number) {
 
 // 改过的一样：换主体、改成固定的几年
 export function edited(need: DataRequest, edit: Edit | undefined): DataRequest {
+  if (edit?.source_query) return { ...need, source_query: edit.source_query }
   if (!edit) return need
   const out: DataRequest = { ...need }
   if (edit.subject !== undefined) out.subject = edit.subject

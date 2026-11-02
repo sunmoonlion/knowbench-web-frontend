@@ -784,7 +784,9 @@
       "upload": "Upload it in knowbase",
       "recheck": "Uploaded — check again",
       "rechecking": "Checking again…",
-      "notSaved": "This draft was not saved to knowbase: {name} — {reason}"
+      "notSaved": "This draft was not saved to knowbase: {name} — {reason}",
+      "supplierQuery": "Supplier query parameters",
+      "supplierEvidence": "This is supplier response evidence; excerpts or links are not a complete annual report."
     },
     "plan": {
       "label": "Plan for this task",

@@ -679,6 +679,16 @@ export const dataRequestSchema = z
     name: z.string(),
     subject: z.string().nullable().optional(),
     doc_type: z.string(),
+    source_query: z
+      .object({
+        channel: z.string(),
+        service: z.string(),
+        tool: z.string(),
+        arguments: z.record(z.string(), z.unknown()),
+        request_id: z.string().nullable().optional(),
+      })
+      .nullable()
+      .optional(),
     period: z
       .object({
         kind: z.string(),

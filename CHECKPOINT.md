@@ -1,3 +1,12 @@
+# 2026-11-02 Wind 通用查询与年报证据（开发候选，未发布）
+
+基线 `fb942ff2428dbeea042ef42134d0c81db7714861`。本轮本人要求第二轨作为主演示、巨潮保底，财务与年报都纳入、不限制为财务专线。
+
+采单显示供应商服务/工具及原参数，参数可编辑且确认前不请求取数；确认发送修改后的 query。明确“摘要或链接不等于年报全文”，不把查询响应伪装为已交年报 PDF。source_query/request_id 透传，普通采单保持。
+验证全量 379 passed / 2 skipped（/tmp/luna-wind-web-full.log）；之后补强实际点击确认发送参数断言，组件 16 passed（/tmp/luna-wind-web-query-confirm.log）。typecheck 通过，变更 ESLint/Prettier 通过。
+
+发布由 qwen/Jenkins；不代点用户采单、不修改线上任务。以下为此前历史：
+
 # 2026-11-02 luna：排队会话显示状态并允许取消
 
 基线：web 7c58ef9；父仓 8fc56c8（Jenkins #45）。

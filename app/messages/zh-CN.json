@@ -784,7 +784,9 @@
       "upload": "去 knowbase 上传",
       "recheck": "传好了，重新查",
       "rechecking": "正在重新查…",
-      "notSaved": "这份成稿没存进 knowbase：{name}——{reason}"
+      "notSaved": "这份成稿没存进 knowbase：{name}——{reason}",
+      "supplierQuery": "供应商查询参数",
+      "supplierEvidence": "这是供应商查询响应；摘要或链接不等于年报全文。"
     },
     "plan": {
       "label": "本次任务计划",

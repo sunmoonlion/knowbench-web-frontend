@@ -547,3 +547,41 @@ describe('项目看板（请专家方案设计第 4.8 节）', () => {
     )
   })
 })
+
+it('shows supplier query arguments and sends edited arguments for fresh confirmation', async () => {
+  const data = structuredClone(proposed)
+  const query = {
+    channel: 'wind',
+    service: 'financial_docs',
+    tool: 'get_company_announcements',
+    arguments: { query: 'synthetic annual report', top_k: 3 },
+  }
+  const request = data.requests[0]
+  request.needs = [
+    {
+      ...request.needs[0],
+      doc_type: 'other_text',
+      period: { kind: 'none' },
+      reading: 'text',
+      source_query: query,
+    },
+  ]
+  request.items = [request.items[0]]
+  wrap(<TaskDataPanel task={TASK} data={data} />)
+  expect(screen.getByText(/synthetic annual report/)).toBeInTheDocument()
+  expect(screen.getByText(messages.expert.data.supplierEvidence)).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: messages.expert.data.edit }))
+  const editor = screen.getByRole('textbox', { name: messages.expert.data.supplierQuery })
+  fireEvent.change(editor, { target: { value: '{"query":"changed annual report","top_k":2}' } })
+  fireEvent.click(screen.getByRole('button', { name: messages.expert.data.editDone }))
+  expect(screen.getByText(/changed annual report/)).toBeInTheDocument()
+  expect(calls.filter((c) => c.method === 'POST')).toHaveLength(0)
+  fireEvent.click(screen.getByRole('button', { name: '确认，去取' }))
+  await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true))
+  const sent = calls.find((c) => c.method === 'POST')!
+  expect(sent.path).toBe(`/api/workbench/tasks/${TASK}/data-requests/confirm`)
+  expect((sent.body as { needs: { source_query: unknown }[] }).needs[0].source_query).toEqual({
+    ...query,
+    arguments: { query: 'changed annual report', top_k: 2 },
+  })
+})

@@ -10,6 +10,7 @@ import type { DataRequest, ListedItem, Prematch, TaskData } from '@/contracts/wo
 import { WorkbenchError } from '@/lib/workbench/http'
 import {
   type Changes,
+  type Edit,
   chosenOf,
   confirmBody,
   edited,
@@ -315,6 +316,17 @@ function ItemRow({
           {off ? t('dropped') : edit ? t('changed') : t(`status.${item.status}`)}
         </span>
       </div>
+      {shown?.source_query ? (
+        <details className="mt-2 text-xs" open>
+          <summary>
+            {t('supplierQuery')} · {shown.source_query.channel} · {shown.source_query.tool}
+          </summary>
+          <pre className="mt-1 break-all whitespace-pre-wrap">
+            {JSON.stringify(shown.source_query.arguments, null, 2)}
+          </pre>
+          <p>{t('supplierEvidence')}</p>
+        </details>
+      ) : null}
       {!off && !edit && pool.length > 1 ? (
         <select
           aria-label={t('pick', { name: shown?.name ?? item.need_key })}
@@ -359,7 +371,7 @@ function ItemRow({
       ) : null}
       {editing && need ? (
         <EditItem
-          need={need}
+          need={shown ?? need}
           subject={subject ?? null}
           onDone={(next) => {
             setEditing(false)
@@ -434,14 +446,70 @@ const year = (text: string) => {
   return Number.isInteger(n) && n >= 1990 && n <= THIS_YEAR + 1 ? n : null
 }
 
-function EditItem({
+function EditItem(props: {
+  need: DataRequest
+  subject: string | null
+  onDone: (edit: Edit | null) => void
+}) {
+  return props.need.source_query ? (
+    <EditSupplierQuery {...props} />
+  ) : (
+    <EditOrdinaryItem {...props} />
+  )
+}
+
+function EditSupplierQuery({
+  need,
+  onDone,
+}: {
+  need: DataRequest
+  onDone: (edit: Edit | null) => void
+}) {
+  const t = useTranslations('expert.data')
+  const [value, setValue] = useState(JSON.stringify(need.source_query?.arguments, null, 2))
+  let args: Record<string, unknown> | null = null
+  try {
+    const parsed: unknown = JSON.parse(value)
+    if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed))
+      args = parsed as Record<string, unknown>
+  } catch {
+    /* Keep invalid input for correction. */
+  }
+  return (
+    <div className="mt-2 space-y-2">
+      <textarea
+        className="w-full rounded border p-2 text-xs"
+        rows={6}
+        aria-label={t('supplierQuery')}
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        aria-invalid={!args}
+      />
+      <Button
+        size="sm"
+        disabled={!args || !need.source_query}
+        onClick={() => {
+          if (args && need.source_query)
+            onDone({ source_query: { ...need.source_query, arguments: args } })
+        }}
+      >
+        {t('editDone')}
+      </Button>
+      <button type="button" onClick={() => onDone(null)}>
+        {t('editCancel')}
+      </button>
+    </div>
+  )
+}
+
+function EditOrdinaryItem({
   need,
   subject,
   onDone,
 }: {
   need: DataRequest
   subject: string | null
-  onDone: (edit: { subject?: string | null; from?: number; to?: number } | null) => void
+  onDone: (edit: Edit | null) => void
 }) {
   const t = useTranslations('expert.data')
   const [code, setCode] = useState(subject ?? '')
