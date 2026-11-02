@@ -53,3 +53,8 @@
 找专家无匹配时补“就此结束”，保留通用模型与孵化申请入口。
 前端 385 passed、2 个既有 skipped；typecheck/lint/build 通过。
 日志 /tmp/luna-market-web-{tests,types,lint,build}.log。未部署。
+
+
+## 2026-11-03 所有者确认新版财务测试
+
+后端真实HTTP样例新增两处source_query:null，与实际响应逐字对齐；仅更新合成测试夹具，没有前端产品代码修改。接口解析与专家运行页面14项回归通过。
