@@ -380,6 +380,38 @@ describe('补采进度', () => {
     expect(calls.some((c) => c.path.endsWith('/data-requests/confirm'))).toBe(false)
   })
 
+  it('重新核对遇到服务故障时不归咎于主体年份，也不自动确认', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ code: 'user_data_unavailable' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    wrap(
+      <TaskDataPanel
+        task={TASK}
+        data={{
+          ...proposed,
+          requests: proposed.requests.map((r) => ({
+            ...r,
+            status: 'missing',
+            missing: ['年报未取到'],
+          })),
+        }}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: '重新核对采单' }))
+    expect(
+      await screen.findByText(messages.expert.data.problems.user_data_unavailable),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(messages.expert.data.problems.data_choice_invalid)).toBeNull()
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(fetch).mock.calls[0][0]).toBe(
+      `/api/workbench/tasks/${TASK}/data-requests/recheck`,
+    )
+    expect(screen.getByRole('button', { name: '重新核对采单' })).toBeEnabled()
+  })
+
   it('按类型分组显示真实状态与失败原因，不重复模型的长理由', () => {
     const reason = '第六步需读年报并写明页码核对'
     const items = [

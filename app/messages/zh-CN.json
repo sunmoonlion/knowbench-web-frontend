@@ -761,6 +761,7 @@
         "unusable": "不能用"
       },
       "problems": {
+        "user_data_unavailable": "数据服务暂时无法处理，请稍后重试。采单已保留，无需修改主体或年份。",
         "data_choice_invalid": "这样确认不了：换选的要在候选里，改的主体和年份要写对。",
         "reauth_required": "登录过期了，请重新登录再确认。"
       },
