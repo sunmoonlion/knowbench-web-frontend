@@ -22,7 +22,7 @@ import { useClock } from '@/lib/workbench/use-clock'
 
 import { useReview, useRun, useRunActions, useRunStep } from '../api/run'
 import { shownStep, tokenOf } from '../model/run'
-import { amountText, NowStrip, StepDetail, StepRail } from './parts'
+import { amountText, NowStrip, StepDetail, StepRail, TaskPlan } from './parts'
 import { ReviewPanel } from './review-panel'
 
 // 专家处理中。三栏：步骤、这一步的细节、委托单。
@@ -63,7 +63,8 @@ export function ExpertRunScreen({ task }: { task: string }) {
   // 点了停止、那一轮还没收住：顶上马上说「正在停下」，按钮不再能点，免得以为没点上
   const stopping = live && (sheet.cancel_requested === true || act.stop.isSuccess)
   // 审查面摆在停住的那一步下面；看别的步骤时不摆
-  const reviewHere = review.data && shown === (review.data.where.step?.index ?? position?.step)
+  const reviewHere =
+    review.data && shown === (review.data.where.step?.index ?? position?.step ?? null)
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -104,6 +105,7 @@ export function ExpertRunScreen({ task }: { task: string }) {
       </header>
 
       {now ? <NowStrip now={now} clock={clock} /> : null}
+      <TaskPlan plan={sheet.plan} live={live} />
       {sheet.chosen_data?.length ? (
         <p
           className="text-muted-foreground shrink-0 truncate border-b px-4 py-1.5 text-xs"
@@ -127,7 +129,7 @@ export function ExpertRunScreen({ task }: { task: string }) {
           ) : null}
           <StepDetail
             step={detail.data ?? steps.find((step) => step.index === shown)}
-            loading={detail.isPending}
+            loading={shown !== null && detail.isPending}
           />
           {reviewHere && review.data ? (
             <ReviewPanel

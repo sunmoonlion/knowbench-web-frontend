@@ -3,7 +3,7 @@
 import { CheckIcon, LoaderIcon, MinusIcon, XIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
-import type { Attempt, Now, RunStep } from '@/contracts/workbench-v2'
+import type { Attempt, Now, RunSheet, RunStep } from '@/contracts/workbench-v2'
 import { money, symbol, toMicros } from '@/lib/workbench/money'
 import { cn } from '@/lib/utils'
 
@@ -20,6 +20,39 @@ export function useDuration() {
 export function amountText(amount: string, currency: string) {
   const micros = toMicros(amount)
   return micros === null ? amount : `${symbol(currency)}${money(micros)}`
+}
+
+export function TaskPlan({ plan, live }: { plan: RunSheet['plan']; live: boolean }) {
+  const t = useTranslations('expert.plan')
+  if (!plan) return null
+  return (
+    <section className="shrink-0 border-b px-4 py-3 text-sm" aria-label={t('label')}>
+      <p className="font-medium">
+        {plan.planning
+          ? t('planning')
+          : plan.version !== null
+            ? t('version', { version: plan.version })
+            : live
+              ? t('pending')
+              : t('unavailable')}
+      </p>
+      {plan.reason ? (
+        <p className="text-muted-foreground mt-1 whitespace-pre-wrap">{plan.reason}</p>
+      ) : null}
+      {plan.history.length > 1 ? (
+        <details className="mt-2">
+          <summary className="cursor-pointer">{t('history')}</summary>
+          <ol className="mt-2 space-y-1">
+            {plan.history.map((entry) => (
+              <li key={entry.version}>
+                {t('version', { version: entry.version })}：{entry.reason}
+              </li>
+            ))}
+          </ol>
+        </details>
+      ) : null}
+    </section>
+  )
 }
 
 // 现在在干什么、为什么、没有卡住。专家处理期间一直摆着。
@@ -237,6 +270,19 @@ export function StepDetail({ step, loading }: { step: RunStep | undefined; loadi
         </p>
         <h2 className="mt-0.5 text-lg font-semibold">{step.title}</h2>
         <p className="text-muted-foreground mt-0.5 text-sm">{step.summary}</p>
+        {step.selection_reason ? (
+          <p className="mt-2 text-sm">
+            {t('plan.selectedBecause')}：{step.selection_reason}
+          </p>
+        ) : null}
+        {step.current_result ? (
+          <p className="text-muted-foreground mt-1 text-xs">
+            {t('plan.currentResult', { version: step.current_result.version })}
+          </p>
+        ) : step.current_result === null &&
+          step.attempts.some((attempt) => attempt.outcome === 'accepted') ? (
+          <p className="mt-1 text-xs">{t('plan.historicalResult')}</p>
+        ) : null}
       </header>
 
       <section>

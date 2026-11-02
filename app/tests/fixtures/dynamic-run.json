@@ -1,0 +1,293 @@
+{
+  "task": {
+    "task_id": "67d91501-47e0-453c-af1e-23e845e8f123",
+    "session_id": "c62592be-53ca-429e-9c1e-9d454f0f5683",
+    "project_id": "b7ecb9f7-14a4-4ffc-b05c-ee0582b4170f",
+    "expert": {
+      "id": "DATA_QUERY",
+      "name": "文档核对",
+      "version": "1"
+    },
+    "question": "核对 2025 年报附注",
+    "state": "SUCCEEDED",
+    "state_word": "已完成",
+    "waiting_reason": null,
+    "cancel_requested": false,
+    "reason": null,
+    "reason_text": "",
+    "budget": {
+      "currency": "CNY",
+      "limit": "10.00",
+      "used": "0.04",
+      "reserved": "0.00",
+      "left": "9.96",
+      "running": "0.00",
+      "spent": "0.04",
+      "estimated": true
+    },
+    "data": null,
+    "chosen_data": [],
+    "started_at": "2026-11-02T06:04:33.235898+00:00",
+    "ended_at": "2026-11-02T06:04:33.598716+00:00",
+    "seconds": 0,
+    "active_interaction_id": null,
+    "plan": {
+      "version": 1,
+      "planning": false,
+      "reason": "依据用户问题组合作者方法",
+      "history": [
+        {
+          "version": 1,
+          "reason": "依据用户问题组合作者方法"
+        }
+      ]
+    }
+  },
+  "now": null,
+  "position": {
+    "step": 3,
+    "of": 3,
+    "title": "汇总",
+    "left": 0
+  },
+  "steps": [
+    {
+      "index": 1,
+      "step_id": "inspect_1",
+      "title": "核对",
+      "summary": "只依据给定文档核对，不补充未提供的文字。",
+      "why": "",
+      "uses": [],
+      "tools": ["read_input"],
+      "returns": "__method_output__:inspect_1",
+      "checks": [
+        {
+          "label": "交回的是一个 JSON"
+        },
+        {
+          "label": "交回项都在：「rows」"
+        },
+        {
+          "label": "「rows」至少 1 项"
+        },
+        {
+          "label": "没有评级、目标价、买卖建议"
+        }
+      ],
+      "after_rejection": {
+        "reworks": 1,
+        "then": "human",
+        "back_to": null,
+        "backs": 0,
+        "text": "重做，最多 1 次；仍不过，停下来问你"
+      },
+      "reserve": "0.05",
+      "status": "accepted",
+      "attempts": [
+        {
+          "attempt_id": "722c966e-2c08-42b1-85ee-ae60be8ed3fe",
+          "n": 1,
+          "outcome": "accepted",
+          "failure": null,
+          "spent": "0.01",
+          "started_at": "2026-11-02T06:04:33.442521+00:00",
+          "ended_at": "2026-11-02T06:04:33.453266+00:00",
+          "checks": [
+            {
+              "label": "交回的是一个 JSON",
+              "pass": true,
+              "message": ""
+            },
+            {
+              "label": "交回项都在：「rows」",
+              "pass": true,
+              "message": ""
+            },
+            {
+              "label": "「rows」至少 1 项",
+              "pass": true,
+              "message": ""
+            },
+            {
+              "label": "没有评级、目标价、买卖建议",
+              "pass": true,
+              "message": ""
+            }
+          ],
+          "tools": {}
+        }
+      ],
+      "times": 1,
+      "rejected": 0,
+      "spent": "0.01",
+      "data": null,
+      "selection_reason": "核对给定文档",
+      "method_instance": "inspect_1",
+      "current_result": {
+        "id": "a0905acf-347e-4978-85af-e08cd60d863e",
+        "version": 1,
+        "digest": "055f455db18cad1c9f693dd0d50fecdca2b983870025505f8c283e5d308f653a"
+      }
+    },
+    {
+      "index": 2,
+      "step_id": "review_1",
+      "title": "复核",
+      "summary": "再按同一原文逐项复核。",
+      "why": "",
+      "uses": [
+        {
+          "artifact": "__method_output__:inspect_1",
+          "step": 1,
+          "title": "核对"
+        }
+      ],
+      "tools": ["read_input"],
+      "returns": "__method_output__:review_1",
+      "checks": [
+        {
+          "label": "交回的是一个 JSON"
+        },
+        {
+          "label": "交回项都在：「notes」"
+        },
+        {
+          "label": "没有评级、目标价、买卖建议"
+        }
+      ],
+      "after_rejection": {
+        "reworks": 1,
+        "then": "human",
+        "back_to": null,
+        "backs": 0,
+        "text": "重做，最多 1 次；仍不过，停下来问你"
+      },
+      "reserve": "0.05",
+      "status": "accepted",
+      "attempts": [
+        {
+          "attempt_id": "2729a522-d1b1-416b-baef-4d8244e019fc",
+          "n": 1,
+          "outcome": "accepted",
+          "failure": null,
+          "spent": "0.01",
+          "started_at": "2026-11-02T06:04:33.503912+00:00",
+          "ended_at": "2026-11-02T06:04:33.514917+00:00",
+          "checks": [
+            {
+              "label": "交回的是一个 JSON",
+              "pass": true,
+              "message": ""
+            },
+            {
+              "label": "交回项都在：「notes」",
+              "pass": true,
+              "message": ""
+            },
+            {
+              "label": "没有评级、目标价、买卖建议",
+              "pass": true,
+              "message": ""
+            }
+          ],
+          "tools": {}
+        }
+      ],
+      "times": 1,
+      "rejected": 0,
+      "spent": "0.01",
+      "data": null,
+      "selection_reason": "这次问题要求复核",
+      "method_instance": "review_1",
+      "current_result": {
+        "id": "3d5dc337-7017-492d-8d0b-720294c0a5a2",
+        "version": 1,
+        "digest": "f7bb6aa066ecb56b213c6727ffd1395977cd0a870d99ac59cfd048b7ed6d964b"
+      }
+    },
+    {
+      "index": 3,
+      "step_id": "report_1",
+      "title": "汇总",
+      "summary": "列出每一条的核对结果。",
+      "why": "",
+      "uses": [
+        {
+          "artifact": "__method_output__:inspect_1",
+          "step": 1,
+          "title": "核对"
+        }
+      ],
+      "tools": [],
+      "returns": "__method_output__:report_1",
+      "checks": [
+        {
+          "label": "交回的是一个 JSON"
+        },
+        {
+          "label": "交回项都在：「rows」"
+        },
+        {
+          "label": "「rows」与第「核对」步一一对上"
+        },
+        {
+          "label": "没有评级、目标价、买卖建议"
+        }
+      ],
+      "after_rejection": {
+        "reworks": 1,
+        "then": "back",
+        "back_to": 1,
+        "backs": 1,
+        "text": "重做，最多 1 次；仍不过，退回第 1 步，最多 1 次；仍不过，停下来问你"
+      },
+      "reserve": "0.05",
+      "status": "accepted",
+      "attempts": [
+        {
+          "attempt_id": "1e502d2b-c828-47d4-8ebc-275a25f92675",
+          "n": 1,
+          "outcome": "accepted",
+          "failure": null,
+          "spent": "0.01",
+          "started_at": "2026-11-02T06:04:33.569626+00:00",
+          "ended_at": "2026-11-02T06:04:33.580653+00:00",
+          "checks": [
+            {
+              "label": "交回的是一个 JSON",
+              "pass": true,
+              "message": ""
+            },
+            {
+              "label": "交回项都在：「rows」",
+              "pass": true,
+              "message": ""
+            },
+            {
+              "label": "没有评级、目标价、买卖建议",
+              "pass": true,
+              "message": ""
+            },
+            {
+              "label": "「rows」与第「核对」步一一对上",
+              "pass": true,
+              "message": ""
+            }
+          ],
+          "tools": {}
+        }
+      ],
+      "times": 1,
+      "rejected": 0,
+      "spent": "0.01",
+      "data": null,
+      "selection_reason": "交回作者规定的最终成果",
+      "method_instance": "report_1",
+      "current_result": {
+        "id": "96c373ab-7aa2-49e1-812f-d6caf239b8f0",
+        "version": 1,
+        "digest": "055f455db18cad1c9f693dd0d50fecdca2b983870025505f8c283e5d308f653a"
+      }
+    }
+  ]
+}

@@ -784,6 +784,17 @@
       "recheck": "传好了，重新查",
       "rechecking": "正在重新查…",
       "notSaved": "这份成稿没存进 knowbase：{name}——{reason}"
+    },
+    "plan": {
+      "label": "本次任务计划",
+      "planning": "正在安排方法与顺序",
+      "version": "任务计划 · 第 {version} 版",
+      "pending": "等待生成任务计划",
+      "unavailable": "本次尚未生成有效计划",
+      "history": "查看计划调整记录",
+      "selectedBecause": "本次选择这个方法的原因",
+      "currentResult": "当前有效成果：第 {version} 版",
+      "historicalResult": "下方保留的是历史成果；返工后需重新验收，当前不作为有效依据"
     }
   },
   "expertHome": {

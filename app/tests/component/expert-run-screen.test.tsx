@@ -13,6 +13,8 @@ import { WorkbenchProvider } from '@/lib/workbench/context'
 import { ConversationEventsProvider } from '@/lib/workbench/conversation-events'
 import messages from '@/messages/zh-CN.json'
 import backendFixture from '@/tests/fixtures/knowbase-run.json'
+import dynamicFixture from '@/tests/fixtures/dynamic-run.json'
+import { runSchema } from '@/contracts/workbench-v2'
 
 const full = join(process.cwd(), 'preview/fixtures/full')
 const manifest = JSON.parse(readFileSync(join(full, 'manifest.json'), 'utf8')) as {
@@ -50,12 +52,14 @@ let calls: Call[] = []
 let withoutNow = false
 let supplyingData = false
 let withKnowbase = false
+let methodView: Run | null = null
 
 beforeEach(() => {
   calls = []
   withoutNow = false
   supplyingData = false
   withKnowbase = false
+  methodView = null
   vi.stubGlobal('EventSource', FakeEventSource)
   vi.stubGlobal(
     'fetch',
@@ -72,6 +76,11 @@ beforeEach(() => {
       let body = method === 'GET' ? sample(path) : { ok: true }
       if (withKnowbase && method === 'GET' && path.endsWith('/steps')) body = backendFixture.steps
       if (withKnowbase && method === 'GET' && path.endsWith('/data')) body = backendFixture.data
+      if (methodView && method === 'GET') {
+        if (path.endsWith('/steps')) body = methodView
+        const selected = path.match(/\/steps\/(\d+)$/)
+        if (selected) body = { step: methodView.steps[Number(selected[1]) - 1] }
+      }
       if (supplyingData && method === 'GET' && path.endsWith('/steps') && body) {
         const run = body as Run
         body = {
@@ -113,6 +122,55 @@ function page(conversation: string) {
 }
 
 describe('专家处理中', () => {
+  it('accepts the backend dynamic view and shows selected methods and reasons', async () => {
+    methodView = runSchema.parse(dynamicFixture)
+    page(conversationOf('专家处理中'))
+    expect(await screen.findByText('任务计划 · 第 1 版')).toBeInTheDocument()
+    expect(await screen.findByText(/当前有效成果：第 1 版/)).toBeInTheDocument()
+    expect(screen.getByText(/本次选择这个方法的原因/)).toBeInTheDocument()
+  })
+
+  it('shows planning with no invented step or detail request', async () => {
+    const view = runSchema.parse(dynamicFixture)
+    methodView = {
+      ...view,
+      task: {
+        ...view.task,
+        state: 'RUNNING',
+        plan: { version: null, planning: true, reason: null, history: [] },
+      },
+      steps: [],
+      position: null,
+    }
+    page(conversationOf('专家处理中'))
+    expect(await screen.findByText('正在安排方法与顺序')).toBeInTheDocument()
+    expect(calls.some((call) => /\/steps\/\d+$/.test(call.path))).toBe(false)
+  })
+
+  it('retains plan revision reasons and distinguishes historical accepted results', async () => {
+    const view = runSchema.parse(dynamicFixture)
+    methodView = {
+      ...view,
+      task: {
+        ...view.task,
+        plan: {
+          version: 2,
+          planning: false,
+          reason: '重新绑定已验收的输入',
+          history: [
+            { version: 1, reason: '初次安排' },
+            { version: 2, reason: '重新绑定已验收的输入' },
+          ],
+        },
+      },
+      steps: view.steps.map((step) => ({ ...step, current_result: null })),
+    }
+    page(conversationOf('专家处理中'))
+    expect(await screen.findByText('任务计划 · 第 2 版', { selector: 'p' })).toBeInTheDocument()
+    expect(await screen.findByText(/下方保留的是历史成果/)).toBeInTheDocument()
+    fireEvent.click(screen.getByText('查看计划调整记录'))
+    expect(screen.getByText(/初次安排/)).toBeVisible()
+  })
   it('真实后端非空资料库响应仍展示步骤和待确认采单，不自动确认', async () => {
     withKnowbase = true
     page(conversationOf('专家处理中'))

@@ -322,6 +322,12 @@ export const runStepSchema = z
       })
       .loose()
       .nullable(),
+    selection_reason: z.string().optional(),
+    method_instance: z.string().optional(),
+    current_result: z
+      .object({ id: uuid, version: z.number().int().positive(), digest: z.string() })
+      .nullable()
+      .optional(),
   })
   .loose()
 export type RunStep = z.infer<typeof runStepSchema>
@@ -373,6 +379,15 @@ export const runSheetSchema = z
     started_at: z.string().nullable(),
     ended_at: z.string().nullable(),
     active_interaction_id: uuid.nullable(),
+    plan: z
+      .object({
+        version: z.number().int().positive().nullable(),
+        planning: z.boolean(),
+        reason: z.string().nullable(),
+        history: z.array(z.object({ version: z.number().int().positive(), reason: z.string() })),
+      })
+      .nullable()
+      .optional(),
   })
   .loose()
 export type RunSheet = z.infer<typeof runSheetSchema>

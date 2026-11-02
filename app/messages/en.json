@@ -784,6 +784,17 @@
       "recheck": "Uploaded — check again",
       "rechecking": "Checking again…",
       "notSaved": "This draft was not saved to knowbase: {name} — {reason}"
+    },
+    "plan": {
+      "label": "Plan for this task",
+      "planning": "Choosing methods and their order",
+      "version": "Task plan · Version {version}",
+      "pending": "Waiting for a task plan",
+      "unavailable": "No accepted plan was produced",
+      "history": "View plan revisions",
+      "selectedBecause": "Why this method was selected",
+      "currentResult": "Current accepted result: version {version}",
+      "historicalResult": "Results below are historical. They require acceptance again after rework and are not current evidence."
     }
   },
   "expertHome": {

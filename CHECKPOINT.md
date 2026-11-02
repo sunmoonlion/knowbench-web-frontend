@@ -21,3 +21,10 @@
 验证：347 passed、2 skipped；typecheck、lint、check:i18n、build 通过。Playwright 在本地预览注入 12 条采单，在 1366×768 和 1024×640 下验证步骤栏可见、可点击，采单独立滚动且确认按钮可到达。脚本 /tmp/luna_check_long_data_panel.cjs、截图 /tmp/luna-release45-layout.png 为本地诊断材料，不代表线上验收。
 
 待办：与后端工具契约和等待说明修复一起经现有 Jenkins 发布，再验证线上。已有错误采单不自动修改或确认。
+
+
+## 2026-11-02 第二轨任务计划读取面（未发布）
+
+分支 feat/method-execution-view，自已发布修复基线 4b8f9de8 继续。契约新增可选计划版本/理由/调整历史与步骤实例/选择理由/当前有效成果引用；兼容既有固定步骤响应。页面展示规划中、计划版本和调整记录，返工旧成果明确区分历史与当前。计划未生成时不请求不存在的步骤详情，保留用户交互区。
+
+真实后端隔离测试导出 fixtures/dynamic-run.json，组件测试验证计划选择和失效成果提示。最终完整测试 377 passed / 2 skipped；typecheck、lint、i18n 1081 keys、生产构建通过，证据 /tmp/luna-method-views-web-{full,typecheck,lint,i18n,build}.txt。未开放 v3、未部署、未移动 qwen 发布分支；后端单元 3 配套实现仍需工具鉴权与联合验证。
