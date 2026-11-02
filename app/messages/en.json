@@ -564,6 +564,7 @@
       "running": "The expert is working: {name}",
       "stopping": "Stopping: interrupting the step it is on; files already written stay in the project",
       "waiting": "The expert stopped and is waiting for you",
+      "supplying": "Data request confirmed; waiting for the data service",
       "offline": "Your machine is offline; the expert is waiting for it",
       "position": "Step {step} of {of}: {title}",
       "spent": "Spent {amount}",
@@ -604,7 +605,7 @@
       "reworking": "redoing",
       "went_back": "went back",
       "redo": "to redo",
-      "waiting": "waiting for you",
+      "waiting": "Waiting",
       "failed": "failed",
       "cancelled": "cancelled",
       "not_reached": "not reached"
@@ -661,6 +662,38 @@
     "failedToLoad": "Could not load this delegation.",
     "data": {
       "title": "Data used",
+      "missingSummary": "{count} data items are still missing. Review the request or decide whether to continue with available data.",
+      "missingDetails": "Show missing items",
+      "reviewAgain": "Review this data request again",
+      "progress": {
+        "title": "Data request confirmed",
+        "counts": "{total} items: {ready} ready · {open} processing · {partial} partial · {failed} unsuccessful",
+        "continue": "The expert resumes when required data is ready. Unavailable items will show a reason.",
+        "hasFailures": "Some items were not fully delivered. Waiting alone will not resolve them. Remaining items are processing; see reasons below.",
+        "checkedAt": "Last checked: {time}",
+        "awaitingStatus": "{count} items submitted; awaiting item-level progress from the data service.",
+        "reading": {
+          "original": "Original",
+          "pages": "Page text",
+          "table": "Table data",
+          "text": "Text"
+        },
+        "status": {
+          "accepted": "Accepted",
+          "fetching": "Processing",
+          "ready": "Ready",
+          "partial": "Partial",
+          "failed": "Failed",
+          "unsatisfiable": "Unavailable",
+          "cancelled": "Cancelled",
+          "timeout": "Timed out"
+        },
+        "reason": {
+          "invalid_request": "Delivery request did not match the interface contract",
+          "readings_incomplete": "Required readings are incomplete",
+          "channel_has_none": "No matching source document"
+        }
+      },
       "waiting": "Waiting for: {items}. The expert carries on once the data service has fetched them.",
       "waitingPlain": "Waiting for the data service; the expert carries on once the data arrives.",
       "demand": "Progress: {status, select, accepted {accepted} fetching {fetching} ready {all fetched} partial {partly fetched} unsatisfiable {not available} failed {failed} cancelled {cancelled} other {—}}",

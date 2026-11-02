@@ -564,6 +564,7 @@
       "running": "专家正在处理：{name}",
       "stopping": "正在停下：打断它正在做的这一步，已经写出的文件留在项目里",
       "waiting": "专家停下来了，等你决定",
+      "supplying": "采单已确认，等待数据服务完成",
       "offline": "你的机器断开了，专家在等它回来",
       "position": "第 {step} 步，共 {of} 步：{title}",
       "spent": "已花 {amount}",
@@ -604,7 +605,7 @@
       "reworking": "在重做",
       "went_back": "退回了前面",
       "redo": "要重做",
-      "waiting": "等你决定",
+      "waiting": "暂停等待",
       "failed": "失败",
       "cancelled": "已取消",
       "not_reached": "没有做到"
@@ -661,6 +662,38 @@
     "failedToLoad": "没有取到这件委托。",
     "data": {
       "title": "用的数据",
+      "missingSummary": "还有 {count} 项数据未齐，需要重新核对采单或决定是否按现有数据继续。",
+      "missingDetails": "展开缺失项",
+      "reviewAgain": "重新核对采单",
+      "progress": {
+        "title": "采单已确认",
+        "counts": "共 {total} 项：就绪 {ready} · 处理中 {open} · 部分完成 {partial} · 未完成 {failed}",
+        "continue": "所需数据就绪后专家自动继续；若取不到，会列明原因。",
+        "hasFailures": "已有未完整交付的项目，不能仅靠等待保证完成。其余项目继续处理，失败原因见下方。",
+        "checkedAt": "最近核对：{time}",
+        "awaitingStatus": "已提交 {count} 项，等待数据服务回传进度；暂时没有逐项状态。",
+        "reading": {
+          "original": "原件",
+          "pages": "按页文字",
+          "table": "报表数据",
+          "text": "正文"
+        },
+        "status": {
+          "accepted": "已受理",
+          "fetching": "处理中",
+          "ready": "就绪",
+          "partial": "部分完成",
+          "failed": "失败",
+          "unsatisfiable": "无法满足",
+          "cancelled": "已取消",
+          "timeout": "超时"
+        },
+        "reason": {
+          "invalid_request": "交付请求不符合接口要求",
+          "readings_incomplete": "所需读法未齐",
+          "channel_has_none": "渠道未找到资料"
+        }
+      },
       "waiting": "在等这几项数据：{items}。数据服务取齐了专家自动接着做。",
       "waitingPlain": "在等数据服务取数据，取齐了专家自动接着做。",
       "demand": "进度：{status, select, accepted {已受理} fetching {正在取} ready {已取齐} partial {取到一部分} unsatisfiable {取不到} failed {没取成} cancelled {已取消} other {—}}",

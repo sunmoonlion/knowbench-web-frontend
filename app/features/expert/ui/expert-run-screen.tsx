@@ -57,6 +57,7 @@ export function ExpertRunScreen({ task }: { task: string }) {
   // 操作权看任务状态。机器断开、实时快照暂缺时仍须能取消。
   const live = ['RECEIVED', 'VALIDATING', 'QUEUED', 'RUNNING', 'WAITING'].includes(sheet.state)
   const offline = now?.doing.code === 'offline'
+  const supplying = now?.doing.code === 'supplying'
   // 点了停止、那一轮还没收住：顶上马上说「正在停下」，按钮不再能点，免得以为没点上
   const stopping = live && (sheet.cancel_requested === true || act.stop.isSuccess)
   // 审查面摆在停住的那一步下面；看别的步骤时不摆
@@ -70,11 +71,13 @@ export function ExpertRunScreen({ task }: { task: string }) {
             ? t('band.stopping')
             : offline
               ? t('band.offline')
-              : waiting
-                ? t('band.waiting')
-                : live
-                  ? t('band.running', { name: sheet.expert.name })
-                  : (sheet.state_word ?? sheet.expert.name)}
+              : supplying
+                ? t('band.supplying')
+                : waiting
+                  ? t('band.waiting')
+                  : live
+                    ? t('band.running', { name: sheet.expert.name })
+                    : (sheet.state_word ?? sheet.expert.name)}
         </span>
         {position ? (
           <span className="text-muted-foreground order-last w-full truncate sm:order-none sm:w-auto sm:max-w-64">

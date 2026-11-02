@@ -742,6 +742,29 @@ export const taskDataSchema = z
     confirm_in: z.enum(['here', 'knowlab']).default('here'),
     waiting_for: z.array(z.string()).default([]),
     demand_status: z.string().nullable().optional(),
+    supply_progress: z
+      .object({
+        checked_at: z.string(),
+        items: z.array(
+          z.object({
+            id: z.string(),
+            key: z
+              .object({
+                subject: z.string().nullable().optional(),
+                doc_type: z.string(),
+                period_start: z.string().nullable().optional(),
+                period_end: z.string().nullable().optional(),
+              })
+              .loose()
+              .nullable(),
+            readings: z.array(z.string()),
+            status: z.string(),
+            reason: z.string().nullable(),
+          }),
+        ),
+      })
+      .nullable()
+      .optional(),
     reason: z.string().nullable().optional(),
     incomplete: z.array(z.string()).default([]),
     requests: z

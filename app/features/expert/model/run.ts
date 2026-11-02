@@ -59,7 +59,7 @@ const seconds = (from: string | null, clock: number) =>
 export function reassurance(now: Now, clock: number): Reassurance {
   const elapsed = seconds(now.since, clock)
   const quiet = seconds(now.last_event_at, clock)
-  const waiting = now.doing.code === 'waiting' || now.doing.code === 'offline'
+  const waiting = ['waiting', 'offline', 'supplying'].includes(now.doing.code)
   let line: Reassurance['line'] = null
   if (!waiting) {
     if (!now.held) line = 'unheld'

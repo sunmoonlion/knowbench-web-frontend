@@ -174,7 +174,9 @@ describe('确认专家提出的数据（decisions ⑭）', () => {
       />,
     )
     const missing = within(screen.getByTestId('task-data-missing'))
-    expect(missing.getByText('这几样没取到：上一年比较：没取到。')).toBeInTheDocument()
+    expect(missing.getByText('上一年比较：没取到')).toBeInTheDocument()
+    expect(missing.getByText(/还有 1 项数据未齐/)).toBeInTheDocument()
+    expect(missing.getByText('展开缺失项')).toBeInTheDocument()
     fireEvent.click(missing.getByRole('button', { name: '照现有的接着做' }))
     await waitFor(() => expect(calls[0].path).toMatch(/data-requests\/decline$/))
   })
@@ -353,6 +355,82 @@ describe('上传回来与成稿没存进 knowbase（独立审 10-30 第二轮）
       />,
     )
     expect(screen.getByTestId('task-output-not-saved')).toBeInTheDocument()
+  })
+})
+
+describe('补采进度', () => {
+  it('失败后能在原任务重新核对采单，按钮不直接确认或取数', async () => {
+    wrap(
+      <TaskDataPanel
+        task={TASK}
+        data={{
+          ...proposed,
+          requests: proposed.requests.map((r) => ({
+            ...r,
+            status: 'missing',
+            missing: ['上一年报表未取到'],
+          })),
+        }}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: '重新核对采单' }))
+    await waitFor(() =>
+      expect(calls.some((c) => c.path.endsWith('/data-requests/recheck'))).toBe(true),
+    )
+    expect(calls.some((c) => c.path.endsWith('/data-requests/confirm'))).toBe(false)
+  })
+
+  it('按类型分组显示真实状态与失败原因，不重复模型的长理由', () => {
+    const reason = '第六步需读年报并写明页码核对'
+    const items = [
+      { id: 'c1', year: '2024', status: 'ready', reason: null },
+      { id: 'c2', year: '2023', status: 'fetching', reason: null },
+      { id: 'c3', year: '2022', status: 'failed', reason: 'invalid_request' },
+    ].map(({ year, ...item }) => ({
+      ...item,
+      key: {
+        subject: '600519.SH',
+        doc_type: 'annual_report',
+        period_start: `${year}-01-01`,
+        period_end: `${year}-12-31`,
+      },
+      readings: ['original'],
+    }))
+    wrap(
+      <TaskDataPanel
+        task={TASK}
+        data={{
+          ...proposed,
+          status: 'waiting',
+          requests: [],
+          waiting_for: [reason, reason, reason],
+          supply_progress: { checked_at: '2026-11-02T00:30:00Z', items },
+        }}
+      />,
+    )
+    const panel = screen.getByTestId('supply-progress')
+    expect(panel).toHaveTextContent('共 3 项：就绪 1 · 处理中 1 · 部分完成 0 · 未完成 1')
+    expect(panel).toHaveTextContent('交付请求不符合接口要求')
+    expect(panel).toHaveTextContent('不能仅靠等待保证完成')
+    expect(panel).not.toHaveTextContent(reason)
+    expect(screen.getAllByText(/600519.SH · 年报/)).toHaveLength(1)
+    expect(screen.queryByRole('button', { name: '确认，去取' })).not.toBeInTheDocument()
+  })
+  it('旧任务没有逐项快照时承认未知，不虚报进度', () => {
+    wrap(
+      <TaskDataPanel
+        task={TASK}
+        data={{
+          ...proposed,
+          status: 'waiting',
+          requests: [],
+          waiting_for: ['冗长理由一', '冗长理由二'],
+        }}
+      />,
+    )
+    expect(screen.getByTestId('supply-progress')).toHaveTextContent('已提交 2 项')
+    expect(screen.getByTestId('supply-progress')).toHaveTextContent('暂时没有逐项状态')
+    expect(screen.getByTestId('supply-progress')).not.toHaveTextContent('冗长理由')
   })
 })
 

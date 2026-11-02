@@ -6,6 +6,8 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { Run } from '@/contracts/workbench-v2'
+
 import { ExpertRunScreen } from '@/features/expert'
 import { WorkbenchProvider } from '@/lib/workbench/context'
 import { ConversationEventsProvider } from '@/lib/workbench/conversation-events'
@@ -45,10 +47,12 @@ class FakeEventSource {
 type Call = { method: string; path: string; body: unknown; csrf: string | null }
 let calls: Call[] = []
 let withoutNow = false
+let supplyingData = false
 
 beforeEach(() => {
   calls = []
   withoutNow = false
+  supplyingData = false
   vi.stubGlobal('EventSource', FakeEventSource)
   vi.stubGlobal(
     'fetch',
@@ -63,6 +67,18 @@ beforeEach(() => {
         csrf: headers['X-CSRF-Token'] ?? null,
       })
       let body = method === 'GET' ? sample(path) : { ok: true }
+      if (supplyingData && method === 'GET' && path.endsWith('/steps') && body) {
+        const run = body as Run
+        body = {
+          ...run,
+          task: { ...run.task, state: 'WAITING', waiting_reason: 'DATA' },
+          now: run.now && {
+            ...run.now,
+            held: false,
+            doing: { code: 'supplying', text: '采单已确认，正在等待数据服务完成采集与加工' },
+          },
+        }
+      }
       if (withoutNow && method === 'GET' && path.endsWith('/steps') && body) {
         body = { ...body, now: null }
       }
@@ -92,6 +108,15 @@ function page(conversation: string) {
 }
 
 describe('专家处理中', () => {
+  it('采单确认后等待数据服务，不再提示用户决定或沙箱掉线', async () => {
+    supplyingData = true
+    page(conversationOf('专家处理中'))
+    expect(await screen.findByText('采单已确认，等待数据服务完成')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('采单已确认')
+    expect(screen.queryByText('专家停下来了，等你决定')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '停止' })).toBeEnabled()
+  })
+
   it('一直摆着：做到第几步、花了多少、现在在干什么、为什么', async () => {
     page(conversationOf('专家处理中'))
     expect(await screen.findByText('专家正在处理：问数')).toBeInTheDocument()

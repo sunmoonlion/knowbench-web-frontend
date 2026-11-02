@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useFormatter, useTranslations } from 'next-intl'
 import { useState } from 'react'
 
 import { CrossAppLink } from '@/components/common/cross-app-link'
@@ -74,17 +74,8 @@ export function TaskDataPanel({
       data-testid="task-data"
     >
       {data.status === 'planning' ? <p className="text-muted-foreground">{t('planning')}</p> : null}
-      {data.status === 'waiting' ? (
-        <p className="text-amber-700 dark:text-amber-400">
-          {data.waiting_for.length
-            ? t('waiting', { items: data.waiting_for.join('、') })
-            : t('waitingPlain')}
-          {data.demand_status ? (
-            <span className="text-muted-foreground ml-2">
-              {t('demand', { status: data.demand_status })}
-            </span>
-          ) : null}
-        </p>
+      {data.status === 'waiting' || data.supply_progress?.items.length ? (
+        <SupplyProgress data={data} />
       ) : null}
 
       {request && data.confirm_in === 'knowlab' ? (
@@ -162,9 +153,22 @@ export function TaskDataPanel({
 
       {missing.length ? (
         <div className="flex flex-wrap items-center gap-2" data-testid="task-data-missing">
-          <p className="text-amber-700 dark:text-amber-400">
-            {t('missing', { items: missing.flatMap((each) => each.missing).join('；') })}
+          <p className="w-full text-amber-700 dark:text-amber-400">
+            {t('missingSummary', { count: missing.flatMap((each) => each.missing).length })}
           </p>
+          <details className="text-muted-foreground w-full">
+            <summary className="cursor-pointer">{t('missingDetails')}</summary>
+            <ul className="list-disc space-y-1 pl-5">
+              {missing
+                .flatMap((each) => each.missing)
+                .map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+            </ul>
+          </details>
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => act.recheck.mutate()}>
+            {t('reviewAgain')}
+          </Button>
           <Button size="sm" disabled={busy} onClick={() => act.decline.mutate()}>
             {t('goOn')}
           </Button>
@@ -545,6 +549,93 @@ function AddItem({
       >
         {t('addDone')}
       </Button>
+    </div>
+  )
+}
+
+function SupplyProgress({ data }: { data: TaskData }) {
+  const format = useFormatter()
+  const t = useTranslations('expert.data')
+  const snapshot = data.supply_progress
+  const items = snapshot?.items ?? []
+  const counts = { ready: 0, open: 0, partial: 0, failed: 0 }
+  const groups = new Map<
+    string,
+    {
+      subject: string
+      doc: string
+      readings: string[]
+      rows: Map<string, { status: string; reason: string | null; periods: string[] }>
+    }
+  >()
+  for (const item of items) {
+    if (item.status === 'ready') counts.ready++
+    else if (['accepted', 'fetching'].includes(item.status)) counts.open++
+    else if (item.status === 'partial') counts.partial++
+    else counts.failed++
+    const subject = item.key?.subject ?? t('anySubject')
+    const doc = item.key?.doc_type ?? 'unknown'
+    const groupKey = JSON.stringify([subject, doc, item.readings])
+    const group = groups.get(groupKey) ?? { subject, doc, readings: item.readings, rows: new Map() }
+    const rowKey = JSON.stringify([item.status, item.reason])
+    const row = group.rows.get(rowKey) ?? { status: item.status, reason: item.reason, periods: [] }
+    const period = [item.key?.period_start, item.key?.period_end].filter(Boolean).join('–')
+    if (period && !row.periods.includes(period)) row.periods.push(period)
+    group.rows.set(rowKey, row)
+    groups.set(groupKey, group)
+  }
+  return (
+    <div className="space-y-2" data-testid="supply-progress">
+      <p className="font-medium">{t('progress.title')}</p>
+      {items.length ? (
+        <>
+          <p>{t('progress.counts', { total: items.length, ...counts })}</p>
+          <p className="text-muted-foreground">
+            {t(counts.failed || counts.partial ? 'progress.hasFailures' : 'progress.continue')}
+          </p>
+          <p className="text-muted-foreground text-xs">
+            {t('progress.checkedAt', {
+              time: format.dateTime(new Date(snapshot!.checked_at), {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+              }),
+            })}
+          </p>
+          <ul className="space-y-1.5">
+            {[...groups.entries()].map(([key, group]) => (
+              <li key={key} className="rounded border px-2 py-1">
+                <span className="font-medium">
+                  {group.subject} ·{' '}
+                  {t.has(`docType.${group.doc}`) ? t(`docType.${group.doc}`) : group.doc}
+                </span>
+                <span className="text-muted-foreground ml-2">
+                  {group.readings
+                    .map((r) => (t.has(`progress.reading.${r}`) ? t(`progress.reading.${r}`) : r))
+                    .join('、')}
+                </span>
+                {[...group.rows.entries()].map(([key, row]) => (
+                  <p key={key} className="text-xs leading-5">
+                    {t.has(`progress.status.${row.status}`)
+                      ? t(`progress.status.${row.status}`)
+                      : row.status}
+                    ：{row.periods.sort().join('、')}
+                    {row.reason
+                      ? ` · ${t.has(`progress.reason.${row.reason}`) ? t(`progress.reason.${row.reason}`) : row.reason}`
+                      : ''}
+                  </p>
+                ))}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <p className="text-muted-foreground">
+          {t('progress.awaitingStatus', { count: data.waiting_for.length })}
+        </p>
+      )}
     </div>
   )
 }

@@ -92,6 +92,10 @@ describe('没有卡住：只说真的', () => {
     const waiting = now({ doing: { code: 'waiting', text: '停下来了' }, held: false })
     expect(reassurance(waiting, at).line).toBeNull()
   })
+  it('已确认的补采等待不误报沙箱掉线', () => {
+    const supplying = now({ doing: { code: 'supplying', text: '正在取数' }, held: false })
+    expect(reassurance(supplying, at).line).toBeNull()
+  })
   it('时间的写法', () => {
     expect(minutesAndSeconds(192)).toEqual({ minutes: 3, seconds: 12 })
     expect(minutesAndSeconds(8)).toEqual({ minutes: 0, seconds: 8 })
