@@ -365,7 +365,7 @@ export const runSheetSchema = z
           .object({
             need: z.string().nullable(),
             name: z.string(),
-            source: z.enum(['cloud', 'local']),
+            source: z.literal('knowbase'),
           })
           .loose(),
       )

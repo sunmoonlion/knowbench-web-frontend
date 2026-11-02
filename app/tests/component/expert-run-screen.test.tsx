@@ -12,6 +12,7 @@ import { ExpertRunScreen } from '@/features/expert'
 import { WorkbenchProvider } from '@/lib/workbench/context'
 import { ConversationEventsProvider } from '@/lib/workbench/conversation-events'
 import messages from '@/messages/zh-CN.json'
+import backendFixture from '@/tests/fixtures/knowbase-run.json'
 
 const full = join(process.cwd(), 'preview/fixtures/full')
 const manifest = JSON.parse(readFileSync(join(full, 'manifest.json'), 'utf8')) as {
@@ -48,11 +49,13 @@ type Call = { method: string; path: string; body: unknown; csrf: string | null }
 let calls: Call[] = []
 let withoutNow = false
 let supplyingData = false
+let withKnowbase = false
 
 beforeEach(() => {
   calls = []
   withoutNow = false
   supplyingData = false
+  withKnowbase = false
   vi.stubGlobal('EventSource', FakeEventSource)
   vi.stubGlobal(
     'fetch',
@@ -67,6 +70,8 @@ beforeEach(() => {
         csrf: headers['X-CSRF-Token'] ?? null,
       })
       let body = method === 'GET' ? sample(path) : { ok: true }
+      if (withKnowbase && method === 'GET' && path.endsWith('/steps')) body = backendFixture.steps
+      if (withKnowbase && method === 'GET' && path.endsWith('/data')) body = backendFixture.data
       if (supplyingData && method === 'GET' && path.endsWith('/steps') && body) {
         const run = body as Run
         body = {
@@ -108,6 +113,16 @@ function page(conversation: string) {
 }
 
 describe('专家处理中', () => {
+  it('真实后端非空资料库响应仍展示步骤和待确认采单，不自动确认', async () => {
+    withKnowbase = true
+    page(conversationOf('专家处理中'))
+    expect(await screen.findByText(/专家自带的资料（资料库）/)).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: '步骤' })).toBeInTheDocument()
+    expect(await screen.findByText('上一年比较')).toBeInTheDocument()
+    expect(screen.queryByText('没有取到这件委托。')).not.toBeInTheDocument()
+    expect(calls.every((call) => call.method === 'GET')).toBe(true)
+  })
+
   it('采单确认后等待数据服务，不再提示用户决定或沙箱掉线', async () => {
     supplyingData = true
     page(conversationOf('专家处理中'))

@@ -1,5 +1,6 @@
 'use client'
 
+import { useRecoveredSession } from '@/components/auth/session-boundary'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { leaveTo } from '@/lib/leave-to'
@@ -13,6 +14,7 @@ type LogoutButtonProps = {
 
 export function LogoutButton({ csrfToken, locale, label, errorLabel }: LogoutButtonProps) {
   const router = useRouter()
+  const recovered = useRecoveredSession()
   const [pending, setPending] = useState(false)
   const [failed, setFailed] = useState(false)
 
@@ -26,7 +28,7 @@ export function LogoutButton({ csrfToken, locale, label, errorLabel }: LogoutBut
         cache: 'no-store',
         headers: {
           Accept: 'application/json',
-          'X-CSRF-Token': csrfToken,
+          'X-CSRF-Token': recovered?.csrf_token ?? csrfToken,
         },
       })
       if (!response.ok) throw new Error('logout_failed')

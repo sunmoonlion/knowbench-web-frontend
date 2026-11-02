@@ -1,24 +1,26 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { sessionRecovery } from '@/lib/auth/session-recovery'
 import type { RunAction } from '@/contracts/interaction'
-import {
-  cancelRun,
-  fetchRunSnapshot,
-  parseRunEventPayload,
-  submitRunAction,
-} from './client'
+import { cancelRun, fetchRunSnapshot, parseRunEventPayload, submitRunAction } from './client'
 import { applyRunEvent, createRunProjection, type RunProjection } from './projection'
 
 export type StreamState = 'connecting' | 'open' | 'reconciling' | 'offline' | 'closed'
 
 export function useRunProjection(runId: string, csrfToken: string) {
   const queryClient = useQueryClient()
+  const expired = useSyncExternalStore(
+    sessionRecovery.subscribe,
+    sessionRecovery.snapshot,
+    () => false,
+  )
   const queryKey = ['run-snapshot', runId] as const
   const query = useQuery({
     queryKey,
     queryFn: () => fetchRunSnapshot(runId),
+    enabled: !expired,
   })
   const [projection, setProjection] = useState<RunProjection | null>(null)
   const projectionRef = useRef<RunProjection | null>(null)
@@ -26,7 +28,7 @@ export function useRunProjection(runId: string, csrfToken: string) {
   const refetch = query.refetch
 
   useEffect(() => {
-    if (!query.data || isTerminal(query.data.status)) {
+    if (expired || !query.data || isTerminal(query.data.status)) {
       return
     }
     if (
@@ -80,7 +82,8 @@ export function useRunProjection(runId: string, csrfToken: string) {
         source?.close()
         if (stopped) return
         setStreamState('offline')
-        const delay = Math.min(1000 * 2 ** reconnectAttempt, 10000) + Math.floor(Math.random() * 250)
+        const delay =
+          Math.min(1000 * 2 ** reconnectAttempt, 10000) + Math.floor(Math.random() * 250)
         reconnectAttempt += 1
         reconnectTimer = setTimeout(connect, delay)
       }
@@ -92,7 +95,7 @@ export function useRunProjection(runId: string, csrfToken: string) {
       source?.close()
       if (reconnectTimer) clearTimeout(reconnectTimer)
     }
-  }, [query.data, refetch, runId])
+  }, [query.data, refetch, runId, expired])
 
   const action = useMutation({
     mutationFn: (command: RunAction) => submitRunAction(runId, command, csrfToken),

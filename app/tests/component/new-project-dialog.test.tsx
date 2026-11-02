@@ -48,6 +48,7 @@ beforeEach(() => {
       })
       const json = (status: number, value: unknown) => Response.json(value, { status })
       if (where.startsWith('http://127.0.0.1:') && !agentHere) throw new TypeError('refused')
+      if (where === 'http://testserver/api/auth/web/me') return json(200, { authenticated: true })
       if (where === 'http://testserver/api/workbench/environments')
         return json(200, {
           environments: [{ id: ENV, name: 'zymun', status: 'online', roots: [ROOT] }],

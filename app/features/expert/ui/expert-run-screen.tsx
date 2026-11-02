@@ -17,6 +17,7 @@ import { TaskDataPanel } from '@/components/workbench/task-data-panel'
 import { useConversationEvents } from '@/lib/workbench/conversation-events'
 import { useTaskData } from '@/lib/workbench/task-data'
 import { byFile, timeline } from '@/lib/workbench/timeline'
+import { RequestFailure } from '@/components/common/request-failure'
 import { useClock } from '@/lib/workbench/use-clock'
 
 import { useReview, useRun, useRunActions, useRunStep } from '../api/run'
@@ -46,6 +47,7 @@ export function ExpertRunScreen({ task }: { task: string }) {
   const review = useReview(pending)
 
   if (!run.data) {
+    if (run.isError) return <RequestFailure error={run.error} retry={() => void run.refetch()} />
     return (
       <p className="text-muted-foreground p-6 text-sm">
         {run.isError ? t('failedToLoad') : t('loading')}
@@ -118,7 +120,11 @@ export function ExpertRunScreen({ task }: { task: string }) {
       <div className="flex min-h-0 flex-1">
         <StepRail steps={steps} shown={shown} onPick={setPicked} />
         <div className="min-w-0 flex-1 overflow-y-auto">
-          {data.data ? <TaskDataPanel task={task} data={data.data} /> : null}
+          {data.data ? (
+            <TaskDataPanel task={task} data={data.data} />
+          ) : data.isError ? (
+            <RequestFailure error={data.error} retry={() => void data.refetch()} />
+          ) : null}
           <StepDetail
             step={detail.data ?? steps.find((step) => step.index === shown)}
             loading={detail.isPending}

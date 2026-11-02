@@ -65,3 +65,21 @@ Ingress 或受控 Node server 对外提供服务。发布前必须同时记录�
 - Next.js App Router 与自托管文档：<https://nextjs.org/docs>
 - 当前架构与契约入口：`k8s/docs/project-guide/`
 - 旧设计与迁移证据：按 `k8s/sunmoonai/docs/legacy-backlog/verification-index.md` 的固定 Git 版本查询，不作为当前实施基线。
+
+## 工作台登录恢复与资料来源契约
+
+本轮公共登录恢复同步自 `tpl-web-frontend@bd00575`（模板先通过完整 `pnpm check`）。
+`SessionBoundary` 包住工作台；工作台、公共跨应用链接及 Run HTTP 客户端使用会话请求入口。
+重新登录通过 `/api/auth/web/me` 核对同一 actor/app，更新 WorkbenchProvider 的 CSRF；
+只恢复读取，不自动重放确认采单、派单、发消息等写操作。输入只在原标签页内存保留。
+远程 link 的 Git 凭据 401 另行核对浏览器会话；已有 Git 凭据提示继续可用。
+
+`chosen_data.source` 按 20261028_0030 后的数据库契约只接受 `knowbase`，不放宽为
+任意字符串。`tests/fixtures/knowbase-run.json` 来自后端真实测试 HTTP 响应，使用
+合成数据，非线上响应。后端 `tests/test_run_data_contract_db.py` 在隔离数据库中
+验证并对照此副本；合法契约变化时先在后端用 `UPDATE_RUN_CONTRACT_FIXTURE=1`
+更新提供方原件，再同步消费者并运行两端测试，不能为前端测试通过手改响应。
+
+回归包括 HTTP 200/401 区分、非空资料下步骤与采单渲染、登录恢复保留输入与 CSRF、
+账号切换清缓存、迟到响应拒绝、SSE 停止与只读恢复，以及本地/远程 Git 凭据流程。
+线上 Casdoor 与原任务恢复仍须随正式发版验收。

@@ -1,4 +1,9 @@
 import {
+  assertSessionResponse,
+  sessionFetch,
+  SessionRequestError,
+} from '@/lib/auth/session-recovery'
+import {
   apiErrorSchema,
   cancelRunRequestSchema,
   createRunRequestSchema,
@@ -27,7 +32,11 @@ export async function fetchRunSnapshot(
   runId: string,
   fetchImpl: typeof fetch = fetch,
 ): Promise<RunSnapshot> {
-  return requestSnapshot(`/api/web/v1/runs/${encodeURIComponent(runId)}`, { method: 'GET' }, fetchImpl)
+  return requestSnapshot(
+    `/api/web/v1/runs/${encodeURIComponent(runId)}`,
+    { method: 'GET' },
+    fetchImpl,
+  )
 }
 
 export async function createRun(
@@ -103,18 +112,23 @@ async function requestSnapshot(
 ): Promise<RunSnapshot> {
   let response: Response
   try {
-    response = await fetchImpl(url, {
-      ...init,
-      credentials: 'same-origin',
-      cache: 'no-store',
-      redirect: 'manual',
-      headers: {
-        Accept: 'application/json',
-        'X-Correlation-Id': crypto.randomUUID(),
-        ...init.headers,
+    response = await sessionFetch(
+      url,
+      {
+        ...init,
+        credentials: 'same-origin',
+        cache: 'no-store',
+        redirect: 'manual',
+        headers: {
+          Accept: 'application/json',
+          'X-Correlation-Id': crypto.randomUUID(),
+          ...init.headers,
+        },
       },
-    })
+      fetchImpl,
+    )
   } catch (error) {
+    if (error instanceof SessionRequestError) throw error
     throw new InteractionClientError('backend_unavailable', undefined, { cause: error })
   }
   if (!response.ok || response.type === 'opaqueredirect') {
@@ -128,6 +142,7 @@ async function requestSnapshot(
   if (!parsed.success) {
     throw new InteractionClientError('contract_invalid', undefined, { cause: parsed.error })
   }
+  assertSessionResponse(response)
   return parsed.data
 }
 

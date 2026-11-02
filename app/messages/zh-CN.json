@@ -1329,5 +1329,24 @@
     "collapseSidebar": "折叠侧边栏",
     "expandSidebar": "展开侧边栏",
     "expandSide": "展开右栏"
+  },
+  "sessionRecovery": {
+    "title": "登录状态已失效",
+    "hint": "当前页面的未提交输入仍保留。请在新标签页重新登录，再回到这里继续。登录后请核对刚才操作的结果，系统不会自动重试确认或派单。",
+    "login": "在新标签页登录",
+    "resume": "我已登录，继续原页面",
+    "checking": "正在核对登录状态…",
+    "failed": "还未确认有效登录，请完成登录后再试。",
+    "accountChanged": "登录账号已改变",
+    "accountChangedHint": "已清除上一账号的页面缓存和未提交输入，请重新打开页面。",
+    "reopen": "重新打开页面"
+  },
+  "requestFailure": {
+    "authentication": "登录状态已失效，请重新登录后继续。",
+    "forbidden": "当前账号没有查看此内容的权限。",
+    "notFound": "这项内容不存在或已被移除。",
+    "contract": "服务返回的数据格式不符合约定，请重试；仍失败请反馈。",
+    "unavailable": "暂时无法连接服务，请稍后重试。",
+    "retry": "重新读取"
   }
 }

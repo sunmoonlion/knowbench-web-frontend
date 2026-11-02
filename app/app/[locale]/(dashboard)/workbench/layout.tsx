@@ -1,3 +1,4 @@
+import { SessionBoundary } from '@/components/auth/session-boundary'
 import { WorkbenchShell } from '@/features/shell'
 import { requireBrowserSession } from '@/lib/server/auth-session'
 
@@ -15,15 +16,17 @@ export default async function WorkbenchLayout({
   const { locale } = await params
   const session = await requireBrowserSession(locale)
   return (
-    <WorkbenchShell
-      csrfToken={session.csrf_token}
-      locale={locale}
-      user={{
-        name: session.user.display_name || session.user.email || session.user.actor_id,
-        email: session.user.email ?? null,
-      }}
-    >
-      {children}
-    </WorkbenchShell>
+    <SessionBoundary session={session} locale={locale}>
+      <WorkbenchShell
+        csrfToken={session.csrf_token}
+        locale={locale}
+        user={{
+          name: session.user.display_name || session.user.email || session.user.actor_id,
+          email: session.user.email ?? null,
+        }}
+      >
+        {children}
+      </WorkbenchShell>
+    </SessionBoundary>
   )
 }

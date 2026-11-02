@@ -1,3 +1,8 @@
+import {
+  assertSessionResponse,
+  sessionFetch,
+  SessionRequestError,
+} from '@/lib/auth/session-recovery'
 // 工作台接口的收发。同源 /api/workbench；浏览器会话 cookie；改动类的请求带 CSRF；答复一律过 zod。
 import { z } from 'zod'
 
@@ -26,18 +31,40 @@ async function exchange<T>(
   if (!path.startsWith('/api/workbench/')) throw new Error('workbench path expected')
   let response: Response
   try {
-    response = await fetchImpl(path, {
-      ...init,
-      credentials: 'same-origin',
-      cache: 'no-store',
-      redirect: 'manual',
-      headers: {
-        Accept: 'application/json',
-        'X-Correlation-Id': crypto.randomUUID(),
-        ...init.headers,
+    response = await sessionFetch(
+      path,
+      {
+        ...init,
+        credentials: 'same-origin',
+        cache: 'no-store',
+        redirect: 'manual',
+        headers: {
+          Accept: 'application/json',
+          'X-Correlation-Id': crypto.randomUUID(),
+          ...init.headers,
+        },
       },
-    })
+      fetchImpl,
+      async () => {
+        // Remote Git credentials and browser login both use 401. Ask the
+        // authoritative session endpoint before hiding the workbench.
+        if (!/^\/api\/workbench\/environments\/[^/]+\/remote\//.test(path)) return true
+        try {
+          const session = await fetchImpl('/api/auth/web/me', {
+            method: 'GET',
+            credentials: 'same-origin',
+            cache: 'no-store',
+            redirect: 'manual',
+            signal: AbortSignal.timeout(10_000),
+          })
+          return !session.ok
+        } catch {
+          return true
+        }
+      },
+    )
   } catch (error) {
+    if (error instanceof SessionRequestError) throw error
     throw new WorkbenchError('backend_unavailable', undefined, { cause: error })
   }
   if (!response.ok || response.type === 'opaqueredirect') {
@@ -54,6 +81,7 @@ async function exchange<T>(
   if (!parsed.success) {
     throw new WorkbenchError('contract_invalid', response.status, { cause: parsed.error })
   }
+  assertSessionResponse(response)
   return parsed.data
 }
 

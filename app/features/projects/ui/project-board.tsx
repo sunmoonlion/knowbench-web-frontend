@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 
+import { RequestFailure } from '@/components/common/request-failure'
 import { TaskDataPanel } from '@/components/workbench/task-data-panel'
 import type { BoardCard } from '@/contracts/workbench-v2'
 import { useWorkbench } from '@/lib/workbench/context'
@@ -20,6 +21,8 @@ export function ProjectBoard({ project }: { project: string }) {
   const t = useTranslations('projects.board')
   const board = useBoard(project, true)
   if (!board.data) {
+    if (board.isError)
+      return <RequestFailure error={board.error} retry={() => void board.refetch()} />
     return (
       <p className={cn('text-sm', board.isError ? 'text-destructive' : 'text-muted-foreground')}>
         {board.isError ? t('failed') : t('loading')}
@@ -81,6 +84,8 @@ function Card({ project, card }: { project: string; card: BoardCard }) {
 
 function CardData({ task }: { task: string }) {
   const data = useTaskData(task)
+  if (data.isError && !data.data)
+    return <RequestFailure error={data.error} retry={() => void data.refetch()} />
   return data.data ? (
     <div className="mt-1.5">
       <TaskDataPanel task={task} data={data.data} compact />

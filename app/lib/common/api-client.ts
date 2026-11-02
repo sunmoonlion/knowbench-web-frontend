@@ -1,5 +1,7 @@
 'use client'
 
+import { sessionFetch, assertSessionResponse } from '@/lib/auth/session-recovery'
+
 export type ApiProblem = {
   code: string
   message_key: string
@@ -29,17 +31,14 @@ function correlationId(): string {
   return `web-${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-export async function requestJson<T>(
-  path: string,
-  options: RequestJsonOptions = {},
-): Promise<T> {
+export async function requestJson<T>(path: string, options: RequestJsonOptions = {}): Promise<T> {
   if (!path.startsWith('/api/') || path.startsWith('//') || path.includes('\\')) {
     throw new Error('API path must be a same-origin /api/ path')
   }
   const method = (options.method ?? 'GET').toUpperCase()
   const unsafe = !['GET', 'HEAD', 'OPTIONS'].includes(method)
   const requestCorrelationId = correlationId()
-  const response = await fetch(path, {
+  const response = await sessionFetch(path, {
     ...options,
     method,
     credentials: 'same-origin',
@@ -60,8 +59,9 @@ export async function requestJson<T>(
       normalizeProblem(await safeJson(response), requestCorrelationId),
     )
   }
-  if (response.status === 204) return undefined as T
-  return (await response.json()) as T
+  const payload = response.status === 204 ? undefined : await response.json()
+  assertSessionResponse(response)
+  return payload as T
 }
 
 async function safeJson(response: Response): Promise<unknown> {

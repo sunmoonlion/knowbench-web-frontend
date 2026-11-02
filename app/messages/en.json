@@ -1329,5 +1329,24 @@
     "collapseSidebar": "Collapse the sidebar",
     "expandSidebar": "Expand the sidebar",
     "expandSide": "Expand side panel"
+  },
+  "sessionRecovery": {
+    "title": "Your sign-in is no longer valid",
+    "hint": "Your unsent input remains on this page. Sign in in a new tab, then return here to continue. Check the result of your last action; confirmations and collection requests will not be retried automatically.",
+    "login": "Sign in in a new tab",
+    "resume": "I signed in; return to this page",
+    "checking": "Checking sign-in…",
+    "failed": "A valid sign-in could not be confirmed. Finish signing in and try again.",
+    "accountChanged": "The signed-in account changed",
+    "accountChangedHint": "The previous account’s cached pages and unsent input have been cleared. Reopen this page to continue.",
+    "reopen": "Reopen page"
+  },
+  "requestFailure": {
+    "authentication": "Your sign-in is no longer valid. Sign in to continue.",
+    "forbidden": "This account does not have access to this content.",
+    "notFound": "This content does not exist or has been removed.",
+    "contract": "The service returned an unexpected data format. Retry, or report the problem if it persists.",
+    "unavailable": "The service is unavailable. Please try again later.",
+    "retry": "Read again"
   }
 }

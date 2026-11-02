@@ -2,7 +2,7 @@
 
 // 一段对话的事件：先按游标把已有的取完，再开实时流接着收；按游标去重。断了退避重连，重连前再补取一次。
 // 一段对话只开一条流：页面放一个 Provider，各功能（对话、花费）都从这里读。
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 import {
   conversationEventSchema,
@@ -10,6 +10,7 @@ import {
   type ConversationEvent,
 } from '@/contracts/workbench-v2'
 
+import { sessionRecovery } from '@/lib/auth/session-recovery'
 import { getJson, seg } from './http'
 
 export type StreamState = 'connecting' | 'live' | 'offline'
@@ -30,8 +31,14 @@ export function ConversationEventsProvider({
   const [events, setEvents] = useState<ConversationEvent[]>([])
   const [state, setState] = useState<StreamState>('connecting')
   const cursor = useRef(0)
+  const expired = useSyncExternalStore(
+    sessionRecovery.subscribe,
+    sessionRecovery.snapshot,
+    () => false,
+  )
 
   useEffect(() => {
+    if (expired) return
     let stopped = false
     let source: EventSource | null = null
     let timer: ReturnType<typeof setTimeout> | null = null
@@ -107,7 +114,7 @@ export function ConversationEventsProvider({
       source?.close()
       if (timer) clearTimeout(timer)
     }
-  }, [conversation])
+  }, [conversation, expired])
 
   return <Context.Provider value={{ events, state }}>{children}</Context.Provider>
 }
