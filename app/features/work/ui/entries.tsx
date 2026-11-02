@@ -407,7 +407,11 @@ export function TimelineEntry({
       return (
         <div className="space-y-2">
           <Marker variant="separator">
-            <MarkerContent>{t(`handover.${entry.what}`)}</MarkerContent>
+            <MarkerContent>
+              {entry.what === 'given'
+                ? t('handover.given')
+                : t(`handover.terminal.${entry.outcome ?? 'failed'}`)}
+            </MarkerContent>
           </Marker>
           {entry.what === 'returned' ? (
             <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[13px]">

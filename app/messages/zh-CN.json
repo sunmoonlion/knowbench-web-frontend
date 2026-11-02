@@ -478,7 +478,13 @@
       "rejectedPlain": "专家没有接这个委托，一步也没做，没有写底稿。",
       "open": "打开工作底稿",
       "returnedStep": "交回：{summary}",
-      "returnedRaw": "这一步交回的原文（点开看）"
+      "returnedRaw": "这一步交回的原文（点开看）",
+      "terminal": {
+        "succeeded": "专家已完成委托",
+        "failed": "专家未完成委托",
+        "stopped": "专家委托已停止",
+        "rejected": "专家未接此委托"
+      }
     },
     "question": {
       "title": "Codex 想问你",

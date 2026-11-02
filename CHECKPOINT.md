@@ -1,3 +1,11 @@
+# 2026-11-02：专家终态主标题纠正
+
+基线 #57 web cf96b723ed69。之前所有 wheel returned 都显示“专家交回了”，即使真实 outcome 是 failed/stopped/rejected。现在主标题按实际 outcome 显示“专家已完成委托/未完成委托/委托已停止/未接此委托”，原有细节与产物查看保持；未知 outcome 保守显示未完成。不改后端状态，不重写历史。
+
+4 条终态回归；相关 29 passed，全量 383 passed/2 skipped，typecheck/lint/i18n 通过。第一次 pnpm check 的 build 因临时工位 node_modules 跨根符号链接被 Turbopack 拒绝；已移除仅此链接、离线按锁安装后 pnpm build 通过，未改锁或依赖。日志 /tmp/luna-preflight-web-check.log、/tmp/luna-preflight-web-build.log。无 API/schema 变化；经 qwen/Jenkins 发布并做浏览器验收，未声称线上已修复。
+
+此前记录：
+
 # 2026-11-02 Wind 通用查询与年报证据（开发候选，未发布）
 
 基线 `fb942ff2428dbeea042ef42134d0c81db7714861`。本轮本人要求第二轨作为主演示、巨潮保底，财务与年报都纳入、不限制为财务专线。

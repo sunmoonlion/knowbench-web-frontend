@@ -478,7 +478,13 @@
       "rejectedPlain": "The expert did not take this request; no step ran and nothing was written.",
       "open": "Open work papers",
       "returnedStep": "Returned: {summary}",
-      "returnedRaw": "What this step returned (open to read)"
+      "returnedRaw": "What this step returned (open to read)",
+      "terminal": {
+        "succeeded": "Expert task completed",
+        "failed": "Expert task failed",
+        "stopped": "Expert task stopped",
+        "rejected": "Expert task declined"
+      }
     },
     "question": {
       "title": "Codex is asking you",

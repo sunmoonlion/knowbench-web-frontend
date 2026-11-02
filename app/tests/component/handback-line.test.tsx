@@ -56,3 +56,14 @@ describe('专家交回那一行', () => {
     expect(screen.queryByText(/右边栏/)).toBeNull()
   })
 })
+
+it.each([
+  ['failed', '专家未完成委托'],
+  ['stopped', '专家委托已停止'],
+  ['rejected', '专家未接此委托'],
+  ['succeeded', '专家已完成委托'],
+] as const)('终态 %s 在主标题明确显示，不统一报交回成功', (outcome, title) => {
+  line({ kind: 'handover', key: outcome, what: 'returned', outcome })
+  expect(screen.getByText(title)).toBeInTheDocument()
+  expect(screen.queryByText('专家交回了')).not.toBeInTheDocument()
+})
