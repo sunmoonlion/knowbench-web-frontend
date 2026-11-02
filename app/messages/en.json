@@ -761,6 +761,7 @@
         "unusable": "Cannot be used"
       },
       "problems": {
+        "user_data_unavailable": "The data service cannot process this request right now. Try again later. Your list is kept; you do not need to change the company or years.",
         "data_choice_invalid": "Cannot confirm this: a switched copy must be one of the candidates, and the company and years must be valid.",
         "reauth_required": "Your login has expired; sign in again and confirm."
       },

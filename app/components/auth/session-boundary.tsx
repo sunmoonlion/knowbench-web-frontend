@@ -68,7 +68,6 @@ export function SessionBoundary({
         current.user.actor_id !== session.user.actor_id
       ) {
         setChangedAccount(true)
-        client.clear()
         return
       }
       if (Date.parse(current.user.expires_at) <= Date.now()) throw new Error('expired')
@@ -81,6 +80,12 @@ export function SessionBoundary({
       setBusy(false)
     }
   }
+
+  useEffect(() => {
+    // Clear after the old account's observers have unmounted. Clearing while
+    // they are mounted lets an in-flight render recreate their cache entries.
+    if (changedAccount) client.clear()
+  }, [changedAccount, client])
 
   useEffect(() => {
     if (!recovered) return
