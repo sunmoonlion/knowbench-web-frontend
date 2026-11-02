@@ -20,6 +20,11 @@ export function useRun(task: string, beat: number) {
     queryKey: [...runKey(task), beat],
     queryFn: () => getJson(runSchema, `/api/workbench/tasks/${seg(task)}/steps`),
     placeholderData: (previous) => previous,
+    // 数据服务可能只更新采单，没有新模型事件；同步等待原因，避免一直显示采集中。
+    refetchInterval: (query) =>
+      query.state.data?.task.state === 'WAITING' && query.state.data.task.waiting_reason === 'DATA'
+        ? 10_000
+        : false,
   })
 }
 

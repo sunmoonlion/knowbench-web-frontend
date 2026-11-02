@@ -23,6 +23,8 @@ export function useTaskData(task: string, beat = 0) {
     queryKey: [...taskDataKey(task), beat],
     queryFn: () => getJson(taskDataSchema, `/api/workbench/tasks/${seg(task)}/data`),
     placeholderData: (previous) => previous,
+    // 采集进度更新不一定产生对话事件；等待时读取服务端快照，办结后停止。
+    refetchInterval: (query) => (query.state.data?.status === 'waiting' ? 10_000 : false),
   })
 }
 
