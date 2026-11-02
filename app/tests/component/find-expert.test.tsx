@@ -181,6 +181,15 @@ describe('让 AI 找', () => {
       body: { title: '毛利率拆解', problem: QUESTION },
     })
   })
+
+  it('没有合适专家时可就此结束，保留记录且不发起聊天、委托或孵化', async () => {
+    result = done({ outcome: 'none', picks: [] })
+    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    fireEvent.click(await screen.findByRole('button', { name: '就此结束' }))
+    expect(push).toHaveBeenCalledWith(`/zh-CN/workbench/projects/${PROJECT}`)
+    expect(calls).toHaveLength(0)
+    expect(screen.getByText(messages.findExpert.finishHereNote)).toBeInTheDocument()
+  })
 })
 
 describe('直接答的那段对话', () => {

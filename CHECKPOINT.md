@@ -45,3 +45,11 @@
 分支 feat/method-execution-view，自已发布修复基线 4b8f9de8 继续。契约新增可选计划版本/理由/调整历史与步骤实例/选择理由/当前有效成果引用；兼容既有固定步骤响应。页面展示规划中、计划版本和调整记录，返工旧成果明确区分历史与当前。计划未生成时不请求不存在的步骤详情，保留用户交互区。
 
 真实后端隔离测试导出 fixtures/dynamic-run.json，组件测试验证计划选择和失效成果提示。最终完整测试 377 passed / 2 skipped；typecheck、lint、i18n 1081 keys、生产构建通过，证据 /tmp/luna-method-views-web-{full,typecheck,lint,i18n,build}.txt。未开放 v3、未部署、未移动 qwen 发布分支；后端单元 3 配套实现仍需工具鉴权与联合验证。
+
+
+## 2026-11-02 动态专家入口与无匹配分支
+
+合入 8181502 终态标题修复；专家页/委托页识别 v3 的任务规划入口，不虚构固定步骤。
+找专家无匹配时补“就此结束”，保留通用模型与孵化申请入口。
+前端 385 passed、2 个既有 skipped；typecheck/lint/build 通过。
+日志 /tmp/luna-market-web-{tests,types,lint,build}.log。未部署。

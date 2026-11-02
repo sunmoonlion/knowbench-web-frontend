@@ -141,6 +141,28 @@ describe('请专家：数据按问题定', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('正在按各位专家自己写的范围')
   })
 
+  it('动态专家仍展示数据确认说明，任务步骤由作者方法按问题选择', async () => {
+    const originalNeeds = NEEDS[KNOWBOT]
+    const originalSteps = PACKS.packs[0].steps
+    NEEDS[KNOWBOT] = { contract_version: 'v2', contract: 'knowbot-manifest/v3', bound: 2 }
+    PACKS.packs[0].steps = []
+    try {
+      page(<AskExpertScreen project={project} from={null} expert={KNOWBOT} />)
+      expect(await screen.findByText(messages.askExpert.dynamicPlan)).toBeInTheDocument()
+      expect(screen.getByTestId('ask-by-question')).toHaveTextContent('作者挑选的')
+      expect(screen.queryByText('定范围')).not.toBeInTheDocument()
+      const submit = screen.getByRole('button', { name: '交给专家' })
+      await waitFor(() => expect(submit).toBeEnabled())
+      fireEvent.click(submit)
+      await waitFor(() => expect(calls).toHaveLength(1))
+      expect(calls[0].body).not.toHaveProperty('data')
+      expect(calls[0].body).not.toHaveProperty('plan')
+    } finally {
+      NEEDS[KNOWBOT] = originalNeeds
+      PACKS.packs[0].steps = originalSteps
+    }
+  })
+
   it('内置专家不用数据：没有数据那一节', async () => {
     page(<AskExpertScreen project={project} from={null} expert="BUILTIN" />)
     expect(await screen.findByRole('heading', { name: /内置的一位/ })).toBeInTheDocument()

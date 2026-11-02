@@ -51,7 +51,7 @@ export function AskExpertScreen({
   const [findTask, setFindTask] = useState<string | null>(null)
 
   const [chosen, setChosen] = useState<string | null>(expert)
-  // 清单 v2 的专家（decisions ⑭）：不用选数据，只说专家自带几份
+  // 固定与动态专家都沿用数据授权、补采和本人确认。
   const needs = useDataNeeds(chosen)
   // 用户自己打的字。没打过的时候用带进来的那句
   const [typed, setTyped] = useState<string | null>(null)
@@ -66,7 +66,7 @@ export function AskExpertScreen({
   const question = typed ?? (from ? said.data?.last : fromHome) ?? ''
 
   const pack = (packs.data ?? []).find((each) => each.id === chosen)
-  const v2 = needs.data?.contract === 'knowbot-manifest/v2' ? needs.data : null
+  const dataNeeds = needs.data?.contract ? needs.data : null
   const blocker = askBlocker({
     pack,
     question,
@@ -222,14 +222,14 @@ export function AskExpertScreen({
               ) : null}
             </section>
 
-            {v2 && pack ? (
+            {dataNeeds && pack ? (
               // 清单 v2（decisions ⑭）：不用选数据；开跑后先按问题列出要哪些，你确认后才取、才做
               <section aria-label={t('byQuestion.title')} data-testid="ask-by-question">
                 <p className={label}>{t('byQuestion.title')}</p>
                 <p className="text-muted-foreground text-[13px]">{t('byQuestion.lead')}</p>
-                {v2.bound ? (
+                {dataNeeds.bound ? (
                   <p className="text-muted-foreground mt-1 text-[13px]">
-                    {t('byQuestion.bound', { count: v2.bound })}
+                    {t('byQuestion.bound', { count: dataNeeds.bound })}
                   </p>
                 ) : null}
               </section>
@@ -278,6 +278,9 @@ export function AskExpertScreen({
               <>
                 <section>
                   <h2 className={label}>{t('will')}</h2>
+                  {needs.data?.contract === 'knowbot-manifest/v3' ? (
+                    <p className="text-muted-foreground text-sm">{t('dynamicPlan')}</p>
+                  ) : null}
                   <ol className="space-y-2.5">
                     {pack.steps.map((step) => (
                       <li key={step.index} className="text-sm">

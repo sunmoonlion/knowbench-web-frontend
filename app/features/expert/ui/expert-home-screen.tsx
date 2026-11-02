@@ -174,8 +174,12 @@ export function ExpertHomeScreen() {
                   </dl>
                   <div className="mt-auto flex items-center justify-between pt-4">
                     <span className="text-muted-foreground text-[13px]">
-                      {t('stepsCount', { n: pack.steps.length })} ·{' '}
-                      {pack.uses_our_data ? t('usesData') : t('noData')}
+                      {pack.steps.length
+                        ? t('stepsCount', { n: pack.steps.length })
+                        : pack.status === 'preparing'
+                          ? t('preparing')
+                          : t('planAtStart')}{' '}
+                      · {pack.uses_our_data ? t('usesData') : t('noData')}
                     </span>
                     <Button
                       size="sm"

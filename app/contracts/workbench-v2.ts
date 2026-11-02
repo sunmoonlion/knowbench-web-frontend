@@ -668,7 +668,7 @@ export const createdProjectSchema = z.object({ id: uuid }).loose()
 // 内置专家不用数据：contract 是 null、bound 是 0
 export const listedNeedsSchema = z
   .object({
-    contract: z.literal('knowbot-manifest/v2').nullable(),
+    contract: z.enum(['knowbot-manifest/v2', 'knowbot-manifest/v3']).nullable(),
     bound: z.number().int(),
   })
   .loose()

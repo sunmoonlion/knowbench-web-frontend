@@ -226,6 +226,16 @@ function NoneCard({
         </p>
       ) : null}
 
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={direct.isPending || incubate.isPending || publish.isPending}
+        onClick={() => router.push(routes.project(locale, project))}
+      >
+        {t('finishHere')}
+      </Button>
+      <p className="text-muted-foreground text-xs">{t('finishHereNote')}</p>
+
       <details className="text-sm">
         <summary className="cursor-pointer font-medium">{t('demandTitle')}</summary>
         <p className="text-muted-foreground mt-1 text-[13px]">{t('demandLead')}</p>
