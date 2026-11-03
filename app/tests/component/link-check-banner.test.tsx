@@ -65,7 +65,11 @@ function banner() {
   return render(
     <NextIntlClientProvider locale="zh-CN" messages={messages}>
       <QueryClientProvider client={client}>
-        <WorkbenchProvider csrfToken="csrf" locale="zh-CN">
+        <WorkbenchProvider
+          csrfToken="csrf"
+          locale="zh-CN"
+          user={{ name: '当前用户B', email: null }}
+        >
           <LinkCheckBanner />
         </WorkbenchProvider>
       </QueryClientProvider>
@@ -74,6 +78,23 @@ function banner() {
 }
 
 describe('工作台顶上的核对提示（会合点备忘第五节，账 143）', () => {
+  it('新账号与已运行的本机 link 分开显示，仅引导配对，不自动创建沙箱或切换账号', async () => {
+    answers['http://testserver/api/workbench/local-link'] = {
+      assigned: null,
+      copied: false,
+      token_expires_at: null,
+    }
+    banner()
+    expect(await screen.findByText(/账号「当前用户B」尚未登记连接的电脑/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '连接到当前账号' })).toHaveAttribute(
+      'href',
+      '/zh-CN/workbench/settings/computer#agent-connect',
+    )
+    expect(screen.queryByRole('link', { name: '重新颁发令牌' })).toBeNull()
+    expect(
+      vi.mocked(fetch).mock.calls.every(([, init]) => !init?.method || init.method === 'GET'),
+    ).toBe(true)
+  })
   it('甲 = 乙、本地 link 连着、沙箱就绪：什么都不显示', async () => {
     const { container } = banner()
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(4))

@@ -20,7 +20,7 @@ import { ReconnectComputer } from './agent-setup'
 
 export function MachinesScreen({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslations('machines')
-  const { csrfToken } = useWorkbench()
+  const { csrfToken, user } = useWorkbench()
   const machines = useMachines(5000)
   const done = progress(machines.isSuccess ? machines.data : undefined)
   const steps = [
@@ -34,6 +34,13 @@ export function MachinesScreen({ embedded = false }: { embedded?: boolean }) {
         <header>
           <h2 className="text-2xl font-semibold tracking-tight">{t('title')}</h2>
           <p className="text-muted-foreground mt-1 text-sm">{t('lead')}</p>
+          {user ? (
+            <p className="mt-2 text-sm font-medium">
+              {t('signedInAccount', { account: user.name })}
+            </p>
+          ) : null}
+          <p className="text-muted-foreground mt-1 text-sm">{t('accountBinding')}</p>
+          <p className="text-muted-foreground mt-1 text-sm">{t('platformTesting')}</p>
         </header>
         <section aria-label={t('guide.title')} className="space-y-3">
           <h3 className="text-sm font-medium">{t('guide.title')}</h3>
