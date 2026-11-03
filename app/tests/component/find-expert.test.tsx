@@ -228,6 +228,18 @@ describe('ai去knowmart请回专家', () => {
     expect(calls).toHaveLength(0)
   })
 
+  it('目录错误展示真实原因，不伪装成无匹配且不自动重试', async () => {
+    result = {
+      ...done({}),
+      state: 'FAILED',
+      error: '专家目录读取失败，已停止查找；这不代表没有合适专家',
+    }
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
+    expect(await screen.findByRole('alert')).toHaveTextContent('专家目录读取失败')
+    expect(screen.queryByText(messages.findExpert.noneTitle)).toBeNull()
+    expect(calls).toHaveLength(0)
+  })
+
   it('停止查找只取消这一轮，不创建或取消分析委托', async () => {
     result = { ...done({}), state: 'RUNNING' }
     page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
