@@ -6,7 +6,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { Run } from '@/contracts/workbench-v2'
+import type { Review, Run } from '@/contracts/workbench-v2'
 
 import { ExpertRunScreen } from '@/features/expert'
 import { WorkbenchProvider } from '@/lib/workbench/context'
@@ -53,6 +53,7 @@ let withoutNow = false
 let supplyingData = false
 let withKnowbase = false
 let methodView: Run | null = null
+let dataPreparation = false
 
 beforeEach(() => {
   calls = []
@@ -60,6 +61,7 @@ beforeEach(() => {
   supplyingData = false
   withKnowbase = false
   methodView = null
+  dataPreparation = false
   vi.stubGlobal('EventSource', FakeEventSource)
   vi.stubGlobal(
     'fetch',
@@ -80,6 +82,29 @@ beforeEach(() => {
         if (path.endsWith('/steps')) body = methodView
         const selected = path.match(/\/steps\/(\d+)$/)
         if (selected) body = { step: methodView.steps[Number(selected[1]) - 1] }
+      }
+      if (dataPreparation && method === 'GET' && body) {
+        if (path.endsWith('/steps')) {
+          const run = body as Run
+          body = {
+            ...run,
+            position: null,
+            steps: run.steps.map((step) => ({ ...step, status: 'pending', attempts: [] })),
+            now: run.now && { ...run.now, step: { ...run.now.step, index: 0, title: '定数据' } },
+          }
+        }
+        if (path.includes('/interactions/') && !path.endsWith('/events')) {
+          const envelope = body as { interaction: Review }
+          const review = envelope.interaction
+          body = {
+            ...envelope,
+            interaction: {
+              ...review,
+              where: { ...review.where, step: null },
+              pending: { ...review.pending, title: '数据准备已暂停' },
+            },
+          }
+        }
       }
       if (supplyingData && method === 'GET' && path.endsWith('/steps') && body) {
         const run = body as Run
@@ -249,6 +274,17 @@ describe('专家处理中', () => {
     fireEvent.click(await screen.findByRole('button', { name: '停下' }))
     await waitFor(() => expect(calls.some((call) => call.path.endsWith('/cancel'))).toBe(true))
     expect(calls.find((call) => call.path.endsWith('/cancel'))?.csrf).toBe('csrf-for-test')
+  })
+
+  it('数据准备暂停没有正式步骤编号，仍能看见待决项', async () => {
+    dataPreparation = true
+    page(conversationOf('专家停下来了：勾稽不平'))
+    expect(await screen.findByRole('region', { name: '数据准备已暂停' })).toBeInTheDocument()
+    expect(screen.queryByText(/第 3 步，共/)).not.toBeInTheDocument()
+    const rail = within(screen.getByRole('navigation', { name: '步骤' }))
+    for (const button of rail.getAllByRole('button'))
+      expect(button).toHaveAttribute('title', '还没做')
+    expect(calls.some((call) => call.method === 'POST')).toBe(false)
   })
 
   it('专家停下来问我：哪条没过、每个选项选了会怎样；答复带着凭证', async () => {
