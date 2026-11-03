@@ -905,6 +905,12 @@
     "summon": "Invite an expert from knowmart yourself"
   },
   "findExpert": {
+    "loading": "Reading the status of this search…",
+    "queued": "Search submitted, but not started yet. Tasks in the same project run in order; this search will start when its turn comes.",
+    "preparing": "Checking the requirements for this search. Matching has not started yet.",
+    "waiting": "This search is paused. Open the project to see what needs attention.",
+    "statusUnknown": "The search progress is currently unclear. Open the project to check its tasks.",
+    "viewTasks": "View project tasks",
     "running": "Your model is looking through what each expert says it handles…",
     "ended": "This search did not finish. Try AI selection again or choose an expert in knowmart.",
     "failed": "Could not load the result. Refresh and try again.",

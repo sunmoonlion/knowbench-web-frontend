@@ -106,6 +106,29 @@ const done = (extra: Record<string, unknown>) => ({
 })
 
 describe('让 AI 找', () => {
+  it.each([
+    ['RECEIVED', 'queued'],
+    ['QUEUED', 'queued'],
+    ['VALIDATING', 'preparing'],
+    ['WAITING', 'waiting'],
+    ['RUNNING', 'running'],
+    ['FAILED', 'ended'],
+    ['CANCELLED', 'ended'],
+    ['REJECTED', 'ended'],
+    ['SUCCEEDED', 'ended'],
+  ] as const)('无结果时按真实状态%s显示，不把排队和终态伪装成运行中', async (state, key) => {
+    result = { ...done({}), state }
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
+    expect(await screen.findByText(messages.findExpert[key])).toBeInTheDocument()
+    if (state !== 'RUNNING') expect(screen.queryByText(messages.findExpert.running)).toBeNull()
+    expect(screen.getByRole('link', { name: messages.findExpert.viewTasks })).toHaveAttribute(
+      'href',
+      `/zh-CN/workbench/projects/${PROJECT}`,
+    )
+    expect(calls).toHaveLength(0)
+    expect(selected).not.toHaveBeenCalled()
+  })
+
   it('免费匹配自动钉版并交回选择与收据，等待用户提交才分析', async () => {
     result = done({
       contract: 'knowbench/expert-match/v2',
