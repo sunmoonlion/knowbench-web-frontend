@@ -60,11 +60,22 @@ export function HomeScreen() {
   // 专家：在对话框里直接挑一位（专家市场上线前先用内置的清单，0017 §三）
   const packs = usePacks()
   // 从 knowmart 请来分身后会带 expert=<这一位> 回到这里，先选好它
-  const [expert, setExpert] = useState<string | null>(query.get('expert'))
+  const incomingExpert = query.get('expert')
+  const [expert, setExpert] = useState<string | null>(incomingExpert)
   const [askKey] = useState(() => crypto.randomUUID())
   const ask = useAsk()
   const finder = useExpertFinder()
-  const [selection, setSelection] = useState<'ai' | 'manual'>(query.get('expert') ? 'manual' : 'ai')
+  const [selection, setSelection] = useState<'ai' | 'manual'>(incomingExpert ? 'manual' : 'ai')
+  const [seenExpert, setSeenExpert] = useState(incomingExpert)
+  // pin 后 router.replace 只更新查询参数，首页不会重新挂载。收到新的专家时同步
+  // 选择状态；同一参数下保留用户后续切换，也保留已经输入的问题和项目。
+  if (incomingExpert !== seenExpert) {
+    setSeenExpert(incomingExpert)
+    if (incomingExpert) {
+      setExpert(incomingExpert)
+      setSelection('manual')
+    }
+  }
   const needs = useDataNeeds(expert)
   const checkingNeeds =
     Boolean(expert?.startsWith('knowbot:')) && (needs.isPending || needs.isError)

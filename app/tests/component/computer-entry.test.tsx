@@ -186,6 +186,66 @@ describe('电脑接入入口', () => {
     checkLink()
     expect(screen.getByRole('button', { name: '交给专家' })).toBeDisabled()
   })
+
+  it('商城回跳在同一首页更新专家参数时选好专家，保留问题并允许再次手选', async () => {
+    const id = 'knowbot:0b8a6c3e-1f2d-4c5b-9a7e-6d5c4b3a2f10@3'
+    const pack = {
+      id,
+      name: '财务分析与预测第3版',
+      tagline: '按作者的方法分析财报',
+      solves: '',
+      does_not_solve: '',
+      input: '',
+      output: '',
+      uses_our_data: false,
+      source: 'knowbot',
+      steps: [],
+    }
+    const base = globalThis.fetch
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init: RequestInit = {}) => {
+        if (String(input) === '/api/workbench/packs') {
+          return Response.json({ packs: [pack, { ...pack, id: 'another', name: '另一位专家' }] })
+        }
+        return base(input, init)
+      }),
+    )
+    navigation.query = 'mode=expert'
+    const p = page(<HomeScreen />)
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '分析贵州茅台' } })
+    expect(screen.getByRole('button', { name: zh.home.expert.find })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
+    // 模拟 KnowbotArrival pin 成功后的软导航，保持同一个组件实例。
+    navigation.query = `mode=expert&expert=${encodeURIComponent(id)}`
+    p.rerender(<HomeScreen />)
+    expect(await screen.findByRole('button', { name: pack.name })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: zh.home.expert.manual })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('textbox')).toHaveValue('分析贵州茅台')
+
+    fireEvent.click(screen.getByRole('button', { name: '另一位专家' }))
+    p.rerender(<HomeScreen />)
+    expect(screen.getByRole('button', { name: '另一位专家' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    fireEvent.click(screen.getByRole('button', { name: zh.home.expert.find }))
+    p.rerender(<HomeScreen />)
+    expect(screen.getByRole('button', { name: zh.home.expert.find })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(calls.every((c) => c.method === 'GET')).toBe(true)
+  })
   it('侧栏状态是可见链接，聊天导航明确指向聊天入口', async () => {
     page(<Sidebar />)
     // 没有电脑：中段只一行，带去设置页的链接；底部不再有「我的电脑」（0016）
