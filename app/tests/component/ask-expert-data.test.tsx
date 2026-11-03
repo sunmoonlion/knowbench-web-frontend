@@ -155,6 +155,23 @@ describe('请专家：数据按问题定', () => {
     expect(calls[0].body).not.toHaveProperty('plan')
   })
 
+  it('问题为空时AI入口可点，聚焦问题而不发起付费查找；填写后再次点击才查找', async () => {
+    window.sessionStorage.clear()
+    page(<AskExpertScreen project={project} from={null} expert={null} />)
+    await screen.findByText('先写清楚要解决什么问题。')
+    const find = screen.getByRole('button', { name: 'ai去knowmart请回专家' })
+    expect(find).toBeEnabled()
+    fireEvent.click(find)
+    const input = screen.getByRole('textbox', { name: '要解决什么问题' })
+    expect(input).toHaveFocus()
+    expect(calls).toHaveLength(0)
+    fireEvent.change(input, { target: { value: '分析贵州茅台营收' } })
+    expect(calls).toHaveLength(0)
+    fireEvent.click(find)
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect(calls[0].path).toBe(`/api/workbench/projects/${project}/find-expert`)
+  })
+
   it('清单 v2 的专家不用选数据，说明自带几份；交出的请求不带数据', async () => {
     page(<AskExpertScreen project={project} from={null} expert={KNOWBOT} />)
     const data = within(await screen.findByTestId('ask-by-question'))

@@ -115,6 +115,28 @@ const checkLink = (locale: 'zh-CN' | 'en' = 'zh-CN') => {
 }
 
 describe('电脑接入入口', () => {
+  it('AI入口缺电脑时可点击并说明原因，不创建查找或委托', async () => {
+    navigation.query = 'mode=expert'
+    page(<HomeScreen />)
+    await screen.findByText(zh.home.blocker.noMachine)
+    const find = screen.getByRole('button', { name: zh.home.expert.find })
+    expect(find).toBeEnabled()
+    fireEvent.click(find)
+    expect(document.getElementById('home-find-reason')).toHaveFocus()
+    expect(find).toHaveAccessibleDescription(expect.stringContaining(zh.home.blocker.noMachine))
+    expect(calls.every((c) => c.method === 'GET')).toBe(true)
+  })
+
+  it('AI入口缺项目时打开项目选择，不创建查找或委托', async () => {
+    environment = 'full'
+    navigation.query = 'mode=expert'
+    page(<HomeScreen />)
+    await screen.findByText(zh.home.blocker.needProject)
+    fireEvent.click(screen.getByRole('button', { name: zh.home.expert.find }))
+    expect(await screen.findByRole('dialog')).toBeVisible()
+    expect(calls.every((c) => c.method === 'GET')).toBe(true)
+  })
+
   it('首次卡片依次引导设置 key 和接电脑，不重复显示下方沙箱提示', async () => {
     hasSandbox = false
     page(<HomeScreen />)
@@ -309,7 +331,11 @@ describe('电脑接入入口', () => {
     navigation.query = `mode=expert&project=${project.id}`
     page(<HomeScreen />)
     const finder = screen.getByRole('button', { name: zh.home.expert.find })
-    expect(finder).toBeDisabled()
+    await screen.findByText(zh.askExpert.blocker.noQuestion)
+    expect(finder).toBeEnabled()
+    fireEvent.click(finder)
+    expect(screen.getByRole('textbox')).toHaveFocus()
+    expect(mutations).toHaveLength(0)
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '分析贵州茅台' } })
     await waitFor(() => expect(finder).toBeEnabled())
     fireEvent.click(finder)
