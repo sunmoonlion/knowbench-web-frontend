@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useEffect, useId, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -45,6 +46,7 @@ export function FindExpertPanel({
   onEdit?: (question: string) => void
 }) {
   const t = useTranslations('findExpert')
+  const { locale } = useWorkbench()
   const found = useFindResult(task)
   const data = found.data
   if (
@@ -74,10 +76,30 @@ export function FindExpertPanel({
       </div>
     )
   if (!data || !data.outcome) {
+    const message = !data
+      ? 'loading'
+      : data.error || ['SUCCEEDED', 'FAILED', 'CANCELLED', 'REJECTED'].includes(data.state)
+        ? 'ended'
+        : data.state === 'RUNNING'
+          ? 'running'
+          : data.state === 'RECEIVED' || data.state === 'QUEUED'
+            ? 'queued'
+            : data.state === 'VALIDATING'
+              ? 'preparing'
+              : data.state === 'WAITING'
+                ? 'waiting'
+                : 'statusUnknown'
     return (
-      <p className="text-muted-foreground text-sm" role="status">
-        {data?.error ? t('ended') : t('running')}
-      </p>
+      <div className="space-y-2 text-sm">
+        <p className="text-muted-foreground" role="status">
+          {t(message)}
+        </p>
+        {data ? (
+          <Link href={routes.project(locale, project)} className="underline underline-offset-3">
+            {t('viewTasks')}
+          </Link>
+        ) : null}
+      </div>
     )
   }
   return (
