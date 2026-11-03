@@ -138,7 +138,7 @@ describe('确认专家提出的数据（decisions ⑭）', () => {
     })
     fireEvent.click(panel.getByRole('button', { name: '好' }))
     expect(panel.getByText('改过，确认时重新找')).toBeInTheDocument()
-    fireEvent.click(panel.getByRole('button', { name: '确认，去取' }))
+    fireEvent.click(panel.getByRole('button', { name: '确认使用这些数据' }))
     await waitFor(() => expect(calls.some((each) => each.method === 'POST')).toBe(true))
     const sent = calls.find((each) => each.method === 'POST')!
     expect(sent.path).toBe(`/api/workbench/tasks/${TASK}/data-requests/confirm`)
@@ -152,7 +152,7 @@ describe('确认专家提出的数据（decisions ⑭）', () => {
     wrap(<TaskDataPanel task={TASK} data={proposed} />)
     const panel = within(screen.getByTestId('task-data-request'))
     fireEvent.click(panel.getAllByRole('button', { name: '不要这一样' })[1])
-    fireEvent.click(panel.getByRole('button', { name: '确认，去取' }))
+    fireEvent.click(panel.getByRole('button', { name: '确认使用这些数据' }))
     await waitFor(() => expect(calls.length).toBe(1))
     expect(calls[0].body).toEqual({ dropped: ['req1_2:b'] })
     fireEvent.click(panel.getByRole('button', { name: '都不要，照现有的做' }))
@@ -446,7 +446,7 @@ describe('补采进度', () => {
     expect(panel).toHaveTextContent('不能仅靠等待保证完成')
     expect(panel).not.toHaveTextContent(reason)
     expect(screen.getAllByText(/600519.SH · 年报/)).toHaveLength(1)
-    expect(screen.queryByRole('button', { name: '确认，去取' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '确认使用这些数据' })).not.toBeInTheDocument()
   })
   it('旧任务没有逐项快照时承认未知，不虚报进度', () => {
     wrap(
@@ -472,7 +472,7 @@ describe('测试委托（SDD 0046 第三节）', () => {
     expect(screen.getByTestId('task-data-elsewhere')).toHaveTextContent(
       '这是一次测试：专家要 最近一年的年报、上一年比较，去 knowlab 的测试页确认。',
     )
-    expect(screen.queryByRole('button', { name: '确认，去取' })).toBeNull()
+    expect(screen.queryByRole('button', { name: '确认使用这些数据' })).toBeNull()
   })
 })
 
@@ -541,7 +541,7 @@ describe('项目看板（请专家方案设计第 4.8 节）', () => {
     const waiting = within(within(board).getByRole('region', { name: '等你' }))
     expect(waiting.getByText('分析茅台')).toBeInTheDocument()
     expect(waiting.getByText('等你：确认要用的数据')).toBeInTheDocument()
-    fireEvent.click(await waiting.findByRole('button', { name: '确认，去取' }))
+    fireEvent.click(await waiting.findByRole('button', { name: '确认使用这些数据' }))
     await waitFor(() =>
       expect(calls.some((each) => each.path.endsWith('/data-requests/confirm'))).toBe(true),
     )
@@ -576,7 +576,7 @@ it('shows supplier query arguments and sends edited arguments for fresh confirma
   fireEvent.click(screen.getByRole('button', { name: messages.expert.data.editDone }))
   expect(screen.getByText(/changed annual report/)).toBeInTheDocument()
   expect(calls.filter((c) => c.method === 'POST')).toHaveLength(0)
-  fireEvent.click(screen.getByRole('button', { name: '确认，去取' }))
+  fireEvent.click(screen.getByRole('button', { name: '确认使用这些数据' }))
   await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true))
   const sent = calls.find((c) => c.method === 'POST')!
   expect(sent.path).toBe(`/api/workbench/tasks/${TASK}/data-requests/confirm`)

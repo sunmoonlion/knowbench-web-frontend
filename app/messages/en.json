@@ -706,8 +706,8 @@
       "failed": "The data could not be fetched: {reason}",
       "incomplete": "Data incomplete (the expert goes on and says so in the result): {items}",
       "pinned": "{count} pinned: {names}",
-      "requested": "For your question the expert proposes this data. You can switch to another copy, change the company or years, drop an item or add one; nothing is signed or fetched until you confirm, and the expert waits here.",
-      "confirm": "Confirm and fetch",
+      "requested": "For your question the expert proposes this data. You can switch to another copy, change the company or years, drop an item or add one; after you confirm, available materials are used for this task and items that need fetching are handled as listed. The expert waits here for your confirmation.",
+      "confirm": "Confirm data use",
       "confirming": "Confirming…",
       "decline": "None of it, go on with what there is",
       "declined": "Not needed",
@@ -885,7 +885,7 @@
     "preparing": "Coming soon",
     "byQuestion": {
       "title": "Data it will use",
-      "lead": "No need to choose data now. After you ask, the expert first lists the data your question needs; you confirm it on the request page (switch, change, drop or add) before anything is fetched or started.",
+      "lead": "No need to choose data now. After you ask, the expert first lists the data your question needs. Confirm it on the request page (switch, change, drop or add); available materials are used directly and items that need fetching are handled as listed.",
       "bound": "It also brings {count} item(s) of its own, chosen by its author."
     },
     "find": "Let AI find one",
