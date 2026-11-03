@@ -1,3 +1,14 @@
+# 2026-11-04 数据准备阶段暂停卡（待Qwen发布）
+
+基线 fefa8735a8488964a64c19860bce1df6d1c0b5ec，保留已有入口前置提示与AI排队状态修复。
+后台定数据不占正式步骤编号时，INPUT待决卡仍展示，不会因为首步为pending而藏掉重试/停止。
+配套后端083b2c4；专家包及正式方法不变，无新增API字段。
+26项关联组件/单元回归通过；typecheck、定向ESLint、Prettier、Next生产webpack构建通过。
+日志 /tmp/luna-data-planning-web.log、/tmp/luna-data-planning-web-build.log。
+首轮新增测试将review响应外壳当成内容，已修正为interaction内字段，非线上契约变更。
+Jenkins正常checkout仍须标准构建门；候选worktree外链node_modules所以本地用webpack。
+未部署、不发付费调用、不代用户确认，发布后仍需真实首次提单验证。
+
 # 2026-11-02：专家终态主标题纠正
 
 基线 #57 web cf96b723ed69。之前所有 wheel returned 都显示“专家交回了”，即使真实 outcome 是 failed/stopped/rejected。现在主标题按实际 outcome 显示“专家已完成委托/未完成委托/委托已停止/未接此委托”，原有细节与产物查看保持；未知 outcome 保守显示未完成。不改后端状态，不重写历史。

@@ -64,7 +64,9 @@ export function ExpertRunScreen({ task }: { task: string }) {
   const stopping = live && (sheet.cancel_requested === true || act.stop.isSuccess)
   // 审查面摆在停住的那一步下面；看别的步骤时不摆
   const reviewHere =
-    review.data && shown === (review.data.where.step?.index ?? position?.step ?? null)
+    review.data &&
+    ((!position && !review.data.where.step) ||
+      shown === (review.data.where.step?.index ?? position?.step ?? null))
 
   return (
     <div className="flex h-full min-h-0 flex-col">
