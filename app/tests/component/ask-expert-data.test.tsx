@@ -138,7 +138,12 @@ describe('请专家：数据按问题定', () => {
     await waitFor(() => expect(calls).toHaveLength(1))
     expect(calls[0].path).toBe(`/api/workbench/projects/${project}/find-expert`)
     expect(calls[0].body).toMatchObject({ question: '看看这家公司这几年的年报' })
-    expect(await screen.findByRole('status')).toHaveTextContent('正在按各位专家自己写的范围')
+    expect(calls[0].body.match_contract).toBe('knowbench/expert-match/v2')
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith(
+        expect.stringContaining('?match=11111111-1111-4111-8111-111111111111'),
+      ),
+    )
   })
 
   it('动态专家仍展示数据确认说明，任务步骤由作者方法按问题选择', async () => {

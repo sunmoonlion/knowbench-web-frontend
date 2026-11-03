@@ -670,6 +670,7 @@ export const listedNeedsSchema = z
   .object({
     contract: z.enum(['knowbot-manifest/v2', 'knowbot-manifest/v3']).nullable(),
     bound: z.number().int(),
+    scope_check_required: z.boolean().optional(),
   })
   .loose()
 // 一样数据（第 0 步或运行中提的，用户可以改）：主体为空就是不限主体
@@ -928,9 +929,29 @@ const pickSchema = z
     price: z.string().nullable(),
     free: z.boolean(),
     reason: z.string(),
+    coverage: z
+      .array(
+        z.object({
+          requirement_id: z.string(),
+          status: z.enum(['covered', 'uncovered', 'unknown']),
+          capability_id: z.string().nullable(),
+          declaration_quote: z.string(),
+          reason: z.string(),
+        }),
+      )
+      .optional(),
+    unresolved_conditions: z.array(z.string()).optional(),
   })
   .loose()
 export type ExpertPick = z.infer<typeof pickSchema>
+export const matchSelectionSchema = z.object({
+  match_task_id: uuid,
+  match_artifact_version: z.number().int().positive(),
+  question_revision: z.number().int().positive(),
+  knowbot_id: z.string(),
+  version: z.string(),
+})
+export type MatchSelection = z.infer<typeof matchSelectionSchema>
 export const findResultSchema = z
   .object({
     task_id: uuid,
@@ -939,7 +960,23 @@ export const findResultSchema = z
     state: z.string(),
     error: z.string().optional(),
     // 没结束时没有下面几项
-    outcome: z.enum(['summon', 'candidates', 'none']).optional(),
+    outcome: z.enum(['summon', 'candidates', 'none', 'clarify']).optional(),
+    contract: z.literal('knowbench/expert-match/v2').optional(),
+    match_task_id: uuid.optional(),
+    match_artifact_version: z.number().int().positive().optional(),
+    question_revision: z.number().int().positive().optional(),
+    clarification: z.string().nullable().optional(),
+    requirements: z
+      .array(
+        z.object({
+          id: z.string(),
+          kind: z.enum(['result', 'constraint', 'explicit_method']),
+          statement: z.string(),
+          question_quote: z.string(),
+          required: z.boolean(),
+        }),
+      )
+      .optional(),
     picks: z.array(pickSchema).optional(),
     recommend: z
       .object({ action: z.enum(['direct', 'incubate']), reason: z.string() })

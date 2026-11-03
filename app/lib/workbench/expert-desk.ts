@@ -4,6 +4,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { delegatedSchema, listedNeedsSchema, packsSchema } from '@/contracts/workbench-v2'
+import type { MatchSelection } from '@/contracts/workbench-v2'
 import { useWorkbench } from '@/lib/workbench/context'
 import { getJson, seg, sendJson } from '@/lib/workbench/http'
 import { workbenchKeys } from '@/lib/workbench/queries'
@@ -37,6 +38,7 @@ export function useAsk() {
       question: string
       // 同一次请求重发不会交出两次
       key: string
+      match?: MatchSelection
     }) => {
       if (input.from) {
         await sendJson(delegatedSchema, `/api/workbench/sessions/${seg(input.from)}/handover`, {
@@ -45,6 +47,7 @@ export function useAsk() {
             idempotency_key: input.key,
             profile_id: input.expert,
             original_input: { text: input.question },
+            ...(input.match ? { match: input.match } : {}),
           },
         })
         return { conversation: input.from }
@@ -58,6 +61,7 @@ export function useAsk() {
             idempotency_key: input.key,
             expert: input.expert,
             question: input.question,
+            ...(input.match ? { match: input.match } : {}),
           },
         },
       )

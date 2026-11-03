@@ -106,6 +106,79 @@ const done = (extra: Record<string, unknown>) => ({
 })
 
 describe('让 AI 找', () => {
+  it('新契约的覆盖收据随专家委托提交，不让客户端编造方法计划', async () => {
+    result = done({
+      contract: 'knowbench/expert-match/v2',
+      outcome: 'summon',
+      picks: [pick(true)],
+      match_task_id: TASK,
+      match_artifact_version: 2,
+      question_revision: 1,
+    })
+    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    await waitFor(() => expect(push).toHaveBeenCalledTimes(1))
+    const sent = calls.find((c) => c.path.endsWith('/delegations'))!.body
+    expect(sent.match).toEqual({
+      match_task_id: TASK,
+      match_artifact_version: 2,
+      question_revision: 1,
+      knowbot_id: KNOWBOT,
+      version: '2',
+    })
+    expect(sent).not.toHaveProperty('plan')
+  })
+
+  it('改了问题不能沿用原自动请入结果', async () => {
+    result = done({ outcome: 'summon', picks: [pick(true)] })
+    page(
+      <FindExpertPanel task={TASK} project={PROJECT} from={null} expectedQuestion="另一个问题" />,
+    )
+    expect(await screen.findByText(messages.findExpert.questionChanged)).toBeInTheDocument()
+    expect(calls).toHaveLength(0)
+  })
+
+  it('部分覆盖或待澄清不自动请专家，也不擅自改走通用回答', async () => {
+    result = done({
+      contract: 'knowbench/expert-match/v2',
+      outcome: 'clarify',
+      clarification: '请确定预测时点',
+      requirements: [
+        {
+          id: 'r1',
+          kind: 'result',
+          statement: '季度预测',
+          question_quote: '毛利率',
+          required: true,
+        },
+      ],
+      picks: [
+        {
+          ...pick(true),
+          coverage: [
+            {
+              requirement_id: 'r1',
+              status: 'unknown',
+              capability_id: null,
+              declaration_quote: '',
+              reason: '时点未定',
+            },
+          ],
+          unresolved_conditions: ['需要明确时点'],
+        },
+      ],
+    })
+    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    expect(await screen.findByText('请确定预测时点')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '请这位' })).toBeNull()
+    expect(calls).toHaveLength(0)
+  })
+
+  it('缺少新契约收据时拒绝自动钉版和委托', async () => {
+    result = done({ contract: 'knowbench/expert-match/v2', outcome: 'summon', picks: [pick(true)] })
+    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    expect(await screen.findByRole('alert')).toHaveTextContent(messages.findExpert.summonFailed)
+    expect(calls).toHaveLength(0)
+  })
   it('不用另付钱的直接请：先钉住这一版，再用你的会话建委托，记下理由，跳到对话', async () => {
     result = done({ outcome: 'summon', picks: [pick(true)] })
     page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)

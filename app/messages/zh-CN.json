@@ -303,7 +303,12 @@
       "who": "请哪一位",
       "loading": "加载中…",
       "preparing": "筹备中",
-      "summon": "去 knowmart 选专家"
+      "summon": "去 knowmart 选专家",
+      "selection": "如何选择专家",
+      "find": "让 AI 找",
+      "manual": "自己指定",
+      "findHint": "用你的模型核对专家公开范围，本轮查找最多 2 元；完整覆盖且不用另付专家费用才直接请。",
+      "findFailed": "没有开始找，请重试。同一请求不会重复建委托。"
     },
     "knowbot": {
       "checking": "正在核对你选的专家……",
@@ -890,8 +895,11 @@
     },
     "find": "让 AI 找",
     "finding": "正在开始…",
-    "findHint": "让你的模型按各位专家自己写的范围替你找；不用另付钱的直接请，要付钱的你点了才请",
-    "findFailed": "没有开始找，请再试一次。"
+    "findHint": "用你的模型核对专家公开范围，本轮查找最多 2 元；完整覆盖且不用另付专家费用才直接请。",
+    "findFailed": "没有开始找，请再试一次。",
+    "checkScope": "核对范围并请这位",
+    "scopeLoadFailed": "暂时无法读取这位专家的能力范围，请重新读取后再请。",
+    "scopeRetry": "重新读取"
   },
   "findExpert": {
     "running": "你的模型正在按各位专家自己写的范围替你找…",
@@ -925,7 +933,16 @@
     "directBanner": "这是你的模型直接答的，不是专家，方法没经过测试。",
     "incubateWithAnswer": "孵化一个专家（附这份回答）",
     "summonedBanner": "AI 替你请了 {name}。理由：{reason}",
-    "change": "换一位（先停下这位）"
+    "change": "换一位（先停下这位）",
+    "questionChanged": "问题已改变，请重新核对。旧匹配结果不会用于新问题。",
+    "matchedQuestion": "本次问题：{question}",
+    "editQuestion": "修改问题／自己指定",
+    "clarifyTitle": "还不能确定专家是否覆盖。你可以补充问题，或选择下面的出路。",
+    "coverage": {
+      "covered": "已覆盖",
+      "uncovered": "未覆盖",
+      "unknown": "待澄清"
+    }
   },
   "reviewPage": {
     "title": "待我决定",

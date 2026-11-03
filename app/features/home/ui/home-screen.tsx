@@ -24,7 +24,8 @@ import {
 import { conversationRoute, isBuilt, MODES, routes, type Mode } from '@/lib/workbench/routes'
 import { cn } from '@/lib/utils'
 
-import { useAsk, usePacks } from '@/lib/workbench/expert-desk'
+import { useAsk, usePacks, useDataNeeds } from '@/lib/workbench/expert-desk'
+import { useExpertFinder } from '@/lib/workbench/expert-finder'
 
 import { useOpenTaskFromRef } from '../api/open-task'
 import { useStart } from '../api/start'
@@ -32,6 +33,7 @@ import { blockerOf, projectIsRequired } from '../model/start'
 
 export function HomeScreen() {
   const t = useTranslations('home')
+  const askText = useTranslations('askExpert')
   const connect = useTranslations('computerConnection')
   const router = useRouter()
   const { locale } = useWorkbench()
@@ -61,6 +63,11 @@ export function HomeScreen() {
   const [expert, setExpert] = useState<string | null>(query.get('expert'))
   const [askKey] = useState(() => crypto.randomUUID())
   const ask = useAsk()
+  const finder = useExpertFinder()
+  const [selection, setSelection] = useState<'ai' | 'manual'>(query.get('expert') ? 'manual' : 'ai')
+  const needs = useDataNeeds(expert)
+  const checkingNeeds =
+    Boolean(expert?.startsWith('knowbot:')) && (needs.isPending || needs.isError)
 
   const project = (projects.data ?? []).find((each) => each.id === projectId)
   const blocker = blockerOf({
@@ -76,10 +83,24 @@ export function HomeScreen() {
   )
 
   async function send() {
-    if (blocker !== null || start.isPending || ask.isPending) return
+    if (blocker !== null || start.isPending || ask.isPending || finder.isPending) return
     if (mode === 'expert') {
       // 专家：服务端先编排再进入对话。在这里直接请，不再跳到另一页（0017）
-      if (!expert || !projectId) return
+      if (!projectId) return
+      if (selection === 'ai' || needs.data?.scope_check_required) {
+        try {
+          await finder.find({
+            project: projectId,
+            question: text,
+            from: null,
+            expert: selection === 'manual' ? (expert ?? undefined) : undefined,
+          })
+        } catch {
+          /* shown below */
+        }
+        return
+      }
+      if (!expert || checkingNeeds) return
       try {
         const made = await ask.mutateAsync({
           project: projectId,
@@ -175,26 +196,48 @@ export function HomeScreen() {
                     {t('expert.summon')}
                   </CrossAppLink>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {(packs.data ?? []).map((each) => (
-                    <Button
-                      key={each.id}
-                      size="sm"
-                      variant={expert === each.id ? 'default' : 'outline'}
-                      title={each.status === 'preparing' ? each.preparing_note : each.tagline}
-                      aria-pressed={expert === each.id}
-                      // 筹备中的专家：看得见、请不了
-                      disabled={each.status === 'preparing'}
-                      onClick={() => setExpert(each.id)}
-                    >
-                      {each.name}
-                      {each.status === 'preparing' ? ` · ${t('expert.preparing')}` : ''}
-                    </Button>
-                  ))}
-                  {packs.isPending ? (
-                    <span className="text-muted-foreground text-xs">{t('expert.loading')}</span>
-                  ) : null}
+                <div className="mb-2 flex gap-2" role="group" aria-label={t('expert.selection')}>
+                  <Button
+                    size="sm"
+                    variant={selection === 'ai' ? 'default' : 'outline'}
+                    aria-pressed={selection === 'ai'}
+                    onClick={() => setSelection('ai')}
+                  >
+                    {t('expert.find')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={selection === 'manual' ? 'default' : 'outline'}
+                    aria-pressed={selection === 'manual'}
+                    onClick={() => setSelection('manual')}
+                  >
+                    {t('expert.manual')}
+                  </Button>
                 </div>
+                {selection === 'ai' ? (
+                  <p className="text-muted-foreground text-sm">{t('expert.findHint')}</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {(packs.data ?? []).map((each) => (
+                      <Button
+                        key={each.id}
+                        size="sm"
+                        variant={expert === each.id ? 'default' : 'outline'}
+                        title={each.status === 'preparing' ? each.preparing_note : each.tagline}
+                        aria-pressed={expert === each.id}
+                        // 筹备中的专家：看得见、请不了
+                        disabled={each.status === 'preparing'}
+                        onClick={() => setExpert(each.id)}
+                      >
+                        {each.name}
+                        {each.status === 'preparing' ? ` · ${t('expert.preparing')}` : ''}
+                      </Button>
+                    ))}
+                    {packs.isPending ? (
+                      <span className="text-muted-foreground text-xs">{t('expert.loading')}</span>
+                    ) : null}
+                  </div>
+                )}
               </div>
             ) : null}
             <div className="flex items-center gap-2 px-1 pt-1">
@@ -221,7 +264,10 @@ export function HomeScreen() {
                   blocker !== null ||
                   start.isPending ||
                   ask.isPending ||
-                  (mode === 'expert' && expert === null)
+                  finder.isPending ||
+                  (mode === 'expert' &&
+                    selection === 'manual' &&
+                    (expert === null || checkingNeeds))
                 }
                 aria-label={t(`mode.${mode}.send`)}
                 title={t(`mode.${mode}.send`)}
@@ -230,6 +276,22 @@ export function HomeScreen() {
               </Button>
             </div>
           </div>
+          {mode === 'expert' &&
+          selection === 'manual' &&
+          expert?.startsWith('knowbot:') &&
+          needs.isError ? (
+            <p role="alert" className="text-destructive text-sm">
+              {askText('scopeLoadFailed')}{' '}
+              <button type="button" className="underline" onClick={() => void needs.refetch()}>
+                {askText('scopeRetry')}
+              </button>
+            </p>
+          ) : null}
+          {finder.isError ? (
+            <p role="alert" className="text-destructive mt-2 text-sm">
+              {t('expert.findFailed')}
+            </p>
+          ) : null}
 
           {said && !(welcome && said === 'noSandbox') ? (
             <p className="text-muted-foreground mt-2 text-center text-[13px]">

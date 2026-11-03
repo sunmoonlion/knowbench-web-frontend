@@ -22,10 +22,15 @@ const DONE = new Set(['SUCCEEDED', 'FAILED', 'CANCELLED', 'REJECTED'])
 export function useStartFind() {
   const { csrfToken } = useWorkbench()
   return useMutation({
-    mutationFn: (input: { project: string; question: string; key: string }) =>
+    mutationFn: (input: { project: string; question: string; key: string; expert?: string }) =>
       sendJson(findStartedSchema, `/api/workbench/projects/${seg(input.project)}/find-expert`, {
         csrfToken,
-        body: { idempotency_key: input.key, question: input.question },
+        body: {
+          idempotency_key: input.key,
+          question: input.question,
+          match_contract: 'knowbench/expert-match/v2',
+          ...(input.expert ? { expert: input.expert } : {}),
+        },
       }),
   })
 }

@@ -303,7 +303,12 @@
       "who": "Which expert",
       "loading": "Loading…",
       "preparing": "Coming soon",
-      "summon": "Pick an expert in knowmart"
+      "summon": "Pick an expert in knowmart",
+      "selection": "Expert selection",
+      "find": "Let AI find",
+      "manual": "Choose myself",
+      "findHint": "Use your model to check declared scope, up to CNY 2 per match. Invite automatically only with full coverage and no extra expert fee.",
+      "findFailed": "Matching did not start. Retry safely without creating a duplicate task."
     },
     "knowbot": {
       "checking": "Checking the expert you picked…",
@@ -890,8 +895,11 @@
     },
     "find": "Let AI find one",
     "finding": "Starting…",
-    "findHint": "Your model looks through what each expert says it handles; free ones are asked straight away, paid ones only when you click",
-    "findFailed": "Could not start looking. Please try again."
+    "findHint": "Use your model to check declared scope, up to CNY 2 per match. Invite automatically only with full coverage and no extra expert fee.",
+    "findFailed": "Could not start looking. Please try again.",
+    "checkScope": "Check scope and ask",
+    "scopeLoadFailed": "Unable to read this expert’s scope. Reload before requesting.",
+    "scopeRetry": "Reload"
   },
   "findExpert": {
     "running": "Your model is looking through what each expert says it handles…",
@@ -925,7 +933,16 @@
     "directBanner": "Answered directly by your model, not an expert; the method is untested.",
     "incubateWithAnswer": "Incubate an expert (attach this answer)",
     "summonedBanner": "AI asked {name} for you. Why: {reason}",
-    "change": "Change (stop this one first)"
+    "change": "Change (stop this one first)",
+    "questionChanged": "The question changed. Match again before inviting an expert.",
+    "matchedQuestion": "Question: {question}",
+    "editQuestion": "Edit question / choose myself",
+    "clarifyTitle": "Coverage is not yet clear. Clarify your question or choose an alternative.",
+    "coverage": {
+      "covered": "Covered",
+      "uncovered": "Not covered",
+      "unknown": "Unclear"
+    }
   },
   "reviewPage": {
     "title": "Waiting for me",

@@ -3,14 +3,14 @@
 import { CheckIcon, FolderIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useSyncExternalStore } from 'react'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ConnectComputerLink } from '@/components/workbench/connect-computer'
 import { useWorkbench } from '@/lib/workbench/context'
-import { useStartFind } from '@/lib/workbench/find-expert'
+import { useExpertFinder } from '@/lib/workbench/expert-finder'
 import { WorkbenchError } from '@/lib/workbench/http'
 import { useMachines, useProjectDetail, useSandboxes } from '@/lib/workbench/queries'
 import { routes } from '@/lib/workbench/routes'
@@ -46,13 +46,15 @@ export function AskExpertScreen({
   const machines = useMachines()
   const said = useSaid(from)
   const ask = useAsk()
-  const startFind = useStartFind()
+  const startFind = useExpertFinder()
   // 「让 AI 找」那一轮的任务号：有了就在专家清单上方显示结果
-  const [findTask, setFindTask] = useState<string | null>(null)
+  const findTask = useSearchParams().get('match')
 
   const [chosen, setChosen] = useState<string | null>(expert)
   // 固定与动态专家都沿用数据授权、补采和本人确认。
   const needs = useDataNeeds(chosen)
+  const checkingNeeds =
+    Boolean(chosen?.startsWith('knowbot:')) && (needs.isPending || needs.isError)
   // 用户自己打的字。没打过的时候用带进来的那句
   const [typed, setTyped] = useState<string | null>(null)
   // 同一页交两次用同一个号：后端认得出是同一次
@@ -86,6 +88,11 @@ export function AskExpertScreen({
 
   async function submit() {
     if (blocker !== null || !pack || ask.isPending) return
+    if (checkingNeeds) return
+    if (needs.data?.scope_check_required) {
+      await find(pack.id)
+      return
+    }
     try {
       const made = await ask.mutateAsync({
         project: projectId,
@@ -106,15 +113,15 @@ export function AskExpertScreen({
   }
 
   // 让你的模型按专家自己写的范围替你找（请专家方案设计第 4.9 节）
-  async function find() {
+  async function find(selected?: string) {
     if (findBlocked !== null || startFind.isPending) return
     try {
-      const started = await startFind.mutateAsync({
+      await startFind.find({
         project: projectId,
         question: question.trim(),
-        key: crypto.randomUUID(),
+        from,
+        expert: selected,
       })
-      setFindTask(started.task_id)
     } catch {
       // 原因显示在按钮下面
     }
@@ -135,13 +142,20 @@ export function AskExpertScreen({
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={findBlocked !== null || startFind.isPending || findTask !== null}
+                  disabled={findBlocked !== null || startFind.isPending}
                   title={findBlocked ? t(`blocker.${findBlocked}`) : t('findHint')}
                   onClick={() => void find()}
                 >
                   {startFind.isPending ? t('finding') : t('find')}
                 </Button>
               </div>
+              {findBlocked === 'noQuestion' ? (
+                <p className="text-muted-foreground mb-2 text-sm" role="status">
+                  {t(`blocker.${findBlocked}`)}
+                </p>
+              ) : (
+                <p className="text-muted-foreground mb-2 text-sm">{t('findHint')}</p>
+              )}
               {startFind.isError ? (
                 <p role="alert" className="text-destructive mb-2 text-[13px]">
                   {t('findFailed')}
@@ -149,7 +163,17 @@ export function AskExpertScreen({
               ) : null}
               {findTask ? (
                 <div className="mb-3">
-                  <FindExpertPanel task={findTask} project={projectId} from={from} />
+                  <FindExpertPanel
+                    task={findTask}
+                    project={projectId}
+                    from={from}
+                    expectedQuestion={typed === null ? undefined : typed}
+                    onEdit={(original) => {
+                      setTyped(original)
+                      router.push(routes.askExpert(locale, projectId, from ?? undefined))
+                      document.getElementById('ask-question')?.focus()
+                    }}
+                  />
                 </div>
               ) : null}
               <ul className="grid gap-2 sm:grid-cols-2">
@@ -319,6 +343,14 @@ export function AskExpertScreen({
             <li>{t('confirm3')}</li>
           </ul>
           <div className="shrink-0 text-right">
+            {chosen?.startsWith('knowbot:') && needs.isError ? (
+              <p role="alert" className="text-destructive mb-1.5 text-[13px]">
+                {t('scopeLoadFailed')}{' '}
+                <button type="button" className="underline" onClick={() => void needs.refetch()}>
+                  {t('scopeRetry')}
+                </button>
+              </p>
+            ) : null}
             {blocker && blocker !== 'noExpert' && blocker !== 'noQuestion' ? (
               <p className="mb-1.5 text-[13px] text-amber-700 dark:text-amber-400">
                 {t(`blocker.${blocker}`)} {blocker === 'noMachine' ? <ConnectComputerLink /> : null}
@@ -349,11 +381,15 @@ export function AskExpertScreen({
                 {t('cancel')}
               </Link>
               <Button
-                disabled={blocker !== null || ask.isPending}
+                disabled={blocker !== null || ask.isPending || startFind.isPending || checkingNeeds}
                 title={blocker ? t(`blocker.${blocker}`) : undefined}
                 onClick={() => void submit()}
               >
-                {ask.isPending ? t('submitting') : t('submit')}
+                {ask.isPending || startFind.isPending
+                  ? t('submitting')
+                  : needs.data?.scope_check_required
+                    ? t('checkScope')
+                    : t('submit')}
               </Button>
             </div>
           </div>
