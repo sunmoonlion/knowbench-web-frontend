@@ -131,7 +131,13 @@ export function AskExpertScreen({
 
   // 让你的模型按专家自己写的范围替你找（请专家方案设计第 4.9 节）
   async function find(selected?: string) {
-    if (findBlocked !== null || startFind.isPending) return
+    if (startFind.isPending || ask.isPending) return
+    if (findBlocked !== null) {
+      document
+        .getElementById(findBlocked === 'noQuestion' ? 'ask-question' : 'ask-find-reason')
+        ?.focus()
+      return
+    }
     setChosen(null)
     setSelectedByAI(null)
     try {
@@ -168,20 +174,34 @@ export function AskExpertScreen({
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={findBlocked !== null || startFind.isPending}
+                  disabled={startFind.isPending || ask.isPending}
+                  aria-describedby="ask-find-reason"
                   title={findBlocked ? t(`blocker.${findBlocked}`) : t('findHint')}
                   onClick={() => void find()}
                 >
                   {startFind.isPending ? t('finding') : t('find')}
                 </Button>
               </div>
-              {findBlocked === 'noQuestion' ? (
-                <p className="text-muted-foreground mb-2 text-sm" role="status">
-                  {t(`blocker.${findBlocked}`)}
-                </p>
-              ) : (
-                <p className="text-muted-foreground mb-2 text-sm">{t('findHint')}</p>
-              )}
+              <p id="ask-find-reason" role="status" tabIndex={-1} className="mb-2 text-sm">
+                {findBlocked ? t(`blocker.${findBlocked}`) : null}
+                {findBlocked === 'noMachine' || findBlocked === 'offline' ? (
+                  <ConnectComputerLink className="ml-2" />
+                ) : null}
+                {findBlocked === 'noSandbox' ? (
+                  <Link href={routes.settings(locale)} className="ml-2 underline">
+                    {t('toSettings')}
+                  </Link>
+                ) : null}
+                {findBlocked === 'busy' && busyAt ? (
+                  <Link
+                    href={routes.projectConversation(locale, projectId, busyAt)}
+                    className="ml-2 underline"
+                  >
+                    {t('toBusy')}
+                  </Link>
+                ) : null}
+              </p>
+              <p className="text-muted-foreground mb-2 text-sm">{t('findHint')}</p>
               {startFind.isError ? (
                 <p role="alert" className="text-destructive mb-2 text-[13px]">
                   {t('findFailed')}
@@ -356,24 +376,6 @@ export function AskExpertScreen({
                 <button type="button" className="underline" onClick={() => void needs.refetch()}>
                   {t('scopeRetry')}
                 </button>
-              </p>
-            ) : null}
-            {blocker && blocker !== 'noExpert' && blocker !== 'noQuestion' ? (
-              <p className="mb-1.5 text-[13px] text-amber-700 dark:text-amber-400">
-                {t(`blocker.${blocker}`)} {blocker === 'noMachine' ? <ConnectComputerLink /> : null}
-                {blocker === 'busy' && busyAt ? (
-                  <Link
-                    href={routes.projectConversation(locale, projectId, busyAt)}
-                    className="underline underline-offset-3"
-                  >
-                    {t('toBusy')}
-                  </Link>
-                ) : null}
-                {blocker === 'noSandbox' ? (
-                  <Link href={routes.settings(locale)} className="underline underline-offset-3">
-                    {t('toSettings')}
-                  </Link>
-                ) : null}
               </p>
             ) : null}
             {ask.isError ? (

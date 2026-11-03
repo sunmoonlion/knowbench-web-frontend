@@ -138,7 +138,13 @@ export function HomeScreen() {
   }
 
   async function find(selected?: string) {
-    if (blocker !== null || !projectId || finder.isPending) return
+    if (finder.isPending || ask.isPending) return
+    if (blocker !== null || !projectId) {
+      if (blocker === 'empty') document.getElementById('home-question')?.focus()
+      else if (blocker === 'needProject') setPicking(true)
+      else document.getElementById('home-find-reason')?.focus()
+      return
+    }
     setSelectedByAI(null)
     setFindTask(null)
     setExpert(null)
@@ -200,6 +206,7 @@ export function HomeScreen() {
 
           <div className="bg-background focus-within:border-ring rounded-2xl border p-2 shadow-xs">
             <Textarea
+              id="home-question"
               value={text}
               onChange={(event) => setText(event.target.value)}
               onKeyDown={(event) => {
@@ -231,7 +238,8 @@ export function HomeScreen() {
                   <Button
                     size="sm"
                     variant="outline"
-                    disabled={blocker !== null || finder.isPending || ask.isPending}
+                    disabled={finder.isPending || ask.isPending}
+                    aria-describedby="home-find-reason"
                     title={
                       blocker
                         ? blocker === 'empty'
@@ -244,6 +252,21 @@ export function HomeScreen() {
                     {finder.isPending ? askText('finding') : t('expert.find')}
                   </Button>
                 </div>
+                <p id="home-find-reason" role="status" tabIndex={-1} className="mb-2 text-sm">
+                  {blocker
+                    ? blocker === 'empty'
+                      ? askText('blocker.noQuestion')
+                      : t(`blocker.${blocker}`)
+                    : null}
+                  {blocker === 'noMachine' || blocker === 'machineOffline' ? (
+                    <ConnectComputerLink className="ml-2" />
+                  ) : null}
+                  {blocker === 'noSandbox' ? (
+                    <Link href={routes.settings(locale)} className="ml-2 underline">
+                      {t('toSettings')}
+                    </Link>
+                  ) : null}
+                </p>
                 <p className="text-muted-foreground mb-2 text-sm">{t('expert.findHint')}</p>
                 {findTask && projectId ? (
                   <FindExpertPanel
@@ -330,7 +353,7 @@ export function HomeScreen() {
             </p>
           ) : null}
 
-          {said && !(welcome && said === 'noSandbox') ? (
+          {mode !== 'expert' && said && !(welcome && said === 'noSandbox') ? (
             <p className="text-muted-foreground mt-2 text-center text-[13px]">
               {t(`blocker.${said}`)}
               {said === 'noMachine' ? <ConnectComputerLink className="ml-2" /> : null}
