@@ -946,6 +946,14 @@
       "covered": "Covered",
       "uncovered": "Not covered",
       "unknown": "Unclear"
+    },
+    "methodSuggestions": "Suggested approaches",
+    "methodSuggestionsHint": "These are suggestions for your question, not methods you explicitly requested or proof that data is available.",
+    "solution": "Approach for this question",
+    "solutionData": "Data conditions to resolve before execution",
+    "requirementOrigin": {
+      "user_explicit": "Your requirement",
+      "goal_inferred": "Inferred from your goal"
     }
   },
   "reviewPage": {

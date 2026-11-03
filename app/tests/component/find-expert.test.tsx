@@ -106,6 +106,49 @@ const done = (extra: Record<string, unknown>) => ({
 })
 
 describe('让 AI 找', () => {
+  it('新版分开展示用户要求、AI方法建议与候选方案，未选择不请付费专家', async () => {
+    result = done({
+      contract: 'knowbench/expert-match/v3',
+      outcome: 'candidates',
+      requirements: [
+        {
+          id: 'r1',
+          kind: 'result',
+          statement: '说明毛利率变化',
+          question_quote: QUESTION,
+          required: true,
+          origin: 'user_explicit',
+          rationale: '来自用户问题',
+        },
+      ],
+      method_proposals: [
+        {
+          id: 'p1',
+          requirement_ids: ['r1'],
+          approach: '按年度对比',
+          reason: '便于看清变化',
+          data_requirements: ['各年数据'],
+        },
+      ],
+      picks: [
+        {
+          ...pick(false),
+          solution: {
+            approach: '利用专家的年度分析方法回答',
+            method_proposal_ids: ['p1'],
+            data_conditions: ['确认年度口径与使用权'],
+          },
+        },
+      ],
+    })
+    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    expect(await screen.findByText('AI 建议的做法')).toBeInTheDocument()
+    expect(screen.getByText(messages.findExpert.methodSuggestionsHint)).toBeInTheDocument()
+    expect(screen.getByText('利用专家的年度分析方法回答')).toBeInTheDocument()
+    expect(screen.getByText('确认年度口径与使用权')).toBeInTheDocument()
+    expect(calls).toHaveLength(0)
+  })
+
   it('澄清先带回完整问题，未编辑或空白不能继续，不创建付费请求', async () => {
     result = done({ outcome: 'clarify', clarification: '请确定预测时点', picks: [] })
     const onEdit = vi.fn()

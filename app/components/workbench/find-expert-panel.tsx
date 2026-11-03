@@ -82,9 +82,25 @@ export function FindExpertPanel({
       {data.requirements?.length ? (
         <ul className="list-disc pl-5 text-sm">
           {data.requirements.map((req) => (
-            <li key={req.id}>{req.statement}</li>
+            <li key={req.id}>
+              {req.origin ? <span>{t(`requirementOrigin.${req.origin}`)} · </span> : null}
+              {req.statement}
+              {req.rationale ? <p className="text-muted-foreground">{req.rationale}</p> : null}
+            </li>
           ))}
         </ul>
+      ) : null}
+      {data.method_proposals?.length ? (
+        <section aria-label={t('methodSuggestions')} className="space-y-2 text-sm">
+          <p className="font-medium">{t('methodSuggestions')}</p>
+          <p className="text-muted-foreground">{t('methodSuggestionsHint')}</p>
+          {data.method_proposals.map((proposal) => (
+            <div key={proposal.id}>
+              <p>{proposal.approach}</p>
+              <p className="text-muted-foreground">{proposal.reason}</p>
+            </div>
+          ))}
+        </section>
       ) : null}
       {data.outcome === 'clarify' ? (
         <div className="space-y-2">
@@ -158,6 +174,16 @@ function Coverage({ result }: { result: FindResult }) {
       {(result.picks ?? []).map((pick) => (
         <div key={`${pick.knowbot_id}@${pick.version}`} className="space-y-1 text-sm">
           <p>{pick.name}</p>
+          {pick.solution ? (
+            <div className="space-y-1">
+              <p className="font-medium">{t('solution')}</p>
+              <p>{pick.solution.approach}</p>
+              {pick.solution.data_conditions.length ? <p>{t('solutionData')}</p> : null}
+              {pick.solution.data_conditions.map((condition, index) => (
+                <p key={index}>{condition}</p>
+              ))}
+            </div>
+          ) : null}
           {pick.coverage?.map((row) => (
             <p key={row.requirement_id}>
               {t(`coverage.${row.status}`)} ·{' '}

@@ -946,6 +946,14 @@
       "covered": "已覆盖",
       "uncovered": "未覆盖",
       "unknown": "待澄清"
+    },
+    "methodSuggestions": "AI 建议的做法",
+    "methodSuggestionsHint": "这些是实现问题的建议，不代表你指定了这些方法，也不代表已取得所需数据。",
+    "solution": "本题方案",
+    "solutionData": "执行前还需核对的数据条件",
+    "requirementOrigin": {
+      "user_explicit": "你的要求",
+      "goal_inferred": "依据目标推导"
     }
   },
   "reviewPage": {

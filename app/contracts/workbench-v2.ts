@@ -941,6 +941,13 @@ const pickSchema = z
       )
       .optional(),
     unresolved_conditions: z.array(z.string()).optional(),
+    solution: z
+      .object({
+        approach: z.string(),
+        method_proposal_ids: z.array(z.string()),
+        data_conditions: z.array(z.string()),
+      })
+      .optional(),
   })
   .loose()
 export type ExpertPick = z.infer<typeof pickSchema>
@@ -961,7 +968,7 @@ export const findResultSchema = z
     error: z.string().optional(),
     // 没结束时没有下面几项
     outcome: z.enum(['summon', 'candidates', 'none', 'clarify']).optional(),
-    contract: z.literal('knowbench/expert-match/v2').optional(),
+    contract: z.enum(['knowbench/expert-match/v2', 'knowbench/expert-match/v3']).optional(),
     match_task_id: uuid.optional(),
     match_artifact_version: z.number().int().positive().optional(),
     question_revision: z.number().int().positive().optional(),
@@ -974,6 +981,19 @@ export const findResultSchema = z
           statement: z.string(),
           question_quote: z.string(),
           required: z.boolean(),
+          origin: z.enum(['user_explicit', 'goal_inferred']).optional(),
+          rationale: z.string().optional(),
+        }),
+      )
+      .optional(),
+    method_proposals: z
+      .array(
+        z.object({
+          id: z.string(),
+          requirement_ids: z.array(z.string()),
+          approach: z.string(),
+          reason: z.string(),
+          data_requirements: z.array(z.string()),
         }),
       )
       .optional(),
