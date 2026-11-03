@@ -303,9 +303,9 @@
       "who": "Which expert",
       "loading": "Loading…",
       "preparing": "Coming soon",
-      "summon": "Choose an expert yourself in knowmart",
+      "summon": "Invite an expert from knowmart yourself",
       "selection": "Expert selection",
-      "find": "Ask AI to choose an expert in knowmart",
+      "find": "Let AI bring back an expert from knowmart",
       "findHint": "Find an expert for your question, with model costs capped at CNY 2 per search. The selected expert is highlighted; analysis starts only when you submit.",
       "findFailed": "Matching did not start. Retry safely without creating a duplicate task.",
       "remove": "Remove",
@@ -837,7 +837,7 @@
     "pickBody": "The expert takes over the whole project: its files and conversations.",
     "noMachine": "No computer registered. Connect one before starting Work or Expert.",
     "preparing": "Coming soon",
-    "summonKnowbot": "Pick an expert in knowmart"
+    "summonKnowbot": "Invite an expert from knowmart yourself"
   },
   "askExpert": {
     "title": "Ask an expert",
@@ -895,14 +895,14 @@
       "lead": "No need to choose data now. After you ask, the expert first lists the data your question needs. Confirm it on the request page (switch, change, drop or add); available materials are used directly and items that need fetching are handled as listed.",
       "bound": "It also brings {count} item(s) of its own, chosen by its author."
     },
-    "find": "Ask AI to choose an expert in knowmart",
+    "find": "Let AI bring back an expert from knowmart",
     "finding": "Starting…",
     "findHint": "Find an expert for your question, with model costs capped at CNY 2 per search. The selected expert is highlighted; analysis starts only when you submit.",
     "findFailed": "Could not start looking. Please try again.",
     "checkScope": "Check scope and select",
     "scopeLoadFailed": "Unable to read this expert’s scope. Reload before requesting.",
     "scopeRetry": "Reload",
-    "summon": "Choose an expert yourself in knowmart"
+    "summon": "Invite an expert from knowmart yourself"
   },
   "findExpert": {
     "running": "Your model is looking through what each expert says it handles…",

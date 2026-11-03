@@ -303,9 +303,9 @@
       "who": "请哪一位",
       "loading": "加载中…",
       "preparing": "筹备中",
-      "summon": "自己去 knowmart 选择专家",
+      "summon": "自己去knowmart请专家",
       "selection": "如何选择专家",
-      "find": "AI 去 knowmart 为你选专家",
+      "find": "ai去knowmart请回专家",
       "findHint": "按你填写的问题查找，本轮模型费用最多 2 元。选中后高亮显示，提交问题才开始分析。",
       "findFailed": "没有开始找，请重试。同一请求不会重复建委托。",
       "remove": "删除",
@@ -837,7 +837,7 @@
     "pickBody": "专家接手的是整个项目：项目里的文件和对话。",
     "noMachine": "还没有登记电脑。先接入电脑，再开始工作或请专家。",
     "preparing": "筹备中",
-    "summonKnowbot": "去 knowmart 选专家"
+    "summonKnowbot": "自己去knowmart请专家"
   },
   "askExpert": {
     "title": "请专家",
@@ -895,14 +895,14 @@
       "lead": "不用先选数据。请专家后，专家先按你的问题列出要哪些数据，你在委托页确认（能换、能改、能去掉、能加）后，已有资料直接使用，需要补取的项目按清单处理。",
       "bound": "专家还自带 {count} 份资料（作者挑选的）。"
     },
-    "find": "AI 去 knowmart 为你选专家",
+    "find": "ai去knowmart请回专家",
     "finding": "正在开始…",
     "findHint": "按你填写的问题查找，本轮模型费用最多 2 元。选中后高亮显示，提交问题才开始分析。",
     "findFailed": "没有开始找，请再试一次。",
     "checkScope": "核对范围并选中",
     "scopeLoadFailed": "暂时无法读取这位专家的能力范围，请重新读取后再请。",
     "scopeRetry": "重新读取",
-    "summon": "自己去 knowmart 选择专家"
+    "summon": "自己去knowmart请专家"
   },
   "findExpert": {
     "running": "你的模型正在按各位专家自己写的范围替你找…",
