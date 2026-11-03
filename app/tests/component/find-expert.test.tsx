@@ -1,17 +1,16 @@
-// AI 请专家（请专家方案设计第 4.9 节；decisions 10-29「AI 请专家」）：不用另付钱的直接请（钉住、建委托都走
-// 用户自己的会话），要付钱的点了才请；都不合适时两件事都不自动做，需求点「发布」才挂。
+// AI 查找只选中，提交问题才创建分析委托；无匹配的出路保持由用户决定。
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DirectAnswerNote } from '@/features/chat/ui/direct-answer-note'
 import { FindExpertPanel } from '@/features/expert/ui/find-expert-panel'
-import { summonedOf } from '@/lib/workbench/find-expert'
 import { WorkbenchProvider } from '@/lib/workbench/context'
 import messages from '@/messages/zh-CN.json'
 
 const push = vi.fn()
+const selected = vi.fn()
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push }),
   useSearchParams: () => new URLSearchParams(),
@@ -53,6 +52,7 @@ let result: Record<string, unknown> = {}
 beforeEach(() => {
   calls = []
   push.mockReset()
+  selected.mockReset()
   window.sessionStorage.clear()
   window.localStorage.clear()
   vi.stubGlobal(
@@ -141,7 +141,7 @@ describe('让 AI 找', () => {
         },
       ],
     })
-    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
     expect(await screen.findByText('AI 建议的做法')).toBeInTheDocument()
     expect(screen.getByText(messages.findExpert.methodSuggestionsHint)).toBeInTheDocument()
     expect(screen.getByText('利用专家的年度分析方法回答')).toBeInTheDocument()
@@ -152,7 +152,7 @@ describe('让 AI 找', () => {
   it('澄清先带回完整问题，未编辑或空白不能继续，不创建付费请求', async () => {
     result = done({ outcome: 'clarify', clarification: '请确定预测时点', picks: [] })
     const onEdit = vi.fn()
-    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} onEdit={onEdit} />)
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} onEdit={onEdit} />)
     const input = await screen.findByRole('textbox', { name: '补充后的完整问题' })
     const use = screen.getByRole('button', { name: '带回提问框' })
     expect(input).toHaveValue(QUESTION)
@@ -181,7 +181,7 @@ describe('让 AI 找', () => {
         return original(input, init)
       }),
     )
-    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
     expect(await screen.findByRole('alert')).toHaveTextContent(messages.findExpert.failed)
     unavailable = false
     fireEvent.click(screen.getByRole('button', { name: '重新读取结果' }))
@@ -189,7 +189,7 @@ describe('让 AI 找', () => {
     expect(calls).toHaveLength(0)
   })
 
-  it('新契约的覆盖收据随专家委托提交，不让客户端编造方法计划', async () => {
+  it('免费匹配自动钉版并交回选择与收据，等待用户提交才分析', async () => {
     result = done({
       contract: 'knowbench/expert-match/v2',
       outcome: 'summon',
@@ -198,132 +198,110 @@ describe('让 AI 找', () => {
       match_artifact_version: 2,
       question_revision: 1,
     })
-    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
-    await waitFor(() => expect(push).toHaveBeenCalledTimes(1))
-    const sent = calls.find((c) => c.path.endsWith('/delegations'))!.body
-    expect(sent.match).toEqual({
-      match_task_id: TASK,
-      match_artifact_version: 2,
-      question_revision: 1,
-      knowbot_id: KNOWBOT,
-      version: '2',
-    })
-    expect(sent).not.toHaveProperty('plan')
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
+    await waitFor(() => expect(selected).toHaveBeenCalledTimes(1))
+    expect(selected).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pack: expect.objectContaining({ id: PACK.id }),
+        question: QUESTION,
+        match: {
+          match_task_id: TASK,
+          match_artifact_version: 2,
+          question_revision: 1,
+          knowbot_id: KNOWBOT,
+          version: '2',
+        },
+      }),
+    )
+    expect(calls.map((c) => c.path)).toEqual(['/api/workbench/knowbots/pin'])
+    expect(push).not.toHaveBeenCalled()
+    expect(screen.getByRole('status')).toHaveTextContent('已选中')
   })
-
-  it('改了问题不能沿用原自动请入结果', async () => {
+  it('改了问题不沿用原查找结果', async () => {
     result = done({ outcome: 'summon', picks: [pick(true)] })
     page(
-      <FindExpertPanel task={TASK} project={PROJECT} from={null} expectedQuestion="另一个问题" />,
+      <FindExpertPanel
+        task={TASK}
+        project={PROJECT}
+        onSelect={selected}
+        expectedQuestion="另一个问题"
+      />,
     )
     expect(await screen.findByText(messages.findExpert.questionChanged)).toBeInTheDocument()
     expect(calls).toHaveLength(0)
+    expect(selected).not.toHaveBeenCalled()
   })
-
-  it('部分覆盖或待澄清不自动请专家，也不擅自改走通用回答', async () => {
-    result = done({
-      contract: 'knowbench/expert-match/v2',
-      outcome: 'clarify',
-      clarification: '请确定预测时点',
-      requirements: [
-        {
-          id: 'r1',
-          kind: 'result',
-          statement: '季度预测',
-          question_quote: '毛利率',
-          required: true,
-        },
-      ],
-      picks: [
-        {
-          ...pick(true),
-          coverage: [
-            {
-              requirement_id: 'r1',
-              status: 'unknown',
-              capability_id: null,
-              declaration_quote: '',
-              reason: '时点未定',
-            },
-          ],
-          unresolved_conditions: ['需要明确时点'],
-        },
-      ],
-    })
-    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
-    expect(await screen.findByText('请确定预测时点')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '请这位' })).toBeNull()
-    expect(calls).toHaveLength(0)
-  })
-
-  it('缺少新契约收据时拒绝自动钉版和委托', async () => {
-    result = done({ contract: 'knowbench/expert-match/v2', outcome: 'summon', picks: [pick(true)] })
-    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
-    expect(await screen.findByRole('alert')).toHaveTextContent(messages.findExpert.summonFailed)
-    expect(calls).toHaveLength(0)
-  })
-  it('不用另付钱的直接请：先钉住这一版，再用你的会话建委托，记下理由，跳到对话', async () => {
-    result = done({ outcome: 'summon', picks: [pick(true)] })
-    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
-    await waitFor(() => expect(push).toHaveBeenCalledTimes(1))
-    expect(calls.map((c) => c.path)).toEqual([
-      '/api/workbench/knowbots/pin',
-      `/api/workbench/projects/${PROJECT}/delegations`,
-    ])
-    expect(calls[0].body).toEqual({ knowbot: `${KNOWBOT}@2` })
-    expect(calls[1].body).toMatchObject({ expert: PACK.id, question: QUESTION })
-    expect(push).toHaveBeenCalledWith(`/zh-CN/workbench/projects/${PROJECT}/c/${MADE}`)
-    expect(summonedOf(MADE)).toEqual({ name: '财务分析与预测', reason: '它接财报分析' })
-  })
-
-  it('要付钱的只列出来，点「请这位」才请', async () => {
-    result = done({ outcome: 'candidates', picks: [pick(false)] })
-    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
-    expect(await screen.findByText('¥5.00（这一版付一次）')).toBeInTheDocument()
-    expect(screen.getByText('理由：它接财报分析')).toBeInTheDocument()
-    expect(calls).toHaveLength(0)
-    fireEvent.click(screen.getByRole('button', { name: '请这位' }))
-    await waitFor(() => expect(push).toHaveBeenCalledTimes(1))
-    expect(calls.map((c) => c.path)[0]).toBe('/api/workbench/knowbots/pin')
-  })
-
-  it('刷新或返回同一轮找专家结果时，沿用委托幂等键，不再创建另一笔委托', async () => {
-    result = done({ outcome: 'summon', picks: [pick(true)] })
-    const first = page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
-    await waitFor(() => expect(push).toHaveBeenCalledTimes(1))
-    const initial = calls.find((call) => call.path.endsWith('/delegations'))!
-    first.unmount()
-    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
-    await waitFor(() => expect(push).toHaveBeenCalledTimes(2))
-    const delegations = calls.filter((call) => call.path.endsWith('/delegations'))
-    expect(delegations).toHaveLength(2)
-    expect(delegations[1].body.idempotency_key).toBe(initial.body.idempotency_key)
-  })
-
-  it('自动请专家丢响应后可显式重试，保持同一委托键且不自动循环', async () => {
+  it('离开旧查找结果后，迟到的钉版响应不重新选中专家', async () => {
     result = done({ outcome: 'summon', picks: [pick(true)] })
     const original = global.fetch
-    let lostResponse = true
+    let release!: () => void
+    const pending = new Promise<void>((resolve) => {
+      release = resolve
+    })
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: string, init?: RequestInit) => {
         const response = await original(input, init)
-        if (String(input).endsWith('/delegations') && lostResponse) {
-          lostResponse = false
-          throw new TypeError('synthetic lost response')
+        if (String(input).endsWith('/pin')) await pending
+        return response
+      }),
+    )
+    const view = page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
+    await waitFor(() => expect(calls).toHaveLength(1))
+    view.unmount()
+    await act(async () => {
+      release()
+      await pending
+    })
+    expect(selected).not.toHaveBeenCalled()
+  })
+  it('部分覆盖或待澄清不自动选中，不自动改走通用模型', async () => {
+    result = done({ outcome: 'clarify', clarification: '请确定预测时点', picks: [pick(true)] })
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
+    expect(await screen.findByText('请确定预测时点')).toBeInTheDocument()
+    expect(calls).toHaveLength(0)
+    expect(selected).not.toHaveBeenCalled()
+  })
+  it('缺少新契约收据时不钉版或选中', async () => {
+    result = done({ contract: 'knowbench/expert-match/v2', outcome: 'summon', picks: [pick(true)] })
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
+    expect(await screen.findByRole('alert')).toHaveTextContent(messages.findExpert.summonFailed)
+    expect(calls).toHaveLength(0)
+    expect(selected).not.toHaveBeenCalled()
+  })
+  it.each(['candidates', 'summon'])('收费候选即使结果为%s也不自动选中', async (outcome) => {
+    result = done({ outcome, picks: [pick(false)] })
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
+    expect(await screen.findByText('¥5.00（这一版付一次）')).toBeInTheDocument()
+    expect(calls).toHaveLength(0)
+    fireEvent.click(screen.getByRole('button', { name: '选择这位' }))
+    await waitFor(() => expect(selected).toHaveBeenCalledTimes(1))
+    expect(calls.map((c) => c.path)).toEqual(['/api/workbench/knowbots/pin'])
+    expect(push).not.toHaveBeenCalled()
+  })
+  it('钉版丢响应可重试同一版本，不创建分析委托', async () => {
+    result = done({ outcome: 'summon', picks: [pick(true)] })
+    const original = global.fetch
+    let lost = true
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init?: RequestInit) => {
+        const response = await original(input, init)
+        if (String(input).endsWith('/pin') && lost) {
+          lost = false
+          throw new TypeError('lost')
         }
         return response
       }),
     )
-    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
     expect(await screen.findByRole('alert')).toHaveTextContent(messages.findExpert.summonFailed)
-    expect(calls.filter((call) => call.path.endsWith('/delegations'))).toHaveLength(1)
-    fireEvent.click(screen.getByRole('button', { name: '重试请这位' }))
-    await waitFor(() => expect(push).toHaveBeenCalledTimes(1))
-    const delegations = calls.filter((call) => call.path.endsWith('/delegations'))
-    expect(delegations).toHaveLength(2)
-    expect(delegations[1].body).toEqual(delegations[0].body)
-    expect(screen.queryByRole('alert')).toBeNull()
+    expect(selected).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: '重试选中' }))
+    await waitFor(() => expect(selected).toHaveBeenCalledTimes(1))
+    expect(calls).toHaveLength(2)
+    expect(calls[1].body).toEqual(calls[0].body)
+    expect(calls.every((c) => c.path.endsWith('/pin'))).toBe(true)
   })
 
   it('都不合适：标出推荐，两件事都不自动做；直接答开一段记来源的聊天', async () => {
@@ -333,7 +311,7 @@ describe('让 AI 找', () => {
       recommend: { action: 'direct', reason: '一次性的问题，直接答就够' },
       demand: { title: '毛利率变化', problem: QUESTION },
     })
-    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
     expect(await screen.findByTestId('find-recommend')).toHaveTextContent(
       '推荐：让我的模型直接答。一次性的问题，直接答就够',
     )
@@ -358,7 +336,7 @@ describe('让 AI 找', () => {
       recommend: { action: 'incubate', reason: '常会问到' },
       demand: { title: '毛利率变化', problem: QUESTION },
     })
-    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
     fireEvent.click(await screen.findByRole('button', { name: '孵化一个专家' }))
     expect(
       await screen.findByText('已在 knowlab 建了申请「毛利率变化」，到 knowlab「申请」里看。'),
@@ -379,7 +357,7 @@ describe('让 AI 找', () => {
 
   it('没有合适专家时可就此结束，保留记录且不发起聊天、委托或孵化', async () => {
     result = done({ outcome: 'none', picks: [] })
-    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
     fireEvent.click(await screen.findByRole('button', { name: '就此结束' }))
     expect(push).toHaveBeenCalledWith(`/zh-CN/workbench/projects/${PROJECT}`)
     expect(calls).toHaveLength(0)

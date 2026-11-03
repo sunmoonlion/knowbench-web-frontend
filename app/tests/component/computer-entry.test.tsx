@@ -186,6 +186,163 @@ describe('电脑接入入口', () => {
     checkLink()
     expect(screen.getByRole('button', { name: '交给专家' })).toBeDisabled()
   })
+
+  it('商城回跳在同一首页更新专家参数时选好专家，保留问题并允许再次手选', async () => {
+    const id = 'knowbot:0b8a6c3e-1f2d-4c5b-9a7e-6d5c4b3a2f10@3'
+    const pack = {
+      id,
+      name: '财务分析与预测第3版',
+      tagline: '按作者的方法分析财报',
+      solves: '',
+      does_not_solve: '',
+      input: '',
+      output: '',
+      uses_our_data: false,
+      source: 'knowbot',
+      steps: [],
+    }
+    const base = globalThis.fetch
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init: RequestInit = {}) => {
+        if (String(input) === '/api/workbench/packs') {
+          return Response.json({ packs: [pack, { ...pack, id: 'another', name: '另一位专家' }] })
+        }
+        return base(input, init)
+      }),
+    )
+    navigation.query = 'mode=expert'
+    const p = page(<HomeScreen />)
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '分析贵州茅台' } })
+    expect(screen.queryByRole('button', { name: '自己指定' })).toBeNull()
+
+    // 模拟 KnowbotArrival pin 成功后的软导航，保持同一个组件实例。
+    navigation.query = `mode=expert&expert=${encodeURIComponent(id)}`
+    p.rerender(<HomeScreen />)
+    expect(await screen.findByRole('button', { name: pack.name })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('textbox')).toHaveValue('分析贵州茅台')
+
+    fireEvent.click(screen.getByRole('button', { name: '另一位专家' }))
+    p.rerender(<HomeScreen />)
+    expect(screen.getByRole('button', { name: '另一位专家' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(calls.every((c) => c.method === 'GET')).toBe(true)
+  })
+  it.each(['submit', 'remove'])('首页AI按钮直接查找，选中后由用户%s', async (action) => {
+    const project = fixture('full', '/api/workbench/projects').projects[0]
+    const task = '11111111-1111-4111-8111-111111111111'
+    const bot = '55555555-5555-4555-8555-555555555555'
+    const pack = {
+      id: `knowbot:${bot}@3`,
+      name: '财务分析与预测第3版',
+      tagline: '财报分析',
+      solves: '',
+      does_not_solve: '',
+      input: '',
+      output: '',
+      uses_our_data: false,
+      source: 'knowbot',
+      steps: [],
+    }
+    let pinned = false
+    const mutations: { path: string; method: string; body: Record<string, unknown> }[] = []
+    const base = globalThis.fetch
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init: RequestInit = {}) => {
+        const path = String(input).split('?')[0]
+        if (init.method && init.method !== 'GET') {
+          mutations.push({ path, method: init.method, body: JSON.parse(String(init.body ?? '{}')) })
+          if (path.endsWith('/find-expert'))
+            return Response.json({ task_id: task, session_id: task })
+          if (path.endsWith('/pin')) {
+            pinned = true
+            return Response.json({ pack })
+          }
+          if (init.method === 'DELETE') {
+            pinned = false
+            return Response.json({})
+          }
+          if (path.endsWith('/delegations'))
+            return Response.json({ task_id: task, session_id: task })
+          throw new Error(`unexpected mutation ${path}`)
+        }
+        if (path === '/api/workbench/packs') return Response.json({ packs: pinned ? [pack] : [] })
+        if (path.endsWith('/data-needs'))
+          return Response.json({
+            contract: 'knowbot-manifest/v3',
+            bound: 0,
+            scope_check_required: true,
+          })
+        if (path === `/api/workbench/find-expert/${task}`)
+          return Response.json({
+            contract: 'knowbench/expert-match/v2',
+            task_id: task,
+            project_id: project.id,
+            question: '分析贵州茅台',
+            state: 'SUCCEEDED',
+            outcome: 'summon',
+            picks: [
+              {
+                knowbot_id: bot,
+                version: '3',
+                name: pack.name,
+                tagline: pack.tagline,
+                free: true,
+                price: null,
+                reason: '适合财报分析',
+              },
+            ],
+            match_task_id: task,
+            match_artifact_version: 1,
+            question_revision: 1,
+          })
+        const body = fixture('full', path)
+        return body ? Response.json(body) : base(input, init)
+      }),
+    )
+    navigation.query = `mode=expert&project=${project.id}`
+    page(<HomeScreen />)
+    const finder = screen.getByRole('button', { name: zh.home.expert.find })
+    expect(finder).toBeDisabled()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '分析贵州茅台' } })
+    await waitFor(() => expect(finder).toBeEnabled())
+    fireEvent.click(finder)
+    const selected = await screen.findByRole('button', { name: pack.name })
+    await waitFor(() => expect(selected).toHaveAttribute('aria-pressed', 'true'))
+    expect(mutations.map((c) => c.path)).toEqual([
+      `/api/workbench/projects/${project.id}/find-expert`,
+      '/api/workbench/knowbots/pin',
+    ])
+    expect(navigation.push).not.toHaveBeenCalled()
+    if (action === 'submit') {
+      const send = screen.getByRole('button', { name: zh.home.mode.expert.send })
+      await waitFor(() => expect(send).toBeEnabled())
+      fireEvent.click(send)
+      await waitFor(() => expect(navigation.push).toHaveBeenCalledTimes(1))
+      expect(mutations[2].path).toBe(`/api/workbench/projects/${project.id}/delegations`)
+      expect(mutations[2].body.match).toMatchObject({
+        match_task_id: task,
+        knowbot_id: bot,
+        version: '3',
+      })
+    } else {
+      fireEvent.click(screen.getByRole('button', { name: `删除 ${pack.name}` }))
+      await waitFor(() => expect(screen.queryByRole('button', { name: pack.name })).toBeNull())
+      expect(mutations[2]).toMatchObject({
+        method: 'DELETE',
+        path: `/api/workbench/packs/${encodeURIComponent(pack.id)}`,
+      })
+      expect(screen.getByRole('button', { name: zh.home.mode.expert.send })).toBeDisabled()
+      expect(navigation.push).not.toHaveBeenCalled()
+    }
+  })
+
   it('侧栏状态是可见链接，聊天导航明确指向聊天入口', async () => {
     page(<Sidebar />)
     // 没有电脑：中段只一行，带去设置页的链接；底部不再有「我的电脑」（0016）

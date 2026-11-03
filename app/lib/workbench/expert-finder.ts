@@ -26,6 +26,7 @@ export function useExpertFinder() {
     question: string
     from: string | null
     expert?: string
+    navigate?: boolean
   }) {
     if (inFlight.current) return
     inFlight.current = true
@@ -84,7 +85,8 @@ export function useExpertFinder() {
       )
       url.searchParams.set('match', found.task_id)
       if (input.expert) url.searchParams.set('expert', input.expert)
-      router.push(url.pathname + url.search)
+      if (input.navigate !== false) router.push(url.pathname + url.search)
+      return found.task_id
     } finally {
       inFlight.current = false
     }

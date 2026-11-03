@@ -8,6 +8,9 @@ import { useState, useSyncExternalStore } from 'react'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { ExpertChoices } from '@/components/workbench/expert-choices'
+import { CrossAppLink } from '@/components/common/cross-app-link'
+import type { ChosenExpert } from '@/components/workbench/find-expert-panel'
 import { ConnectComputerLink } from '@/components/workbench/connect-computer'
 import { useWorkbench } from '@/lib/workbench/context'
 import { useExpertFinder } from '@/lib/workbench/expert-finder'
@@ -51,6 +54,15 @@ export function AskExpertScreen({
   const findTask = useSearchParams().get('match')
 
   const [chosen, setChosen] = useState<string | null>(expert)
+  const [selectedByAI, setSelectedByAI] = useState<ChosenExpert | null>(null)
+  const [seenExpert, setSeenExpert] = useState(expert)
+  if (expert !== seenExpert) {
+    setSeenExpert(expert)
+    if (expert) {
+      setChosen(expert)
+      setSelectedByAI(null)
+    }
+  }
   // 固定与动态专家都沿用数据授权、补采和本人确认。
   const needs = useDataNeeds(chosen)
   const checkingNeeds =
@@ -89,7 +101,11 @@ export function AskExpertScreen({
   async function submit() {
     if (blocker !== null || !pack || ask.isPending) return
     if (checkingNeeds) return
-    if (needs.data?.scope_check_required) {
+    const matched =
+      selectedByAI?.pack.id === chosen &&
+      selectedByAI.question === question.trim() &&
+      selectedByAI.project === projectId
+    if (needs.data?.scope_check_required && !matched) {
       await find(pack.id)
       return
     }
@@ -99,7 +115,8 @@ export function AskExpertScreen({
         from,
         expert: pack.id,
         question: question.trim(),
-        key,
+        key: matched ? `find-expert:${selectedByAI!.task}` : key,
+        match: matched ? selectedByAI!.match : undefined,
       })
       window.sessionStorage.removeItem(QUESTION)
       router.push(
@@ -115,6 +132,8 @@ export function AskExpertScreen({
   // 让你的模型按专家自己写的范围替你找（请专家方案设计第 4.9 节）
   async function find(selected?: string) {
     if (findBlocked !== null || startFind.isPending) return
+    setChosen(null)
+    setSelectedByAI(null)
     try {
       await startFind.find({
         project: projectId,
@@ -139,6 +158,13 @@ export function AskExpertScreen({
             <section>
               <div className="mb-1.5 flex items-center justify-between gap-2">
                 <p className={cn(label, 'mb-0')}>{t('who')}</p>
+                <CrossAppLink
+                  to="knowmart.knowbots"
+                  refValue="expert"
+                  className="text-xs underline underline-offset-3"
+                >
+                  {t('summon')}
+                </CrossAppLink>
                 <Button
                   size="sm"
                   variant="outline"
@@ -166,7 +192,10 @@ export function AskExpertScreen({
                   <FindExpertPanel
                     task={findTask}
                     project={projectId}
-                    from={from}
+                    onSelect={(selection) => {
+                      setChosen(selection.pack.id)
+                      setSelectedByAI(selection)
+                    }}
                     expectedQuestion={typed === null ? undefined : typed}
                     onEdit={(original) => {
                       setTyped(original)
@@ -186,46 +215,24 @@ export function AskExpertScreen({
                   />
                 </div>
               ) : null}
-              <ul className="grid gap-2 sm:grid-cols-2">
-                {(packs.data ?? []).map((each) => {
-                  // 筹备中的专家：看得见、读得到它要做什么，请不了
-                  const preparing = each.status === 'preparing'
-                  return (
-                    <li key={each.id}>
-                      <button
-                        type="button"
-                        aria-pressed={chosen === each.id}
-                        aria-disabled={preparing || undefined}
-                        onClick={() => {
-                          if (!preparing) setChosen(each.id)
-                        }}
-                        className={cn(
-                          'hover:bg-muted/60 w-full rounded-lg border p-3 text-left',
-                          chosen === each.id && 'border-foreground bg-muted/60',
-                          preparing && 'cursor-default opacity-70 hover:bg-transparent',
-                        )}
-                      >
-                        <span className="flex items-center gap-2 text-sm font-medium">
-                          {each.name}
-                          {preparing ? (
-                            <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[11px] font-normal">
-                              {t('preparing')}
-                            </span>
-                          ) : null}
-                        </span>
-                        <span className="text-muted-foreground block text-[13px]">
-                          {each.tagline}
-                        </span>
-                        {preparing && each.preparing_note ? (
-                          <span className="text-muted-foreground mt-1 block text-xs">
-                            {each.preparing_note}
-                          </span>
-                        ) : null}
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
+              <ExpertChoices
+                packs={packs.data ?? []}
+                selected={chosen}
+                onSelect={(id) => {
+                  setChosen(id)
+                  setSelectedByAI(null)
+                  if (findTask)
+                    router.replace(routes.askExpert(locale, projectId, from ?? undefined))
+                }}
+                onRemoved={(id) => {
+                  if (chosen === id) {
+                    setChosen(null)
+                    setSelectedByAI(null)
+                    if (findTask || expert === id)
+                      router.replace(routes.askExpert(locale, projectId, from ?? undefined))
+                  }
+                }}
+              />
               {packs.isPending ? (
                 <p className="text-muted-foreground text-sm">{t('loading')}</p>
               ) : packs.isError ? (
@@ -397,7 +404,7 @@ export function AskExpertScreen({
               >
                 {ask.isPending || startFind.isPending
                   ? t('submitting')
-                  : needs.data?.scope_check_required
+                  : needs.data?.scope_check_required && !selectedByAI?.match
                     ? t('checkScope')
                     : t('submit')}
               </Button>

@@ -303,12 +303,15 @@
       "who": "Which expert",
       "loading": "Loading…",
       "preparing": "Coming soon",
-      "summon": "Pick an expert in knowmart",
+      "summon": "Invite an expert from knowmart yourself",
       "selection": "Expert selection",
-      "find": "Let AI find",
+      "find": "Let AI bring back an expert from knowmart",
       "manual": "Choose myself",
-      "findHint": "Use your model to check declared scope, up to CNY 2 per match. Invite automatically only with full coverage and no extra expert fee.",
-      "findFailed": "Matching did not start. Retry safely without creating a duplicate task."
+      "findHint": "Find an expert for your question, with model costs capped at CNY 2 per search. The selected expert is highlighted; analysis starts only when you submit.",
+      "findFailed": "Matching did not start. Retry safely without creating a duplicate task.",
+      "remove": "Remove",
+      "removeNamed": "Remove {name}",
+      "removeFailed": "Could not remove this expert. Please retry."
     },
     "knowbot": {
       "checking": "Checking the expert you picked…",
@@ -835,7 +838,7 @@
     "pickBody": "The expert takes over the whole project: its files and conversations.",
     "noMachine": "No computer registered. Connect one before starting Work or Expert.",
     "preparing": "Coming soon",
-    "summonKnowbot": "Pick an expert in knowmart"
+    "summonKnowbot": "Invite an expert from knowmart yourself"
   },
   "askExpert": {
     "title": "Ask an expert",
@@ -893,13 +896,14 @@
       "lead": "No need to choose data now. After you ask, the expert first lists the data your question needs. Confirm it on the request page (switch, change, drop or add); available materials are used directly and items that need fetching are handled as listed.",
       "bound": "It also brings {count} item(s) of its own, chosen by its author."
     },
-    "find": "Let AI find one",
+    "find": "Let AI bring back an expert from knowmart",
     "finding": "Starting…",
-    "findHint": "Use your model to check declared scope, up to CNY 2 per match. Invite automatically only with full coverage and no extra expert fee.",
+    "findHint": "Find an expert for your question, with model costs capped at CNY 2 per search. The selected expert is highlighted; analysis starts only when you submit.",
     "findFailed": "Could not start looking. Please try again.",
-    "checkScope": "Check scope and ask",
+    "checkScope": "Check scope and select",
     "scopeLoadFailed": "Unable to read this expert’s scope. Reload before requesting.",
-    "scopeRetry": "Reload"
+    "scopeRetry": "Reload",
+    "summon": "Invite an expert from knowmart yourself"
   },
   "findExpert": {
     "readAgain": "Reload result",
@@ -907,17 +911,17 @@
     "clarificationHint": "Keep your request and clarify the points above. Review it in the question entry, then choose “Let AI find” to start a new search (up to CNY 2). Previous records remain. Copying the question back does not incur a charge.",
     "useClarification": "Use in question entry",
     "running": "Your model is looking through what each expert says it handles…",
-    "ended": "This round did not finish. Click “Let AI find one” again, or choose below.",
-    "failed": "Could not load the result. You can reload this round.",
-    "summoning": "Found {name}, no extra charge; asking it for you…",
-    "summonFailed": "Could not confirm whether the request succeeded. You can retry without creating a duplicate task.",
-    "retrySummon": "Retry this expert",
+    "ended": "This search did not finish. Try AI selection again or choose an expert in knowmart.",
+    "failed": "Could not load the result. Refresh and try again.",
+    "summoning": "Found {name}. Selecting…",
+    "summonFailed": "Could not select this expert. Please retry.",
+    "retrySummon": "Retry selection",
     "picksTitle": "These may fit",
-    "picksLead": "They cost extra and are only asked when you click. The reasons are written by your model; the platform does not rank them.",
+    "picksLead": "Review any expert fee before selecting. Analysis starts after you submit your question.",
     "free": "No extra charge",
     "price": "¥{price} (paid once for this version)",
     "why": "Why: {reason}",
-    "askThis": "Ask this one",
+    "askThis": "Select this expert",
     "noneTitle": "No expert fits. You can (either or both):",
     "direct": "Let my model answer",
     "finishHere": "Finish here",
@@ -954,7 +958,8 @@
     "requirementOrigin": {
       "user_explicit": "Your requirement",
       "goal_inferred": "Inferred from your goal"
-    }
+    },
+    "selected": "Selected: {name}. Review and submit your question to start."
   },
   "reviewPage": {
     "title": "Waiting for me",
