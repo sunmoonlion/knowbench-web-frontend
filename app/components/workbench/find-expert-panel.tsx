@@ -17,6 +17,7 @@ import {
 import { useWorkbench } from '@/lib/workbench/context'
 import {
   useAskIncubation,
+  useCancelFind,
   useDirectAnswer,
   useFindResult,
   usePublishDemand,
@@ -52,6 +53,7 @@ export function FindExpertPanel({
 }) {
   const t = useTranslations('findExpert')
   const { locale } = useWorkbench()
+  const cancel = useCancelFind(task)
   const found = useFindResult(task)
   const data = found.data
   if (
@@ -89,6 +91,17 @@ export function FindExpertPanel({
         <p className="text-muted-foreground" role="status">
           {t(message)}
         </p>
+        {data && !['SUCCEEDED', 'FAILED', 'CANCELLED', 'REJECTED'].includes(data.state) ? (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={cancel.isPending || cancel.isSuccess}
+            onClick={() => cancel.mutate()}
+          >
+            {t(cancel.isPending || cancel.isSuccess ? 'cancelling' : 'cancel')}
+          </Button>
+        ) : null}
+        {cancel.isError ? <p role="alert">{t('cancelFailed')}</p> : null}
         {data ? (
           <Link href={routes.project(locale, project)} className="underline underline-offset-3">
             {t('viewTasks')}

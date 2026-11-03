@@ -118,6 +118,32 @@ function page(children: React.ReactNode) {
 }
 
 describe('请专家：数据按问题定', () => {
+  it('项目已有分析任务仍可查找，查找不会同时提交分析', async () => {
+    const original = global.fetch
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init: RequestInit = {}) => {
+        if (
+          String(input).split('?')[0] === `/api/workbench/projects/${project}` &&
+          (init.method ?? 'GET') === 'GET'
+        ) {
+          return new Response(
+            JSON.stringify({
+              ...(sample(`/api/workbench/projects/${project}`) as object),
+              active_task_id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+            }),
+          )
+        }
+        return original(input, init)
+      }),
+    )
+    page(<AskExpertScreen project={project} from={null} expert={KNOWBOT} />)
+    await screen.findByText(messages.askExpert.queueHint)
+    fireEvent.click(screen.getByRole('button', { name: 'ai去knowmart请回专家' }))
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect(calls[0].path).toBe(`/api/workbench/projects/${project}/find-expert`)
+  })
+
   it('问题为空时AI入口可点，聚焦问题而不发起付费查找；填写后再次点击才查找', async () => {
     window.sessionStorage.clear()
     page(<AskExpertScreen project={project} from={null} expert={null} />)

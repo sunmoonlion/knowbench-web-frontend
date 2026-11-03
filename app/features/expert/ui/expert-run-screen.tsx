@@ -80,9 +80,11 @@ export function ExpertRunScreen({ task }: { task: string }) {
                 ? t('band.supplying')
                 : waiting
                   ? t('band.waiting')
-                  : live
-                    ? t('band.running', { name: sheet.expert.name })
-                    : (sheet.state_word ?? sheet.expert.name)}
+                  : sheet.state === 'RECEIVED'
+                    ? t('band.queued')
+                    : live
+                      ? t('band.running', { name: sheet.expert.name })
+                      : (sheet.state_word ?? sheet.expert.name)}
         </span>
         {position ? (
           <span className="text-muted-foreground order-last w-full truncate sm:order-none sm:w-auto sm:max-w-64">

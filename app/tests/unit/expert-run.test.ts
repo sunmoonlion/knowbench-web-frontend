@@ -141,7 +141,8 @@ describe('交回了什么：按形状摆', () => {
 describe('请专家：现在能不能交出去', () => {
   // 懒得再引一遍：这一段只用到下面两个函数
   it('一条一条拦', async () => {
-    const { askBlocker, busyConversation, sees } = await import('@/features/expert/model/ask')
+    const { askBlocker, findBlocker, busyConversation, sees } =
+      await import('@/features/expert/model/ask')
     const { packsSchema, projectDetailSchema } = await import('@/contracts/workbench-v2')
     const packs = packsSchema.parse(read('/api/workbench/packs')).packs
     const title = (start: string) =>
@@ -155,7 +156,8 @@ describe('请专家：现在能不能交出去', () => {
     expect(askBlocker({ ...ok, pack: undefined })).toBe('noExpert')
     expect(askBlocker({ ...ok, question: ' ' })).toBe('noQuestion')
     expect(askBlocker({ ...ok, sandboxes: 0 })).toBe('noSandbox')
-    expect(askBlocker({ ...ok, project: busy })).toBe('busy')
+    expect(askBlocker({ ...ok, project: busy })).toBeNull()
+    expect(findBlocker({ ...ok, project: busy })).toBeNull()
     expect(
       askBlocker({ ...ok, project: { ...free, project: { ...free.project, online: false } } }),
     ).toBe('offline')

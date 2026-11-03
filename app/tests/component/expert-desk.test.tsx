@@ -178,17 +178,15 @@ describe('请专家', () => {
     )
   })
 
-  it('这个项目里专家还在做：交不出去，给一条过去的路', async () => {
+  it('这个项目里专家还在做：仍能提交，说明等待执行', async () => {
     const busy = parts('专家处理中')
     page(<AskExpertScreen project={busy[4]} from={null} expert="DATA_QUERY" />)
-    expect(await screen.findByText(/这个项目里有一件事专家还在做/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '去看看' })).toHaveAttribute(
-      'href',
-      `/zh-CN/workbench/projects/${busy[4]}/c/${busy[6]}`,
-    )
+    expect(
+      await screen.findByText('专家已选好；提交后将排队，前一项委托结束后开始执行。'),
+    ).toBeInTheDocument()
     fireEvent.change(screen.getByRole('textbox', { name: '要解决什么问题' }), {
       target: { value: '问' },
     })
-    expect(screen.getByRole('button', { name: '交给专家' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '交给专家' })).toBeEnabled()
   })
 })

@@ -8,7 +8,6 @@ export type AskBlocker =
   | 'noSandbox'
   | 'noMachine'
   | 'offline' // 项目所在的机器不在线：专家要在上面干活
-  | 'busy' // 这个项目里有一件事专家还在做
 
 export function askBlocker(input: {
   pack: Pack | undefined
@@ -21,13 +20,12 @@ export function askBlocker(input: {
   if (input.machines === 0) return 'noMachine'
   if (sandboxes === 0) return 'noSandbox'
   if (project && !project.project.online) return 'offline'
-  if (project?.active_task_id) return 'busy'
   if (!pack) return 'noExpert'
   if (!question.trim()) return 'noQuestion'
   return null
 }
 
-// 「让 AI 找」交不出去的原因：同上，只是不用先选专家（找专家那一轮也在项目里跑）
+// 查找不用先选专家，项目里有分析委托也不阻塞查找。
 export function findBlocker(input: {
   question: string
   project: ProjectDetail | undefined
@@ -41,7 +39,11 @@ export function findBlocker(input: {
 
 // 专家正在做的那件事在哪段对话里
 export function busyConversation(project: ProjectDetail | undefined): string | null {
-  return project?.conversations.find((each) => each.active_task_id !== null)?.id ?? null
+  return (
+    project?.conversations.find(
+      (each) => each.active_task_id === project.active_task_id && each.active_task_id !== null,
+    )?.id ?? null
+  )
 }
 
 // 专家看得到什么。只数数量，不列内容

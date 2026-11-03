@@ -5,6 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
+  acceptedSchema,
   createdConversationSchema,
   demandPublishedSchema,
   findResultSchema,
@@ -32,6 +33,16 @@ export function useStartFind() {
           ...(input.expert ? { expert: input.expert } : {}),
         },
       }),
+  })
+}
+
+export function useCancelFind(task: string) {
+  const { csrfToken } = useWorkbench()
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () =>
+      sendJson(acceptedSchema, `/api/workbench/tasks/${seg(task)}/cancel`, { csrfToken }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['workbench', 'find-expert', task] }),
   })
 }
 
