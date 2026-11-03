@@ -96,6 +96,8 @@ describe('专家首页', () => {
     const packs = within(screen.getByRole('region', { name: '有哪些专家' }))
     expect(await packs.findByRole('heading', { name: '财报体检' })).toBeInTheDocument()
     expect(packs.getByRole('heading', { name: '问数' })).toBeInTheDocument()
+    expect(packs.getByRole('button', { name: '删除 财报体检' })).toBeInTheDocument()
+    expect(packs.getByRole('button', { name: '删除 问数' })).toBeInTheDocument()
     expect(packs.getByText('7 步 · 要用我们的数据')).toBeInTheDocument()
     const returned = within(screen.getByRole('region', { name: '最近交回的' }))
     expect(returned.getByText('打回')).toBeInTheDocument()
@@ -114,7 +116,7 @@ describe('请专家', () => {
     page(<AskExpertScreen project={project} from={null} expert={null} />)
     expect(await screen.findByText('先在左边选一位专家。')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '交给专家' })).toBeDisabled()
-    fireEvent.click(await screen.findByRole('button', { name: /财报体检/ }))
+    fireEvent.click(await screen.findByRole('button', { name: '财报体检' }))
     expect(screen.getByRole('heading', { name: '请专家：财报体检' })).toBeInTheDocument()
     // 每一步：名字、一句白话、不过时怎么办。没有方法的原文
     expect(screen.getByText('3 勾稽')).toBeInTheDocument()
@@ -123,7 +125,7 @@ describe('请专家', () => {
     ).toBeInTheDocument()
     expect(screen.getByText(/预测、估值、评级、买卖或仓位建议/)).toBeInTheDocument()
     // 换一位：右边整个换掉（AT-INV-18）
-    fireEvent.click(screen.getByRole('button', { name: /问数/ }))
+    fireEvent.click(screen.getByRole('button', { name: '问数' }))
     expect(screen.queryByText('3 勾稽')).toBeNull()
     expect(screen.getByText('3 执行 SQL')).toBeInTheDocument()
     // 不填预算；专家看得到什么只数数

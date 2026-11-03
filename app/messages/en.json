@@ -303,12 +303,14 @@
       "who": "Which expert",
       "loading": "Loading…",
       "preparing": "Coming soon",
-      "summon": "Pick an expert in knowmart",
+      "summon": "Choose an expert yourself in knowmart",
       "selection": "Expert selection",
-      "find": "Let AI find",
-      "manual": "Choose myself",
-      "findHint": "Use your model to check declared scope, up to CNY 2 per match. Invite automatically only with full coverage and no extra expert fee.",
-      "findFailed": "Matching did not start. Retry safely without creating a duplicate task."
+      "find": "Ask AI to choose an expert in knowmart",
+      "findHint": "Find an expert for your question, with model costs capped at CNY 2 per search. The selected expert is highlighted; analysis starts only when you submit.",
+      "findFailed": "Matching did not start. Retry safely without creating a duplicate task.",
+      "remove": "Remove",
+      "removeNamed": "Remove {name}",
+      "removeFailed": "Could not remove this expert. Please retry."
     },
     "knowbot": {
       "checking": "Checking the expert you picked…",
@@ -893,27 +895,28 @@
       "lead": "No need to choose data now. After you ask, the expert first lists the data your question needs. Confirm it on the request page (switch, change, drop or add); available materials are used directly and items that need fetching are handled as listed.",
       "bound": "It also brings {count} item(s) of its own, chosen by its author."
     },
-    "find": "Let AI find one",
+    "find": "Ask AI to choose an expert in knowmart",
     "finding": "Starting…",
-    "findHint": "Use your model to check declared scope, up to CNY 2 per match. Invite automatically only with full coverage and no extra expert fee.",
+    "findHint": "Find an expert for your question, with model costs capped at CNY 2 per search. The selected expert is highlighted; analysis starts only when you submit.",
     "findFailed": "Could not start looking. Please try again.",
-    "checkScope": "Check scope and ask",
+    "checkScope": "Check scope and select",
     "scopeLoadFailed": "Unable to read this expert’s scope. Reload before requesting.",
-    "scopeRetry": "Reload"
+    "scopeRetry": "Reload",
+    "summon": "Choose an expert yourself in knowmart"
   },
   "findExpert": {
     "running": "Your model is looking through what each expert says it handles…",
-    "ended": "This round did not finish. Click “Let AI find one” again, or choose below.",
+    "ended": "This search did not finish. Try AI selection again or choose an expert in knowmart.",
     "failed": "Could not load the result. Refresh and try again.",
-    "summoning": "Found {name}, no extra charge; asking it for you…",
-    "summonFailed": "Could not confirm whether the request succeeded. You can retry without creating a duplicate task.",
-    "retrySummon": "Retry this expert",
+    "summoning": "Found {name}. Selecting…",
+    "summonFailed": "Could not select this expert. Please retry.",
+    "retrySummon": "Retry selection",
     "picksTitle": "These may fit",
-    "picksLead": "They cost extra and are only asked when you click. The reasons are written by your model; the platform does not rank them.",
+    "picksLead": "Review any expert fee before selecting. Analysis starts after you submit your question.",
     "free": "No extra charge",
     "price": "¥{price} (paid once for this version)",
     "why": "Why: {reason}",
-    "askThis": "Ask this one",
+    "askThis": "Select this expert",
     "noneTitle": "No expert fits. You can (either or both):",
     "direct": "Let my model answer",
     "finishHere": "Finish here",
@@ -942,7 +945,8 @@
       "covered": "Covered",
       "uncovered": "Not covered",
       "unknown": "Unclear"
-    }
+    },
+    "selected": "Selected: {name}. Review and submit your question to start."
   },
   "reviewPage": {
     "title": "Waiting for me",

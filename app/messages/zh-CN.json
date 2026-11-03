@@ -303,12 +303,14 @@
       "who": "请哪一位",
       "loading": "加载中…",
       "preparing": "筹备中",
-      "summon": "去 knowmart 选专家",
+      "summon": "自己去 knowmart 选择专家",
       "selection": "如何选择专家",
-      "find": "让 AI 找",
-      "manual": "自己指定",
-      "findHint": "用你的模型核对专家公开范围，本轮查找最多 2 元；完整覆盖且不用另付专家费用才直接请。",
-      "findFailed": "没有开始找，请重试。同一请求不会重复建委托。"
+      "find": "AI 去 knowmart 为你选专家",
+      "findHint": "按你填写的问题查找，本轮模型费用最多 2 元。选中后高亮显示，提交问题才开始分析。",
+      "findFailed": "没有开始找，请重试。同一请求不会重复建委托。",
+      "remove": "删除",
+      "removeNamed": "删除 {name}",
+      "removeFailed": "没有删除成功，请重试。"
     },
     "knowbot": {
       "checking": "正在核对你选的专家……",
@@ -893,27 +895,28 @@
       "lead": "不用先选数据。请专家后，专家先按你的问题列出要哪些数据，你在委托页确认（能换、能改、能去掉、能加）后，已有资料直接使用，需要补取的项目按清单处理。",
       "bound": "专家还自带 {count} 份资料（作者挑选的）。"
     },
-    "find": "让 AI 找",
+    "find": "AI 去 knowmart 为你选专家",
     "finding": "正在开始…",
-    "findHint": "用你的模型核对专家公开范围，本轮查找最多 2 元；完整覆盖且不用另付专家费用才直接请。",
+    "findHint": "按你填写的问题查找，本轮模型费用最多 2 元。选中后高亮显示，提交问题才开始分析。",
     "findFailed": "没有开始找，请再试一次。",
-    "checkScope": "核对范围并请这位",
+    "checkScope": "核对范围并选中",
     "scopeLoadFailed": "暂时无法读取这位专家的能力范围，请重新读取后再请。",
-    "scopeRetry": "重新读取"
+    "scopeRetry": "重新读取",
+    "summon": "自己去 knowmart 选择专家"
   },
   "findExpert": {
     "running": "你的模型正在按各位专家自己写的范围替你找…",
-    "ended": "这一轮没有找完，可以再点一次「让 AI 找」，或在下面自己选。",
+    "ended": "这一轮没有找完，可以重新点击 AI 选专家，或自己去 knowmart 选择。",
     "failed": "取不到找专家的结果，请刷新再试。",
-    "summoning": "找到了：{name}，不用另付钱，正在替你请…",
-    "summonFailed": "暂时没有确认是否请成，可以重试；同一次请求不会重复建委托。",
-    "retrySummon": "重试请这位",
+    "summoning": "找到了：{name}，正在选中…",
+    "summonFailed": "暂时未能选中这位专家，请重试。",
+    "retrySummon": "重试选中",
     "picksTitle": "这几位可能合适",
-    "picksLead": "要另付钱，你点了才请。理由是你的模型写的，平台不排序。",
+    "picksLead": "需要另付专家费用的，核对价格后再选择。分析在提交问题后开始。",
     "free": "不用另付钱",
     "price": "¥{price}（这一版付一次）",
     "why": "理由：{reason}",
-    "askThis": "请这位",
+    "askThis": "选择这位",
     "noneTitle": "没有合适的专家。可以这样做（都可以点）：",
     "direct": "让我的模型直接答",
     "finishHere": "就此结束",
@@ -942,7 +945,8 @@
       "covered": "已覆盖",
       "uncovered": "未覆盖",
       "unknown": "待澄清"
-    }
+    },
+    "selected": "已选中：{name}。请核对后提交问题。"
   },
   "reviewPage": {
     "title": "待我决定",

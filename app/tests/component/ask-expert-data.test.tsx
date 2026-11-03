@@ -132,7 +132,7 @@ describe('请专家：数据按问题定', () => {
 
   it('「让 AI 找」不用先选专家：带着问题开一轮找专家', async () => {
     page(<AskExpertScreen project={project} from={null} expert={null} />)
-    const find = screen.getByRole('button', { name: '让 AI 找' })
+    const find = screen.getByRole('button', { name: 'AI 去 knowmart 为你选专家' })
     await waitFor(() => expect(find).toBeEnabled())
     fireEvent.click(find)
     await waitFor(() => expect(calls).toHaveLength(1))

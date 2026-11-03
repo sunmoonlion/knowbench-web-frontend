@@ -6,10 +6,15 @@ import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { matchSelectionSchema, type ExpertPick, type FindResult } from '@/contracts/workbench-v2'
+import {
+  matchSelectionSchema,
+  type ExpertPick,
+  type FindResult,
+  type Pack,
+  type MatchSelection,
+} from '@/contracts/workbench-v2'
 import { useWorkbench } from '@/lib/workbench/context'
 import {
-  rememberSummoned,
   useAskIncubation,
   useDirectAnswer,
   useFindResult,
@@ -19,22 +24,28 @@ import { usePinKnowbot } from '@/lib/workbench/knowbots'
 import { routes } from '@/lib/workbench/routes'
 import { cn } from '@/lib/utils'
 
-import { useAsk } from '@/lib/workbench/expert-desk'
+export type ChosenExpert = {
+  pack: Pack
+  match?: MatchSelection
+  question: string
+  project: string
+  task: string
+  reason: string
+}
 
 // 「让 AI 找」的结果（请专家方案设计第 4.9 节）：你的模型按专家自己写的范围找，平台不排序。
-// 不用另付钱的直接请（专家处理中那一页写明是 AI 替你请的、理由，可以换）；要付钱的你点了才请；
+// 免费匹配自动选中；收费候选由用户点击选中。这里只钉版，提交问题才创建分析委托。
 // 都不合适：两件事都不自动做，你点哪件做哪件、可以都点，推荐的那件标出来、写一句理由。
 export function FindExpertPanel({
   task,
   project,
-  from,
+  onSelect,
   expectedQuestion,
   onEdit,
 }: {
   task: string
   project: string
-  // 从哪段对话里来的：请到的专家接着那段对话做
-  from: string | null
+  onSelect: (selection: ChosenExpert) => void
   expectedQuestion?: string
   onEdit?: (question: string) => void
 }) {
@@ -92,7 +103,7 @@ export function FindExpertPanel({
           <NoneCard result={data} task={task} project={project} />
         </>
       ) : (
-        <Picks key={data.task_id} result={data} project={project} from={from} />
+        <Picks key={data.task_id} result={data} project={project} onSelect={onSelect} />
       )}
     </div>
   )
@@ -124,20 +135,25 @@ function Coverage({ result }: { result: FindResult }) {
 function Picks({
   result,
   project,
-  from,
+  onSelect,
 }: {
   result: FindResult
   project: string
-  from: string | null
+  onSelect: (selection: ChosenExpert) => void
 }) {
   const t = useTranslations('findExpert')
-  const router = useRouter()
-  const { locale } = useWorkbench()
   const pin = usePinKnowbot()
-  const ask = useAsk()
   const started = useRef(false)
+  const mounted = useRef(false)
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
   const inFlight = useRef(false)
   const [failed, setFailed] = useState(false)
+  const [selected, setSelected] = useState<string | null>(null)
   const picks = result.picks ?? []
 
   async function summon(pick: ExpertPick) {
@@ -155,45 +171,41 @@ function Picks({
               version: pick.version,
             })
           : undefined
-      // 钉住、建委托都用你自己的登录会话：作者数据的授权由你本人签（decisions 10-29）
+      // 只选定并钉住，分析委托由问题页的提交按钮创建。
       const pack = await pin.mutateAsync(`${pick.knowbot_id}@${pick.version}`)
-      const made = await ask.mutateAsync({
-        project,
-        from,
-        expert: pack.id,
-        question: result.question,
-        // 委托键归这轮找专家，不归组件挂载；刷新/丢响应重试仍取回原委托。
-        // 后端幂等作用域另含用户与专家版本，不会串到另一位用户或候选。
-        key: `find-expert:${result.task_id}`,
+      if (!mounted.current) return
+      setSelected(pack.id)
+      onSelect({
+        pack,
         match,
+        question: result.question,
+        project,
+        task: result.task_id,
+        reason: pick.reason,
       })
-      if (made.conversation) {
-        rememberSummoned(made.conversation, { name: pick.name, reason: pick.reason })
-        router.push(routes.projectConversation(locale, project, made.conversation))
-      }
     } catch {
-      setFailed(true)
+      if (mounted.current) setFailed(true)
     } finally {
       inFlight.current = false
     }
   }
 
-  // 有合适的、不用另付钱：直接请，不用你点
-  const auto = result.outcome === 'summon' ? picks[0] : undefined
+  // 有合适的、不用另付钱：自动选中，不启动分析。
+  const auto = result.outcome === 'summon' && picks[0]?.free ? picks[0] : undefined
   useEffect(() => {
     if (!auto || started.current) return
     started.current = true
     void summon(auto)
-    // 只请一次；summon 每次渲染都是新的，不进依赖
+    // 只选中一次；summon 每次渲染都是新的，不进依赖
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auto])
 
   return (
     <section className="space-y-2" aria-label={t('picksTitle')}>
-      {result.outcome === 'summon' && picks[0] ? (
+      {auto ? (
         failed ? null : (
           <p className="text-sm" role="status">
-            {t('summoning', { name: picks[0].name })}
+            {t(selected ? 'selected' : 'summoning', { name: auto.name })}
           </p>
         )
       ) : (
@@ -214,7 +226,7 @@ function Picks({
                 <Button
                   size="sm"
                   className="mt-2"
-                  disabled={pin.isPending || ask.isPending}
+                  disabled={pin.isPending}
                   onClick={() => void summon(pick)}
                 >
                   {t('askThis')}
@@ -230,11 +242,7 @@ function Picks({
             {t('summonFailed')}
           </p>
           {auto ? (
-            <Button
-              size="sm"
-              disabled={pin.isPending || ask.isPending}
-              onClick={() => void summon(auto)}
-            >
+            <Button size="sm" disabled={pin.isPending} onClick={() => void summon(auto)}>
               {t('retrySummon')}
             </Button>
           ) : null}
