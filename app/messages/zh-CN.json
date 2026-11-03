@@ -237,10 +237,7 @@
       "reissue": "重新颁发令牌",
       "toModels": "去「模型」",
       "toComputer": "去「电脑与沙箱」",
-      "label": "工作台提示",
-      "accountNotConnected": "这台电脑上有本地 link，但当前账号尚未登记连接的电脑。切换网页登录不会自动切换 link 的账号。",
-      "accountNotConnectedNamed": "这台电脑上有本地 link，但账号「{account}」尚未登记连接的电脑。切换网页登录不会自动切换 link 的账号。",
-      "connectAccount": "连接到当前账号"
+      "label": "工作台提示"
     }
   },
   "projectPicker": {
@@ -1205,10 +1202,7 @@
       "tokenTitle": "领取令牌与云端沙箱",
       "toSettings": "登记模型 key"
     },
-    "loadFailed": "电脑状态读取失败，暂时无法确认本地 link 连没连着。",
-    "signedInAccount": "当前网页登录账号：{account}",
-    "accountBinding": "这里显示当前账号的电脑和沙箱。多人共用电脑时，网页账号与 link 绑定分别确认；要使用另一个账号的项目，请在托盘点“重新颁发令牌”，再用该账号核对并允许连接。无需重装 link，切换账号不会转移原账号的沙箱或项目。",
-    "platformTesting": "平台人员只在管理端发起或审核作者的测试时，无需把本机 link 改绑给自己；平台测试按作者授权使用作者的电脑和模型 Key。"
+    "loadFailed": "电脑状态读取失败，暂时无法确认本地 link 连没连着。"
   },
   "results": {
     "title": "结果",

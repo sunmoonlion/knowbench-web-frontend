@@ -15,8 +15,7 @@ export function LinkStatus() {
   const t = useTranslations('settings.computer.status')
   const shell = useTranslations('shell.linkCheck')
   const format = useFormatter()
-  const { locale, user } = useWorkbench()
-  const machines = useTranslations('machines')
+  const { locale } = useWorkbench()
   const local = useLocalLink()
   const sandbox = useSandboxStatus()
   const keys = useCredentials()
@@ -32,9 +31,6 @@ export function LinkStatus() {
   return (
     <section id="link-status" aria-label={t('title')} className="space-y-3 rounded-xl border p-5">
       <h3 className="text-base font-semibold">{t('title')}</h3>
-      {user ? (
-        <p className="text-sm font-medium">{machines('signedInAccount', { account: user.name })}</p>
-      ) : null}
       {local.isSuccess && assigned === null ? (
         <p className="text-muted-foreground text-sm">{t('none')}</p>
       ) : null}

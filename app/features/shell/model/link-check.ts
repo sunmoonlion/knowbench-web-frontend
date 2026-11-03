@@ -7,7 +7,6 @@ export type LinkPrompt =
   | { kind: 'unreachable' }
   | { kind: 'version_mismatch' }
   | { kind: 'not_this_computer' }
-  | { kind: 'account_not_connected' }
   | { kind: 'no_local_link'; name: string | null }
   | { kind: 'copied'; first: string; host: string }
 export type SandboxPrompt = { kind: 'no_key' } | { kind: 'sandbox_not_ready' }
@@ -47,13 +46,10 @@ function linkPrompt({ presence, assigned, copied }: LinkCheckInput): LinkPrompt 
   if (presence === undefined || assigned === undefined) return null
   // 甲拿不到（没装、没在运行、手机、浏览器不让探）：一行小字，不强迫
   if (presence === null) return { kind: 'no_local_link', name: assigned?.name ?? null }
-  // 本机有 link 不代表属于当前登录者；新账号没有绑定时也应引导连接。
-  // 不公开另一账号，也不把它的令牌状态误认为当前账号的状态。
-  if (assigned === null) return { kind: 'account_not_connected' }
   // 0.5.2 之前的本地 link 不报编号：比不了，宁可不说也不误报
   if (!presence.device_id) return null
   const state = presence.link_state
-  if (!assigned.device_id) {
+  if (assigned === null || !assigned.device_id) {
     return state === 'token_invalid' ? { kind: 'token_invalid' } : null
   }
   // 甲 ≠ 乙：这台的本地 link 配给了别的账号，或从没给这个账号颁发过令牌

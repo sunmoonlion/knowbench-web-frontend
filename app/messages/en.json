@@ -237,10 +237,7 @@
       "reissue": "Reissue token",
       "toModels": "Go to Models",
       "toComputer": "Go to Computer & sandbox",
-      "label": "Workbench notice",
-      "accountNotConnected": "Local link is running on this computer, but the signed-in account has no registered computer. Signing in does not switch the link account.",
-      "accountNotConnectedNamed": "Local link is running on this computer, but account “{account}” has no registered computer. Signing in does not switch the link account.",
-      "connectAccount": "Connect to this account"
+      "label": "Workbench notice"
     }
   },
   "projectPicker": {
@@ -1205,10 +1202,7 @@
       "tokenTitle": "Agent token and cloud sandbox",
       "toSettings": "Register a model key"
     },
-    "loadFailed": "Computer status could not be loaded; whether the local link is connected is unknown.",
-    "signedInAccount": "Signed-in web account: {account}",
-    "accountBinding": "This page shows the current account’s computers and sandbox. On a shared computer, web sign-in and link pairing are separate. To use another account’s projects, choose “Reissue token” in the tray, then review and allow the connection while signed in to that account. No reinstall is needed; the previous account’s sandbox and projects are not transferred.",
-    "platformTesting": "Platform staff do not need to pair link to their own account just to start or review an author’s test in the admin console. Platform tests use the author’s computer and model key under the author’s authorization."
+    "loadFailed": "Computer status could not be loaded; whether the local link is connected is unknown."
   },
   "results": {
     "title": "Results",
