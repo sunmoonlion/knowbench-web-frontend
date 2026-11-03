@@ -131,6 +131,45 @@ describe('让 AI 找', () => {
     expect(calls.map((c) => c.path)[0]).toBe('/api/workbench/knowbots/pin')
   })
 
+  it('刷新或返回同一轮找专家结果时，沿用委托幂等键，不再创建另一笔委托', async () => {
+    result = done({ outcome: 'summon', picks: [pick(true)] })
+    const first = page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    await waitFor(() => expect(push).toHaveBeenCalledTimes(1))
+    const initial = calls.find((call) => call.path.endsWith('/delegations'))!
+    first.unmount()
+    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    await waitFor(() => expect(push).toHaveBeenCalledTimes(2))
+    const delegations = calls.filter((call) => call.path.endsWith('/delegations'))
+    expect(delegations).toHaveLength(2)
+    expect(delegations[1].body.idempotency_key).toBe(initial.body.idempotency_key)
+  })
+
+  it('自动请专家丢响应后可显式重试，保持同一委托键且不自动循环', async () => {
+    result = done({ outcome: 'summon', picks: [pick(true)] })
+    const original = global.fetch
+    let lostResponse = true
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init?: RequestInit) => {
+        const response = await original(input, init)
+        if (String(input).endsWith('/delegations') && lostResponse) {
+          lostResponse = false
+          throw new TypeError('synthetic lost response')
+        }
+        return response
+      }),
+    )
+    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    expect(await screen.findByRole('alert')).toHaveTextContent(messages.findExpert.summonFailed)
+    expect(calls.filter((call) => call.path.endsWith('/delegations'))).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: '重试请这位' }))
+    await waitFor(() => expect(push).toHaveBeenCalledTimes(1))
+    const delegations = calls.filter((call) => call.path.endsWith('/delegations'))
+    expect(delegations).toHaveLength(2)
+    expect(delegations[1].body).toEqual(delegations[0].body)
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
   it('都不合适：标出推荐，两件事都不自动做；直接答开一段记来源的聊天', async () => {
     result = done({
       outcome: 'none',

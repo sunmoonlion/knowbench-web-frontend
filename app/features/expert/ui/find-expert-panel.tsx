@@ -51,7 +51,7 @@ export function FindExpertPanel({
     )
   }
   if (data.outcome === 'none') return <NoneCard result={data} task={task} project={project} />
-  return <Picks result={data} project={project} from={from} />
+  return <Picks key={data.task_id} result={data} project={project} from={from} />
 }
 
 function Picks({
@@ -68,12 +68,15 @@ function Picks({
   const { locale } = useWorkbench()
   const pin = usePinKnowbot()
   const ask = useAsk()
-  const [key] = useState(() => crypto.randomUUID())
   const started = useRef(false)
+  const inFlight = useRef(false)
   const [failed, setFailed] = useState(false)
   const picks = result.picks ?? []
 
   async function summon(pick: ExpertPick) {
+    if (inFlight.current) return
+    inFlight.current = true
+    setFailed(false)
     try {
       // 钉住、建委托都用你自己的登录会话：作者数据的授权由你本人签（decisions 10-29）
       const pack = await pin.mutateAsync(`${pick.knowbot_id}@${pick.version}`)
@@ -82,7 +85,9 @@ function Picks({
         from,
         expert: pack.id,
         question: result.question,
-        key,
+        // 委托键归这轮找专家，不归组件挂载；刷新/丢响应重试仍取回原委托。
+        // 后端幂等作用域另含用户与专家版本，不会串到另一位用户或候选。
+        key: `find-expert:${result.task_id}`,
       })
       if (made.conversation) {
         rememberSummoned(made.conversation, { name: pick.name, reason: pick.reason })
@@ -90,6 +95,8 @@ function Picks({
       }
     } catch {
       setFailed(true)
+    } finally {
+      inFlight.current = false
     }
   }
 
@@ -106,9 +113,11 @@ function Picks({
   return (
     <section className="space-y-2" aria-label={t('picksTitle')}>
       {result.outcome === 'summon' && picks[0] ? (
-        <p className="text-sm" role="status">
-          {t('summoning', { name: picks[0].name })}
-        </p>
+        failed ? null : (
+          <p className="text-sm" role="status">
+            {t('summoning', { name: picks[0].name })}
+          </p>
+        )
       ) : (
         <>
           <p className="text-sm font-medium">{t('picksTitle')}</p>
@@ -138,9 +147,20 @@ function Picks({
         </>
       )}
       {failed ? (
-        <p role="alert" className="text-destructive text-sm">
-          {t('summonFailed')}
-        </p>
+        <div className="space-y-2">
+          <p role="alert" className="text-destructive text-sm">
+            {t('summonFailed')}
+          </p>
+          {auto ? (
+            <Button
+              size="sm"
+              disabled={pin.isPending || ask.isPending}
+              onClick={() => void summon(auto)}
+            >
+              {t('retrySummon')}
+            </Button>
+          ) : null}
+        </div>
       ) : null}
     </section>
   )
