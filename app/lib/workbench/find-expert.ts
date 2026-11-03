@@ -1,12 +1,11 @@
 'use client'
 
 // AI 请专家（请专家方案设计第 4.9 节；decisions 10-29「AI 请专家」）：在用户的项目里用他自己的模型
-// 跑一轮「找专家」，按结果直接请（不用另付钱的）、给他看候选（要付钱的）、或都不合适时给两件事做。
+// 跑一轮「找专家」，按结果请回并选中（不用另付钱的），提交问题才开始分析、给他看候选（要付钱的）、或都不合适时给两件事做。
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   createdConversationSchema,
-  demandPublishedSchema,
   findResultSchema,
   findStartedSchema,
   incubationAskedSchema,
@@ -43,17 +42,6 @@ export function useFindResult(task: string | null) {
     queryFn: () => getJson(findResultSchema, `/api/workbench/find-expert/${seg(task!)}`),
     refetchInterval: (query) =>
       query.state.data && DONE.has(query.state.data.state) ? false : POLL_MS,
-  })
-}
-
-export function usePublishDemand(task: string) {
-  const { csrfToken } = useWorkbench()
-  return useMutation({
-    mutationFn: (demand: { title: string; problem: string }) =>
-      sendJson(demandPublishedSchema, `/api/workbench/find-expert/${seg(task)}/demand`, {
-        csrfToken,
-        body: demand,
-      }),
   })
 }
 

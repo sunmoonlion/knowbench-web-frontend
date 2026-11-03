@@ -14,12 +14,7 @@ import {
   type MatchSelection,
 } from '@/contracts/workbench-v2'
 import { useWorkbench } from '@/lib/workbench/context'
-import {
-  useAskIncubation,
-  useDirectAnswer,
-  useFindResult,
-  usePublishDemand,
-} from '@/lib/workbench/find-expert'
+import { useAskIncubation, useDirectAnswer, useFindResult } from '@/lib/workbench/find-expert'
 import { usePinKnowbot } from '@/lib/workbench/knowbots'
 import { routes } from '@/lib/workbench/routes'
 import { cn } from '@/lib/utils'
@@ -33,7 +28,7 @@ export type ChosenExpert = {
   reason: string
 }
 
-// 「让 AI 找」的结果（请专家方案设计第 4.9 节）：你的模型按专家自己写的范围找，平台不排序。
+// 「ai去knowmart请回专家」的结果（请专家方案设计第 4.9 节）：你的模型按专家自己写的范围找，平台不排序。
 // 免费匹配自动选中；收费候选由用户点击选中。这里只钉版，提交问题才创建分析委托。
 // 都不合适：两件事都不自动做，你点哪件做哪件、可以都点，推荐的那件标出来、写一句理由。
 export function FindExpertPanel({
@@ -361,9 +356,6 @@ function NoneCard({
   const { locale } = useWorkbench()
   const direct = useDirectAnswer()
   const incubate = useAskIncubation(task)
-  const publish = usePublishDemand(task)
-  const [title, setTitle] = useState(result.demand?.title ?? '')
-  const [problem, setProblem] = useState(result.demand?.problem ?? result.question)
   const recommended = result.recommend?.action
 
   async function answerDirectly() {
@@ -432,52 +424,12 @@ function NoneCard({
       <Button
         variant="ghost"
         size="sm"
-        disabled={direct.isPending || incubate.isPending || publish.isPending}
+        disabled={direct.isPending || incubate.isPending}
         onClick={() => router.push(routes.project(locale, project))}
       >
         {t('finishHere')}
       </Button>
       <p className="text-muted-foreground text-xs">{t('finishHereNote')}</p>
-
-      <details className="text-sm">
-        <summary className="cursor-pointer font-medium">{t('demandTitle')}</summary>
-        <p className="text-muted-foreground mt-1 text-[13px]">{t('demandLead')}</p>
-        <label className="mt-2 block text-xs font-medium">
-          {t('demandName')}
-          <input
-            className="mt-1 w-full rounded-md border px-2 py-1 text-sm"
-            maxLength={120}
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-          />
-        </label>
-        <label className="mt-2 block text-xs font-medium">
-          {t('demandProblem')}
-          <Textarea
-            rows={3}
-            maxLength={4000}
-            value={problem}
-            onChange={(event) => setProblem(event.target.value)}
-          />
-        </label>
-        <Button
-          size="sm"
-          className="mt-2"
-          disabled={!title.trim() || !problem.trim() || publish.isPending || publish.isSuccess}
-          onClick={() => publish.mutate({ title: title.trim(), problem: problem.trim() })}
-        >
-          {t('publish')}
-        </Button>
-        {publish.isSuccess ? (
-          <p role="status" className="mt-1 text-emerald-700 dark:text-emerald-400">
-            {t('published')}
-          </p>
-        ) : publish.isError ? (
-          <p role="alert" className="text-destructive mt-1">
-            {t('actionFailed')}
-          </p>
-        ) : null}
-      </details>
     </section>
   )
 }

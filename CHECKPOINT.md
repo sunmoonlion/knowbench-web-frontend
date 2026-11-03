@@ -113,3 +113,9 @@
 开发分支合入当前独立发布的请回高亮/列表删除补丁。新查找显式请求 expert-match/v4，展示公开声明依据与已知限制，不显示为结果保证；历史v2/v3方案与覆盖仍按原回包展示。AI请回只钉版高亮，提交才创建分析委托，保留收费、身份、原题、项目与收据核验。
 全量401 passed / 2既有skipped；typecheck、lint、i18n及标准生产build通过。新增v4无coverage/solution也能显示并选中，绝不自动开分析的组件回归。没有调用真实模型/生产接口，没有改qwen当前fix/market-arrival-selection精确候选；此批需后端v4同版支持。
 日志 /tmp/luna-declaration-ui-final.txt、/tmp/luna-declaration-build.txt。后续仍需真实浏览器和模型验收。
+
+## 2026-11-04 AI请回结果界面收尾（后续开发，未发布）
+
+按所有者本轮要求统一现行入口/澄清/失败提示为“ai去knowmart请回专家”“自己去knowmart请专家”，澄清改为适用性判断，不再写是否覆盖；旧匹配结果的覆盖字段继续按历史展示。删除无匹配/澄清卡中的“在knowmart挂需求”表单、专用前端mutation及闲置文案，旧回包带demand也不会恢复入口。主出路保留通用模式/孵化，另可修改问题、回入口手选、结束；任何新动作仍需本人点击。
+
+相关已有组件回归22 passed（含无自动动作、澄清无付费请求、旧需求草稿不再出现发布入口），typecheck、定向ESLint、i18n（1118键）及标准生产build通过。日志 /tmp/luna-find-entry-cleanup-{tests,build}.txt。仅后续开发分支，未移动qwen当前发布候选，无生产操作或付费调用。

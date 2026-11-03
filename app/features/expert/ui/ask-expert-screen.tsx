@@ -50,7 +50,7 @@ export function AskExpertScreen({
   const said = useSaid(from)
   const ask = useAsk()
   const startFind = useExpertFinder()
-  // 「让 AI 找」那一轮的任务号：有了就在专家清单上方显示结果
+  // 「ai去knowmart请回专家」那一轮的任务号：有了就在专家清单上方显示结果
   const findTask = useSearchParams().get('match')
 
   const [chosen, setChosen] = useState<string | null>(expert)

@@ -76,7 +76,6 @@ beforeEach(() => {
       if (path.endsWith('/turns')) return json({ request_id: 'r1' }, 202)
       if (path.endsWith('/incubation'))
         return json({ request_id: 'req-1', title: '毛利率变化', created: true }, 201)
-      if (path.endsWith('/demand')) return json({ demand: { demand_id: 'd-1' } }, 201)
       return json({ code: 'not_found' }, 404)
     }),
   )
@@ -105,7 +104,7 @@ const done = (extra: Record<string, unknown>) => ({
   ...extra,
 })
 
-describe('让 AI 找', () => {
+describe('ai去knowmart请回专家', () => {
   it('按声明选择展示依据和局限，不要求方法覆盖证明，提交前不分析', async () => {
     result = done({
       contract: 'knowbench/expert-match/v4',
@@ -364,7 +363,7 @@ describe('让 AI 找', () => {
     expect(push).toHaveBeenCalledWith(`/zh-CN/workbench/projects/${PROJECT}/c/${TALK}`)
   })
 
-  it('孵化建申请、提示去 knowlab 看；需求可改，点「发布」才挂', async () => {
+  it('无匹配只提供通用模式或孵化；旧需求草稿不再提供发布入口', async () => {
     result = done({
       outcome: 'none',
       picks: [],
@@ -381,13 +380,10 @@ describe('让 AI 找', () => {
       body: {},
     })
 
-    fireEvent.change(screen.getByLabelText('需求名称'), { target: { value: '毛利率拆解' } })
-    fireEvent.click(screen.getByRole('button', { name: '发布' }))
-    expect(await screen.findByText('已在 knowmart 挂出。')).toBeInTheDocument()
-    expect(calls[1]).toMatchObject({
-      path: `/api/workbench/find-expert/${TASK}/demand`,
-      body: { title: '毛利率拆解', problem: QUESTION },
-    })
+    expect(calls).toHaveLength(1)
+    expect(screen.queryByText('在 knowmart 挂个需求')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('需求名称')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '发布' })).not.toBeInTheDocument()
   })
 
   it('没有合适专家时可就此结束，保留记录且不发起聊天、委托或孵化', async () => {

@@ -167,7 +167,7 @@ describe('请专家：数据按问题定', () => {
     expect(calls[0].body).not.toHaveProperty('data')
   })
 
-  it('「让 AI 找」不用先选专家：带着问题开一轮找专家', async () => {
+  it('「ai去knowmart请回专家」不用先选专家：带着问题开一轮找专家', async () => {
     page(<AskExpertScreen project={project} from={null} expert={null} />)
     const find = screen.getByRole('button', { name: 'ai去knowmart请回专家' })
     await waitFor(() => expect(find).toBeEnabled())
