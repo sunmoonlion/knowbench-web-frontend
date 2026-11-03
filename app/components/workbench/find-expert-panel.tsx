@@ -91,6 +91,9 @@ export function FindExpertPanel({
         <p className="text-muted-foreground" role="status">
           {t(message)}
         </p>
+        {data?.error && data.error !== 'the round did not finish' ? (
+          <p role="alert">{data.error}</p>
+        ) : null}
         {data && !['SUCCEEDED', 'FAILED', 'CANCELLED', 'REJECTED'].includes(data.state) ? (
           <Button
             size="sm"

@@ -600,8 +600,8 @@
       "why": "Why this step",
       "elapsed": "This step has taken {time}",
       "fresh": "In progress; last sign of life {time} ago",
-      "quiet": "Last sign of life {time} ago; it is still working",
-      "long": "No new activity for {time}. The backend is still connected; this step probably needs longer thinking",
+      "quiet": "The last progress event was {time} ago; no new progress has been reported.",
+      "long": "No new progress for {time}. The connection is still open, but this does not confirm healthy execution. You can stop and review the details.",
       "unheld": "The backend is not running this delegation right now; it may be reconnecting. If this persists, stop and ask again"
     },
     "time": {
