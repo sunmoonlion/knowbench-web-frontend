@@ -16,7 +16,6 @@ import {
 } from '@/contracts/workbench-v2'
 import { useWorkbench } from '@/lib/workbench/context'
 import {
-  useAskIncubation,
   useCancelFind,
   useDirectAnswer,
   useFindResult,
@@ -37,7 +36,7 @@ export type ChosenExpert = {
 
 // 「让 AI 找」的结果（请专家方案设计第 4.9 节）：你的模型按专家自己写的范围找，平台不排序。
 // 免费匹配自动选中；收费候选由用户点击选中。这里只钉版，提交问题才创建分析委托。
-// 都不合适：两件事都不自动做，你点哪件做哪件、可以都点，推荐的那件标出来、写一句理由。
+// 都不合适：直接回答由用户启动；孵化仅给建议，使用上方 knowlab 入口自行提交创意。
 export function FindExpertPanel({
   task,
   project,
@@ -304,7 +303,6 @@ function NoneCard({
   const router = useRouter()
   const { locale } = useWorkbench()
   const direct = useDirectAnswer()
-  const incubate = useAskIncubation(task)
   const publish = usePublishDemand(task)
   const [title, setTitle] = useState(result.demand?.title ?? '')
   const [problem, setProblem] = useState(result.demand?.problem ?? result.question)
@@ -343,14 +341,7 @@ function NoneCard({
             recommended === 'incubate' && 'border-foreground bg-muted/60',
           )}
         >
-          <Button
-            size="sm"
-            variant={recommended === 'incubate' ? 'default' : 'outline'}
-            disabled={incubate.isPending || incubate.isSuccess}
-            onClick={() => incubate.mutate(null)}
-          >
-            {t('incubate')}
-          </Button>
+          <p className="text-sm font-medium">{t('incubate')}</p>
           <p className="text-muted-foreground text-[13px]">{t('incubateNote')}</p>
         </div>
       </div>
@@ -362,12 +353,7 @@ function NoneCard({
           })}
         </p>
       ) : null}
-      {incubate.isSuccess ? (
-        <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">
-          {t('incubated', { title: incubate.data.title ?? result.question })}
-        </p>
-      ) : null}
-      {direct.isError || incubate.isError ? (
+      {direct.isError ? (
         <p role="alert" className="text-destructive text-sm">
           {t('actionFailed')}
         </p>
@@ -376,7 +362,7 @@ function NoneCard({
       <Button
         variant="ghost"
         size="sm"
-        disabled={direct.isPending || incubate.isPending || publish.isPending}
+        disabled={direct.isPending || publish.isPending}
         onClick={() => router.push(routes.project(locale, project))}
       >
         {t('finishHere')}

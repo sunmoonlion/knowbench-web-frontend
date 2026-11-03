@@ -904,7 +904,8 @@
     "scopeLoadFailed": "Unable to read this expert’s scope. Reload before requesting.",
     "scopeRetry": "Reload",
     "summon": "Invite an expert from knowmart yourself",
-    "queueHint": "Expert selected. Submit to queue execution after the current task."
+    "queueHint": "Expert selected. Submit to queue execution after the current task.",
+    "createIdea": "Submit an idea in knowlab"
   },
   "findExpert": {
     "loading": "Reading the status of this search…",
@@ -925,13 +926,13 @@
     "price": "¥{price} (paid once for this version)",
     "why": "Why: {reason}",
     "askThis": "Select this expert",
-    "noneTitle": "No expert fits. You can (either or both):",
+    "noneTitle": "No suitable expert. Here are your options:",
     "direct": "Let my model answer",
     "finishHere": "Finish here",
     "finishHereNote": "Keep this search record and return to the project without starting further work.",
     "directNote": "Opens a chat in this project answered by your own model. Not an expert; the method is untested.",
     "incubate": "Incubate an expert",
-    "incubateNote": "Creates a “question” request in knowlab in your name; testing starts after you add cases and agree to the test-data notice.",
+    "incubateNote": "To incubate your own expert, use “Submit an idea in knowlab” above to prepare and submit your idea.",
     "recommend": "Recommended: {action}. {reason}",
     "incubated": "Created the request “{title}” in knowlab; see it under Requests in knowlab.",
     "actionFailed": "That did not go through. Please try again.",

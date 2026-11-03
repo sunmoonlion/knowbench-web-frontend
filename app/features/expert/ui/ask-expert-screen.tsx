@@ -162,12 +162,12 @@ export function AskExpertScreen({
             </h1>
 
             <section>
-              <div className="mb-1.5 flex items-center justify-between gap-2">
+              <div className="mb-1.5 flex flex-wrap items-center gap-2">
                 <p className={cn(label, 'mb-0')}>{t('who')}</p>
                 <CrossAppLink
                   to="knowmart.knowbots"
                   refValue="expert"
-                  className="text-xs underline underline-offset-3"
+                  className={buttonVariants({ size: 'sm', variant: 'outline' })}
                 >
                   {t('summon')}
                 </CrossAppLink>
@@ -181,6 +181,13 @@ export function AskExpertScreen({
                 >
                   {startFind.isPending ? t('finding') : t('find')}
                 </Button>
+                <CrossAppLink
+                  to="knowlab.createIdea"
+                  refValue="expert"
+                  className={buttonVariants({ size: 'sm', variant: 'outline' })}
+                >
+                  {t('createIdea')}
+                </CrossAppLink>
               </div>
               <p id="ask-find-reason" role="status" tabIndex={-1} className="mb-2 text-sm">
                 {findBlocked ? t(`blocker.${findBlocked}`) : null}
