@@ -421,16 +421,11 @@ describe('ai去knowmart请回专家', () => {
       demand: { title: '毛利率变化', problem: QUESTION },
     })
     page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
-    fireEvent.click(await screen.findByRole('button', { name: '孵化一个专家' }))
-    expect(
-      await screen.findByText('已在 knowlab 建了申请「毛利率变化」，到 knowlab「申请」里看。'),
-    ).toBeInTheDocument()
-    expect(calls[0]).toMatchObject({
-      path: `/api/workbench/find-expert/${TASK}/incubation`,
-      body: {},
-    })
-
-    expect(calls).toHaveLength(1)
+    expect(await screen.findByTestId('find-recommend')).toHaveTextContent('孵化一个专家')
+    expect(screen.queryByRole('button', { name: '孵化一个专家' })).toBeNull()
+    expect(screen.queryByRole('link', { name: /knowlab/ })).toBeNull()
+    expect(screen.getByText(messages.findExpert.incubateNote)).toBeInTheDocument()
+    expect(calls).toHaveLength(0)
     expect(screen.queryByText('在 knowmart 挂个需求')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('需求名称')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '发布' })).not.toBeInTheDocument()

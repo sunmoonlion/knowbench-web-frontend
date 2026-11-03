@@ -16,7 +16,6 @@ import {
 } from '@/contracts/workbench-v2'
 import { useWorkbench } from '@/lib/workbench/context'
 import {
-  useAskIncubation,
   useCancelFind,
   useDirectAnswer,
   useFindResult,
@@ -397,7 +396,6 @@ function NoneCard({
   const router = useRouter()
   const { locale } = useWorkbench()
   const direct = useDirectAnswer()
-  const incubate = useAskIncubation(task)
   const recommended = result.recommend?.action
 
   async function answerDirectly() {
@@ -433,14 +431,7 @@ function NoneCard({
             recommended === 'incubate' && 'border-foreground bg-muted/60',
           )}
         >
-          <Button
-            size="sm"
-            variant={recommended === 'incubate' ? 'default' : 'outline'}
-            disabled={incubate.isPending || incubate.isSuccess}
-            onClick={() => incubate.mutate(null)}
-          >
-            {t('incubate')}
-          </Button>
+          <p className="text-sm font-medium">{t('incubate')}</p>
           <p className="text-muted-foreground text-[13px]">{t('incubateNote')}</p>
         </div>
       </div>
@@ -452,12 +443,7 @@ function NoneCard({
           })}
         </p>
       ) : null}
-      {incubate.isSuccess ? (
-        <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">
-          {t('incubated', { title: incubate.data.title ?? result.question })}
-        </p>
-      ) : null}
-      {direct.isError || incubate.isError ? (
+      {direct.isError ? (
         <p role="alert" className="text-destructive text-sm">
           {t('actionFailed')}
         </p>
@@ -466,7 +452,7 @@ function NoneCard({
       <Button
         variant="ghost"
         size="sm"
-        disabled={direct.isPending || incubate.isPending}
+        disabled={direct.isPending}
         onClick={() => router.push(routes.project(locale, project))}
       >
         {t('finishHere')}

@@ -904,7 +904,8 @@
     "scopeLoadFailed": "暂时无法读取这位专家的能力范围，请重新读取后再请。",
     "scopeRetry": "重新读取",
     "summon": "自己去knowmart请专家",
-    "queueHint": "专家已选好；提交后将排队，前一项委托结束后开始执行。"
+    "queueHint": "专家已选好；提交后将排队，前一项委托结束后开始执行。",
+    "createIdea": "去knowlab提交创意"
   },
   "findExpert": {
     "loading": "正在读取这次查找的状态…",
@@ -929,13 +930,13 @@
     "price": "¥{price}（这一版付一次）",
     "why": "理由：{reason}",
     "askThis": "选择这位",
-    "noneTitle": "没有找到适合这次问题的专家。请选择下一步：",
+    "noneTitle": "没有合适的专家。可以这样做：",
     "direct": "让我的模型直接答",
     "finishHere": "就此结束",
     "finishHereNote": "保留这次找专家的记录，返回项目，不再发起后续工作。",
     "directNote": "在这个项目里开一段聊天，用你自己的模型答。不是专家，方法没经过测试。",
     "incubate": "孵化一个专家",
-    "incubateNote": "在 knowlab 以你的名义建一份「问题」申请；补上用例、同意测试数据说明后才开测。",
+    "incubateNote": "如需孵化自己的专家，请使用上方“去knowlab提交创意”入口，在 knowlab 整理并提交创意。",
     "recommend": "推荐：{action}。{reason}",
     "incubated": "已在 knowlab 建了申请「{title}」，到 knowlab「申请」里看。",
     "actionFailed": "没有办成，请再试一次。",

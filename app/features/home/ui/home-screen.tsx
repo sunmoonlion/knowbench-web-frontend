@@ -12,7 +12,7 @@ import { FindExpertPanel, type ChosenExpert } from '@/components/workbench/find-
 import { KnowbotArrival } from '@/components/workbench/knowbot-arrival'
 import { ProjectPicker } from '@/components/workbench/project-picker'
 import { ConnectComputerLink } from '@/components/workbench/connect-computer'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { useWorkbench } from '@/lib/workbench/context'
 import { WorkbenchError } from '@/lib/workbench/http'
@@ -224,17 +224,15 @@ export function HomeScreen() {
               <div className="px-1 pt-1" aria-label={t('expert.who')}>
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <p className="text-muted-foreground text-xs">{t('expert.who')}</p>
-                  {/* 自己的分身在 knowmart：去那里选一位，点「请这位」带回这里（SDD 0027 P4）。
-                      原来只在单独的专家页上有，从这里找不到（所有者 2026-10-18） */}
+                </div>
+                <div className="mb-2 flex flex-wrap items-center gap-2">
                   <CrossAppLink
                     to="knowmart.knowbots"
                     refValue="expert"
-                    className="text-xs underline underline-offset-3"
+                    className={buttonVariants({ size: 'sm', variant: 'outline' })}
                   >
                     {t('expert.summon')}
                   </CrossAppLink>
-                </div>
-                <div className="mb-2 flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
@@ -251,6 +249,13 @@ export function HomeScreen() {
                   >
                     {finder.isPending ? askText('finding') : t('expert.find')}
                   </Button>
+                  <CrossAppLink
+                    to="knowlab.createIdea"
+                    refValue="expert"
+                    className={buttonVariants({ size: 'sm', variant: 'outline' })}
+                  >
+                    {askText('createIdea')}
+                  </CrossAppLink>
                 </div>
                 <p id="home-find-reason" role="status" tabIndex={-1} className="mb-2 text-sm">
                   {blocker
