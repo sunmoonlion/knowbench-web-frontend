@@ -904,7 +904,11 @@
   "findExpert": {
     "running": "你的模型正在按各位专家自己写的范围替你找…",
     "ended": "这一轮没有找完，可以再点一次「让 AI 找」，或在下面自己选。",
-    "failed": "取不到找专家的结果，请刷新再试。",
+    "failed": "暂时取不到找专家的结果，可以重新读取这一轮。",
+    "readAgain": "重新读取结果",
+    "clarifiedQuestion": "补充后的完整问题",
+    "clarificationHint": "保留你要问的内容，补清上面的疑问。带回后可继续修改，再点「让 AI 找」开始新一轮（最多 2 元）；旧记录保留，带回本身不收费。",
+    "useClarification": "带回提问框",
     "summoning": "找到了：{name}，不用另付钱，正在替你请…",
     "summonFailed": "暂时没有确认是否请成，可以重试；同一次请求不会重复建委托。",
     "retrySummon": "重试请这位",

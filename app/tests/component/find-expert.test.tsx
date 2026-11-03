@@ -106,6 +106,46 @@ const done = (extra: Record<string, unknown>) => ({
 })
 
 describe('让 AI 找', () => {
+  it('澄清先带回完整问题，未编辑或空白不能继续，不创建付费请求', async () => {
+    result = done({ outcome: 'clarify', clarification: '请确定预测时点', picks: [] })
+    const onEdit = vi.fn()
+    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} onEdit={onEdit} />)
+    const input = await screen.findByRole('textbox', { name: '补充后的完整问题' })
+    const use = screen.getByRole('button', { name: '带回提问框' })
+    expect(input).toHaveValue(QUESTION)
+    expect(use).toBeDisabled()
+    fireEvent.change(input, { target: { value: '   ' } })
+    expect(use).toBeDisabled()
+    const revised = `${QUESTION}，以2024年末为预测时点`
+    fireEvent.change(input, { target: { value: revised } })
+    fireEvent.click(use)
+    expect(onEdit).toHaveBeenCalledWith(revised)
+    expect(result.question).toBe(QUESTION)
+    expect(calls).toHaveLength(0)
+    expect(screen.getByText(messages.findExpert.clarificationHint)).toBeInTheDocument()
+  })
+
+  it('读结果失败只重读同一任务，不重新找专家或创建委托', async () => {
+    result = done({ outcome: 'none', picks: [] })
+    const original = global.fetch
+    let unavailable = true
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init?: RequestInit) => {
+        if (String(input) === `/api/workbench/find-expert/${TASK}` && unavailable) {
+          return Response.json({ code: 'provider_unavailable' }, { status: 503 })
+        }
+        return original(input, init)
+      }),
+    )
+    page(<FindExpertPanel task={TASK} project={PROJECT} from={null} />)
+    expect(await screen.findByRole('alert')).toHaveTextContent(messages.findExpert.failed)
+    unavailable = false
+    fireEvent.click(screen.getByRole('button', { name: '重新读取结果' }))
+    expect(await screen.findByText(messages.findExpert.noneTitle)).toBeInTheDocument()
+    expect(calls).toHaveLength(0)
+  })
+
   it('新契约的覆盖收据随专家委托提交，不让客户端编造方法计划', async () => {
     result = done({
       contract: 'knowbench/expert-match/v2',

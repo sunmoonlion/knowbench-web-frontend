@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -53,9 +53,19 @@ export function FindExpertPanel({
     )
   if (found.isError)
     return (
-      <p role="alert" className="text-destructive text-sm">
-        {t('failed')}
-      </p>
+      <div className="space-y-2">
+        <p role="alert" className="text-destructive text-sm">
+          {t('failed')}
+        </p>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={found.isFetching}
+          onClick={() => void found.refetch()}
+        >
+          {t('readAgain')}
+        </Button>
+      </div>
     )
   if (!data || !data.outcome) {
     return (
@@ -77,9 +87,12 @@ export function FindExpertPanel({
         </ul>
       ) : null}
       {data.outcome === 'clarify' ? (
-        <p role="status" className="text-sm">
-          {data.clarification}
-        </p>
+        <div className="space-y-2">
+          <p role="status" className="text-sm">
+            {data.clarification}
+          </p>
+          {onEdit ? <ClarificationEditor key={data.task_id} result={data} onEdit={onEdit} /> : null}
+        </div>
       ) : null}
       {onEdit ? (
         <Button size="sm" variant="outline" onClick={() => onEdit(data.question)}>
@@ -95,6 +108,46 @@ export function FindExpertPanel({
         <Picks key={data.task_id} result={data} project={project} from={from} />
       )}
     </div>
+  )
+}
+
+// A clarification edits the next request, never the completed match receipt.
+// The user reviews it in the normal question entry before starting another paid search.
+function ClarificationEditor({
+  result,
+  onEdit,
+}: {
+  result: FindResult
+  onEdit: (question: string) => void
+}) {
+  const t = useTranslations('findExpert')
+  const id = useId()
+  const [question, setQuestion] = useState(result.question)
+  const changed = question.trim() !== result.question.trim()
+  return (
+    <section className="space-y-2 rounded-lg border p-3">
+      <label htmlFor={id} className="text-sm font-medium">
+        {t('clarifiedQuestion')}
+      </label>
+      <Textarea
+        id={id}
+        value={question}
+        rows={4}
+        maxLength={2000}
+        aria-describedby={`${id}-hint`}
+        onChange={(event) => setQuestion(event.target.value)}
+      />
+      <p id={`${id}-hint`} className="text-muted-foreground text-xs">
+        {t('clarificationHint')}
+      </p>
+      <Button
+        size="sm"
+        disabled={!changed || !question.trim() || question.trim().length > 2000}
+        onClick={() => onEdit(question.trim())}
+      >
+        {t('useClarification')}
+      </Button>
+    </section>
   )
 }
 

@@ -13,9 +13,11 @@ import { WorkbenchProvider } from '@/lib/workbench/context'
 import messages from '@/messages/zh-CN.json'
 
 const push = vi.fn()
+let search = ''
+let match: Record<string, unknown> | null = null
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(search),
   usePathname: () => '/zh-CN/workbench/expert',
 }))
 
@@ -62,6 +64,8 @@ let calls: Call[] = []
 
 beforeEach(() => {
   calls = []
+  search = ''
+  match = null
   push.mockReset()
   window.sessionStorage.clear()
   window.sessionStorage.setItem('workbench.question', '看看这家公司这几年的年报')
@@ -87,12 +91,14 @@ beforeEach(() => {
       }
       if (path === '/api/workbench/packs') return json(PACKS)
       if (path.startsWith('/api/workbench/find-expert/')) {
-        return json({
-          task_id: '11111111-1111-4111-8111-111111111111',
-          project_id: project,
-          question: '看看这家公司这几年的年报',
-          state: 'RUNNING',
-        })
+        return json(
+          match ?? {
+            task_id: '11111111-1111-4111-8111-111111111111',
+            project_id: project,
+            question: '看看这家公司这几年的年报',
+            state: 'RUNNING',
+          },
+        )
       }
       const needs = /^\/api\/workbench\/packs\/(.+)\/data-needs$/.exec(path)
       if (needs) return json(NEEDS[decodeURIComponent(needs[1])])
@@ -118,6 +124,37 @@ function page(children: React.ReactNode) {
 }
 
 describe('请专家：数据按问题定', () => {
+  it('澄清后保留问题与指定专家，由用户另点查找才重新匹配', async () => {
+    const task = '11111111-1111-4111-8111-111111111111'
+    search = `match=${task}`
+    match = {
+      task_id: task,
+      project_id: project,
+      question: '看看这家公司这几年的年报',
+      state: 'SUCCEEDED',
+      outcome: 'clarify',
+      clarification: '需要哪家公司？',
+      picks: [],
+    }
+    page(<AskExpertScreen project={project} from={null} expert={KNOWBOT} />)
+    const input = await screen.findByRole('textbox', { name: '补充后的完整问题' })
+    const revised = '看看贵州茅台2021至2024年的年报'
+    fireEvent.change(input, { target: { value: revised } })
+    fireEvent.click(screen.getByRole('button', { name: '带回提问框' }))
+    expect(screen.getByLabelText('要解决什么问题')).toHaveValue(revised)
+    expect(window.sessionStorage.getItem('workbench.question')).toBe(revised)
+    const editUrl = new URL(push.mock.calls.at(-1)![0], 'https://example.test')
+    expect(editUrl.searchParams.has('match')).toBe(false)
+    expect(editUrl.searchParams.get('expert')).toBe(KNOWBOT)
+    expect(calls).toHaveLength(0)
+    fireEvent.click(screen.getByRole('button', { name: '让 AI 找' }))
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect(calls[0].path).toBe(`/api/workbench/projects/${project}/find-expert`)
+    expect(calls[0].body.question).toBe(revised)
+    expect(calls[0].body).not.toHaveProperty('match')
+    expect(calls[0].body).not.toHaveProperty('plan')
+  })
+
   it('清单 v2 的专家不用选数据，说明自带几份；交出的请求不带数据', async () => {
     page(<AskExpertScreen project={project} from={null} expert={KNOWBOT} />)
     const data = within(await screen.findByTestId('ask-by-question'))

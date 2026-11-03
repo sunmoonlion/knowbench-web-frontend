@@ -902,9 +902,13 @@
     "scopeRetry": "Reload"
   },
   "findExpert": {
+    "readAgain": "Reload result",
+    "clarifiedQuestion": "Complete clarified question",
+    "clarificationHint": "Keep your request and clarify the points above. Review it in the question entry, then choose “Let AI find” to start a new search (up to CNY 2). Previous records remain. Copying the question back does not incur a charge.",
+    "useClarification": "Use in question entry",
     "running": "Your model is looking through what each expert says it handles…",
     "ended": "This round did not finish. Click “Let AI find one” again, or choose below.",
-    "failed": "Could not load the result. Refresh and try again.",
+    "failed": "Could not load the result. You can reload this round.",
     "summoning": "Found {name}, no extra charge; asking it for you…",
     "summonFailed": "Could not confirm whether the request succeeded. You can retry without creating a duplicate task.",
     "retrySummon": "Retry this expert",

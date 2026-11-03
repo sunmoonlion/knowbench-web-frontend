@@ -63,3 +63,33 @@ it('lost response and active round reuse the key; an explicit retry after comple
   })
   expect(keys[3]).not.toBe(keys[2])
 })
+
+it('a specified expert and source conversation survive the result URL and reload', async () => {
+  window.sessionStorage.clear()
+  push.mockReset()
+  const task = '11111111-1111-4111-8111-111111111111'
+  const project = '22222222-2222-4222-8222-222222222222'
+  const from = '33333333-3333-4333-8333-333333333333'
+  const expert = 'knowbot:44444444-4444-4444-8444-444444444444@3'
+  const fetcher = vi.fn(async () =>
+    Response.json({ task_id: task, session_id: task }, { status: 201 }),
+  )
+  vi.stubGlobal('fetch', fetcher)
+  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
+  const { result } = renderHook(() => useExpertFinder(), {
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={client}>
+        <WorkbenchProvider csrfToken="csrf" locale="zh-CN">
+          {children}
+        </WorkbenchProvider>
+      </QueryClientProvider>
+    ),
+  })
+  await act(async () => {
+    await result.current.find({ project, question: '分析营收', from, expert })
+  })
+  const url = new URL(push.mock.calls.at(-1)![0], 'https://example.test')
+  expect(url.searchParams.get('expert')).toBe(expert)
+  expect(url.searchParams.get('from')).toBe(from)
+  expect(url.searchParams.get('match')).toBe(task)
+})

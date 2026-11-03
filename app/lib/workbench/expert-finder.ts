@@ -83,6 +83,7 @@ export function useExpertFinder() {
         window.location.origin,
       )
       url.searchParams.set('match', found.task_id)
+      if (input.expert) url.searchParams.set('expert', input.expert)
       router.push(url.pathname + url.search)
     } finally {
       inFlight.current = false

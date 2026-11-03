@@ -170,7 +170,17 @@ export function AskExpertScreen({
                     expectedQuestion={typed === null ? undefined : typed}
                     onEdit={(original) => {
                       setTyped(original)
-                      router.push(routes.askExpert(locale, projectId, from ?? undefined))
+                      try {
+                        window.sessionStorage.setItem(QUESTION, original)
+                      } catch {
+                        // The visible input remains usable when browser storage is unavailable.
+                      }
+                      const url = new URL(
+                        routes.askExpert(locale, projectId, from ?? undefined),
+                        window.location.origin,
+                      )
+                      if (chosen) url.searchParams.set('expert', chosen)
+                      router.push(url.pathname + url.search)
                       document.getElementById('ask-question')?.focus()
                     }}
                   />
