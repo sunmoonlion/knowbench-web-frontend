@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from 'react'
 
 import { browserSessionSchema, type BrowserSession } from '@/contracts/auth'
-import { loginPath, nextPath } from '@/lib/auth/next-path'
+import { nextPath } from '@/lib/auth/next-path'
 import { sessionRecovery } from '@/lib/auth/session-recovery'
 import { leaveTo } from '@/lib/leave-to'
 
@@ -71,6 +71,13 @@ export function SessionBoundary({
         return
       }
       if (Date.parse(current.user.expires_at) <= Date.now()) throw new Error('expired')
+      // A valid browser session can still lack a usable delegated access token.
+      // /me returning the same session does not resolve reauth_required. A real
+      // OIDC callback creates a fresh CSRF token; require that rotation on every
+      // recovery, including a second recovery while this page remains mounted.
+      if (current.csrf_token === (recovered ?? session).csrf_token) {
+        throw new Error('reauthentication_not_completed')
+      }
       setRecovered(current)
       // Publish the fresh CSRF context before refetching. Failed mutations are
       // never resumed: only GET queries reset, after the next React commit.
@@ -122,7 +129,9 @@ export function SessionBoundary({
             ) : (
               <div className="flex flex-wrap gap-4">
                 <a
-                  href={loginPath(locale, returnTo)}
+                  // The normal login page redirects an existing session straight
+                  // back. Start OIDC explicitly so delegated credentials refresh.
+                  href={`/api/auth/web/login?return_to=${encodeURIComponent(returnTo)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline"

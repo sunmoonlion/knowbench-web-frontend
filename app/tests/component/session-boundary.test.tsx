@@ -82,7 +82,7 @@ it('retains input, hides stale identity, stops polling, refreshes CSRF and does 
   expect(fetchImpl.mock.calls.length).toBe(count)
   expect(screen.getByText('在新标签页登录')).toHaveAttribute(
     'href',
-    '/zh-CN/login?next=%2Fzh-CN%2Fworkbench%2Foriginal%3Fq%3Dkeep%23step',
+    '/api/auth/web/login?return_to=%2Fzh-CN%2Fworkbench%2Foriginal%3Fq%3Dkeep%23step',
   )
   fireEvent.click(screen.getByText('我已登录，继续原页面'))
   await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
@@ -102,6 +102,53 @@ it('keeps the gate closed when login verification fails', async () => {
   fireEvent.click(screen.getByText('我已登录，继续原页面'))
   await screen.findByText('还未确认有效登录，请完成登录后再试。')
   expect(sessionRecovery.snapshot()).toBe(true)
+  client.clear()
+})
+
+it('does not treat an unchanged valid browser session as completed reauthentication', async () => {
+  const fetchImpl = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    if (String(input) === '/api/auth/web/me') return Response.json(initial)
+    if (init?.method === 'POST') return Response.json({ code: 'reauth_required' }, { status: 401 })
+    return new Response('{}')
+  })
+  vi.stubGlobal('fetch', fetchImpl)
+  const client = setup()
+  fireEvent.change(screen.getByRole('textbox'), { target: { value: '保留原题' } })
+  fireEvent.click(screen.getByText('提交'))
+  await screen.findByRole('alertdialog')
+  fireEvent.click(screen.getByText('我已登录，继续原页面'))
+  await screen.findByText('还未确认有效登录，请完成登录后再试。')
+  expect(sessionRecovery.snapshot()).toBe(true)
+  expect(screen.getByLabelText('draft')).toHaveValue('保留原题')
+  expect(fetchImpl.mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(1)
+  client.clear()
+})
+
+it('requires a fresh session for each recovery instead of accepting the previous recovery', async () => {
+  let csrf = 'b'.repeat(32)
+  const fetchImpl = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    if (String(input) === '/api/auth/web/me') return Response.json({ ...initial, csrf_token: csrf })
+    if (init?.method === 'POST') return Response.json({ code: 'reauth_required' }, { status: 401 })
+    return new Response('{}')
+  })
+  vi.stubGlobal('fetch', fetchImpl)
+  const client = setup()
+  fireEvent.change(screen.getByRole('textbox'), { target: { value: '不重复派单' } })
+  fireEvent.click(screen.getByText('提交'))
+  await screen.findByRole('alertdialog')
+  fireEvent.click(screen.getByText('我已登录，继续原页面'))
+  await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+  fireEvent.click(screen.getByText('提交'))
+  await screen.findByRole('alertdialog')
+  fireEvent.click(screen.getByText('我已登录，继续原页面'))
+  await screen.findByText('还未确认有效登录，请完成登录后再试。')
+  expect(sessionRecovery.snapshot()).toBe(true)
+  csrf = 'c'.repeat(32)
+  fireEvent.click(screen.getByText('我已登录，继续原页面'))
+  await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+  expect(screen.getByRole('textbox')).toHaveValue('不重复派单')
+  expect(screen.getByTestId('csrf')).toHaveTextContent(csrf)
+  expect(fetchImpl.mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(2)
   client.clear()
 })
 
