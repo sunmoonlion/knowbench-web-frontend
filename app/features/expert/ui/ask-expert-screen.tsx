@@ -192,14 +192,6 @@ export function AskExpertScreen({
                     {t('toSettings')}
                   </Link>
                 ) : null}
-                {findBlocked === 'busy' && busyAt ? (
-                  <Link
-                    href={routes.projectConversation(locale, projectId, busyAt)}
-                    className="ml-2 underline"
-                  >
-                    {t('toBusy')}
-                  </Link>
-                ) : null}
               </p>
               <p className="text-muted-foreground mb-2 text-sm">{t('findHint')}</p>
               {startFind.isError ? (
@@ -393,6 +385,19 @@ export function AskExpertScreen({
                 {t.has(`problem.${(ask.error as WorkbenchError).code}`)
                   ? t(`problem.${(ask.error as WorkbenchError).code}`)
                   : t('problem.other')}
+              </p>
+            ) : null}
+            {pack && project.data?.active_task_id ? (
+              <p role="status" className="mb-2 text-sm">
+                {t('queueHint')}
+                {busyAt ? (
+                  <Link
+                    href={routes.projectConversation(locale, projectId, busyAt)}
+                    className="ml-2 underline"
+                  >
+                    {t('toBusy')}
+                  </Link>
+                ) : null}
               </p>
             ) : null}
             <div className="flex justify-end gap-2">

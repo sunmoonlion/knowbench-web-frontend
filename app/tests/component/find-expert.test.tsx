@@ -70,6 +70,11 @@ beforeEach(() => {
         return json({ code: 'not_found' }, 404)
       }
       calls.push({ method, path, body: JSON.parse(String(init.body ?? '{}')) })
+      if (path === `/api/workbench/tasks/${TASK}/cancel`) {
+        expect(new Headers(init.headers).get('X-CSRF-Token')).toBe('csrf-for-test')
+        result = { ...result, state: 'CANCELLED' }
+        return json({}, 202)
+      }
       if (path === '/api/workbench/knowbots/pin') return json({ pack: PACK })
       if (path.endsWith('/delegations')) return json({ task_id: TASK, session_id: MADE }, 201)
       if (path === '/api/workbench/sessions') return json({ session_id: TALK }, 201)
@@ -221,6 +226,16 @@ describe('ai去knowmart请回专家', () => {
     fireEvent.click(screen.getByRole('button', { name: '重新读取结果' }))
     expect(await screen.findByText(messages.findExpert.noneTitle)).toBeInTheDocument()
     expect(calls).toHaveLength(0)
+  })
+
+  it('停止查找只取消这一轮，不创建或取消分析委托', async () => {
+    result = { ...done({}), state: 'RUNNING' }
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
+    fireEvent.click(await screen.findByRole('button', { name: '停止查找' }))
+    expect(await screen.findByText(messages.findExpert.ended)).toBeInTheDocument()
+    expect(calls.map((c) => c.path)).toEqual([`/api/workbench/tasks/${TASK}/cancel`])
+    expect(screen.queryByRole('button', { name: '停止查找' })).toBeNull()
+    expect(selected).not.toHaveBeenCalled()
   })
 
   it.each([

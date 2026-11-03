@@ -123,11 +123,8 @@ export function ProjectScreen({ project: id }: { project: string }) {
                 </Link>
                 <Link
                   href={routes.askExpert(locale, id)}
-                  aria-disabled={offline || detail.data.active_task_id !== null}
-                  className={cn(
-                    buttonVariants({ variant: 'default' }),
-                    (offline || detail.data.active_task_id !== null) && off,
-                  )}
+                  aria-disabled={offline}
+                  className={cn(buttonVariants({ variant: 'default' }), offline && off)}
                 >
                   {t('askExpert')}
                 </Link>

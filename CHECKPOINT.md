@@ -144,3 +144,10 @@ Jenkins正常checkout仍须标准构建门；候选worktree外链node_modules所
 现按RECEIVED/QUEUED、VALIDATING、RUNNING、WAITING、终态分别显示，附查看项目任务入口；加载中不声称模型已开始，终态无outcome也不显示running。不改队列/预算/并发与业务状态。前序财务任务定数据重复读取inputs=[]属于另一个未解决问题，未代用户停止任务或启动新测试。
 
 状态矩阵与请回组件46 passed；typecheck、ESLint、i18n通过。生产webpack构建结果见交接。只读现场核查不等于真实匹配成功验收。
+
+
+## 2026-11-04 AI请专家独立查找与执行排队
+
+项目忙不再拦AI查找或请专家页入口；选好后的委托允许提交排队，并提示前项结束后执行。查找等待文案只指其他查找，增加本人停止当前查找按钮（原取消API及CSRF，不自动新建委托）。RECEIVED分析任务显示等待执行，不冒充第一方法正在运行。选中/高亮、范围与原授权流程保持。
+
+相关组件/单元64 passed；typecheck、定向ESLint、i18n 1123键、生产webpack构建通过。初版新增测试拦截GET方式有误已纠正。Jenkins仍走标准checkout构建。须与独立调度后端及0038迁移同批发布；无线上或付费模型操作。

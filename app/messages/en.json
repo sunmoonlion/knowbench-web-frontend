@@ -583,7 +583,8 @@
       "spent": "Spent {amount}",
       "estimated": "est.",
       "data": "Data used: {names}",
-      "dataItem": "{name} ({source, select, knowbase {knowbase} cloud {cloud} other {local}})"
+      "dataItem": "{name} ({source, select, knowbase {knowbase} cloud {cloud} other {local}})",
+      "queued": "Expert selected; task waiting to start"
     },
     "stop": {
       "stopping": "Stopping…",
@@ -902,7 +903,8 @@
     "checkScope": "Check scope and select",
     "scopeLoadFailed": "Unable to read this expert’s scope. Reload before requesting.",
     "scopeRetry": "Reload",
-    "summon": "Invite an expert from knowmart yourself"
+    "summon": "Invite an expert from knowmart yourself",
+    "queueHint": "Expert selected. Submit to queue execution after the current task."
   },
   "findExpert": {
     "readAgain": "Reload result",
@@ -910,7 +912,7 @@
     "clarificationHint": "Keep your request and clarify the points above. Review it in the question entry, then choose “Let AI bring back an expert from knowmart” to start a new search (up to CNY 2). Previous records remain. Copying the question back does not incur a charge.",
     "useClarification": "Use in question entry",
     "loading": "Reading the status of this search…",
-    "queued": "Search submitted, but not started yet. Tasks in the same project run in order; this search will start when its turn comes.",
+    "queued": "Lookup submitted. It only queues behind other lookups in this project, not analysis tasks.",
     "preparing": "Checking the requirements for this search. Matching has not started yet.",
     "waiting": "This search is paused. Open the project to see what needs attention.",
     "statusUnknown": "The search progress is currently unclear. Open the project to check its tasks.",
@@ -960,7 +962,10 @@
     },
     "selected": "Selected: {name}. Review and submit your question to start.",
     "declarationBasis": "Selected from the expert’s public declaration",
-    "selectionLimits": "This is a suitability judgment, not a guarantee of accuracy or completion. Data and methods still need checking during execution."
+    "selectionLimits": "This is a suitability judgment, not a guarantee of accuracy or completion. Data and methods still need checking during execution.",
+    "cancel": "Stop lookup",
+    "cancelling": "Stopping lookup…",
+    "cancelFailed": "Could not stop lookup. Please try again."
   },
   "reviewPage": {
     "title": "Waiting for me",

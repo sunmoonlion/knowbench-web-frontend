@@ -155,6 +155,20 @@ describe('专家处理中', () => {
     expect(screen.getByText(/本次选择这个方法的原因/)).toBeInTheDocument()
   })
 
+  it('排队委托不显示专家正在执行第一个方法', async () => {
+    const view = runSchema.parse(dynamicFixture)
+    methodView = {
+      ...view,
+      task: { ...view.task, state: 'RECEIVED', plan: null },
+      now: null,
+      position: null,
+      steps: view.steps.map((step) => ({ ...step, status: 'pending' })),
+    }
+    page(conversationOf('专家处理中'))
+    expect(await screen.findByText('专家已选好，委托等待执行')).toBeInTheDocument()
+    expect(screen.queryByText(/专家正在处理/)).toBeNull()
+  })
+
   it('shows planning with no invented step or detail request', async () => {
     const view = runSchema.parse(dynamicFixture)
     methodView = {

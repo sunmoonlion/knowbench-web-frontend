@@ -583,7 +583,8 @@
       "spent": "已花 {amount}",
       "estimated": "估算",
       "data": "用的数据：{names}",
-      "dataItem": "{name}（{source, select, cloud {云端} knowbase {资料库} other {本地}}）"
+      "dataItem": "{name}（{source, select, cloud {云端} knowbase {资料库} other {本地}}）",
+      "queued": "专家已选好，委托等待执行"
     },
     "stop": {
       "stopping": "停下中…",
@@ -902,11 +903,12 @@
     "checkScope": "核对范围并选中",
     "scopeLoadFailed": "暂时无法读取这位专家的能力范围，请重新读取后再请。",
     "scopeRetry": "重新读取",
-    "summon": "自己去knowmart请专家"
+    "summon": "自己去knowmart请专家",
+    "queueHint": "专家已选好；提交后将排队，前一项委托结束后开始执行。"
   },
   "findExpert": {
     "loading": "正在读取这次查找的状态…",
-    "queued": "查找已提交，还没有开始。同一项目已有任务时会排队，轮到后自动开始。",
+    "queued": "查找已提交，等待开始；只与本项目的其他查找排队，不等待分析委托。",
     "preparing": "正在检查这次查找的运行条件，还没有开始匹配。",
     "waiting": "这次查找已暂停等待处理，请打开项目查看需要处理的事项。",
     "statusUnknown": "暂时无法确认查找进度，请打开项目查看任务状态。",
@@ -960,7 +962,10 @@
     },
     "selected": "已选中：{name}。请核对后提交问题。",
     "declarationBasis": "依据专家公开声明选择",
-    "selectionLimits": "这是适用性判断，不保证结果准确或任务一定完成；执行中仍需核对数据与方法。"
+    "selectionLimits": "这是适用性判断，不保证结果准确或任务一定完成；执行中仍需核对数据与方法。",
+    "cancel": "停止查找",
+    "cancelling": "正在停止查找…",
+    "cancelFailed": "未能停止查找，请重试。"
   },
   "reviewPage": {
     "title": "待我决定",
