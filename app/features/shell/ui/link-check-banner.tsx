@@ -55,18 +55,6 @@ export function LinkCheckBanner() {
 
 function LinkLine({ prompt, computer }: { prompt: LinkPrompt; computer: string }) {
   const t = useTranslations('shell.linkCheck')
-  const { user } = useWorkbench()
-  if (prompt.kind === 'account_not_connected')
-    return (
-      <p className={`${bar} bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-100`}>
-        <span>
-          {user ? t('accountNotConnectedNamed', { account: user.name }) : t('accountNotConnected')}
-        </span>
-        <Link href={`${computer}#agent-connect`} className={action}>
-          {t('connectAccount')}
-        </Link>
-      </p>
-    )
   if (prompt.kind === 'no_local_link')
     return (
       <p className="text-muted-foreground border-b px-4 py-1.5 text-xs">

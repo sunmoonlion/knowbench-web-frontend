@@ -66,20 +66,10 @@ describe('打开工作台时的核对（会合点备忘第五节，账 143）', 
       linkCheck({ ...ok, presence: here({ device_id: undefined, link_state: undefined }) }).link,
     ).toBeNull()
   })
-  it('新账号未登记电脑：本机有 link 也要明确提示，不能沿用另一账号的令牌状态', () => {
-    expect(linkCheck({ ...ok, assigned: null }).link).toEqual({ kind: 'account_not_connected' })
+  it('后端还没有带编号的本地 link：只在令牌失效时说', () => {
+    expect(linkCheck({ ...ok, assigned: null }).link).toBeNull()
     expect(
       linkCheck({ ...ok, assigned: null, presence: here({ link_state: 'token_invalid' }) }).link,
-    ).toEqual({ kind: 'account_not_connected' })
-  })
-  it('已有旧版登记但无设备编号：保留令牌失效提示', () => {
-    expect(linkCheck({ ...ok, assigned: { name: 'legacy' } }).link).toBeNull()
-    expect(
-      linkCheck({
-        ...ok,
-        assigned: { name: 'legacy' },
-        presence: here({ link_state: 'token_invalid' }),
-      }).link,
     ).toEqual({ kind: 'token_invalid' })
   })
   it('配置像是从别的电脑拷来的：照实说两个主机名', () => {
