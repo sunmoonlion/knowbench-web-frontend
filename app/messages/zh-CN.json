@@ -959,7 +959,9 @@
       "user_explicit": "你的要求",
       "goal_inferred": "依据目标推导"
     },
-    "selected": "已选中：{name}。请核对后提交问题。"
+    "selected": "已选中：{name}。请核对后提交问题。",
+    "declarationBasis": "依据专家公开声明选择",
+    "selectionLimits": "这是适用性判断，不保证结果准确或任务一定完成；执行中仍需核对数据与方法。"
   },
   "reviewPage": {
     "title": "待我决定",

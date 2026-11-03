@@ -106,6 +106,41 @@ const done = (extra: Record<string, unknown>) => ({
 })
 
 describe('让 AI 找', () => {
+  it('按声明选择展示依据和局限，不要求方法覆盖证明，提交前不分析', async () => {
+    result = done({
+      contract: 'knowbench/expert-match/v4',
+      outcome: 'summon',
+      match_task_id: TASK,
+      match_artifact_version: 1,
+      question_revision: 1,
+      requirements: [
+        {
+          id: 'goal',
+          kind: 'result',
+          statement: QUESTION,
+          question_quote: QUESTION,
+          required: true,
+        },
+      ],
+      picks: [
+        {
+          ...pick(true),
+          fit: 'suitable',
+          declarations: [{ capability_id: null, quote: '可分析财报走势' }],
+          limitations: ['方法组合尚未验证，执行时核对'],
+        },
+      ],
+    })
+    page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
+    expect(await screen.findByText('可分析财报走势')).toBeInTheDocument()
+    expect(screen.getByText('方法组合尚未验证，执行时核对')).toBeInTheDocument()
+    expect(screen.getByText(messages.findExpert.selectionLimits)).toBeInTheDocument()
+    await waitFor(() => expect(selected).toHaveBeenCalledTimes(1))
+    expect(selected.mock.calls[0][0].match.match_task_id).toBe(TASK)
+    expect(calls.every((c) => c.path.endsWith('/pin'))).toBe(true)
+    expect(push).not.toHaveBeenCalled()
+  })
+
   it('新版分开展示用户要求、AI方法建议与候选方案，未选择不请付费专家', async () => {
     result = done({
       contract: 'knowbench/expert-match/v3',

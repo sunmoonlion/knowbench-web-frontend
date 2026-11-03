@@ -147,7 +147,7 @@ describe('请专家：数据按问题定', () => {
     expect(editUrl.searchParams.has('match')).toBe(false)
     expect(editUrl.searchParams.get('expert')).toBe(KNOWBOT)
     expect(calls).toHaveLength(0)
-    fireEvent.click(screen.getByRole('button', { name: '让 AI 找' }))
+    fireEvent.click(screen.getByRole('button', { name: 'ai去knowmart请回专家' }))
     await waitFor(() => expect(calls).toHaveLength(1))
     expect(calls[0].path).toBe(`/api/workbench/projects/${project}/find-expert`)
     expect(calls[0].body.question).toBe(revised)
@@ -175,7 +175,7 @@ describe('请专家：数据按问题定', () => {
     await waitFor(() => expect(calls).toHaveLength(1))
     expect(calls[0].path).toBe(`/api/workbench/projects/${project}/find-expert`)
     expect(calls[0].body).toMatchObject({ question: '看看这家公司这几年的年报' })
-    expect(calls[0].body.match_contract).toBe('knowbench/expert-match/v3')
+    expect(calls[0].body.match_contract).toBe('knowbench/expert-match/v4')
     await waitFor(() =>
       expect(push).toHaveBeenCalledWith(
         expect.stringContaining('?match=11111111-1111-4111-8111-111111111111'),

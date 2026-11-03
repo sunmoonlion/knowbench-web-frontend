@@ -185,6 +185,18 @@ function Coverage({ result }: { result: FindResult }) {
       {(result.picks ?? []).map((pick) => (
         <div key={`${pick.knowbot_id}@${pick.version}`} className="space-y-1 text-sm">
           <p>{pick.name}</p>
+          {pick.declarations?.length ? (
+            <div className="space-y-1">
+              <p className="font-medium">{t('declarationBasis')}</p>
+              {pick.declarations.map((e, i) => (
+                <blockquote key={i}>{e.quote}</blockquote>
+              ))}
+              <p>{t('selectionLimits')}</p>
+              {pick.limitations?.map((limit, i) => (
+                <p key={i}>{limit}</p>
+              ))}
+            </div>
+          ) : null}
           {pick.solution ? (
             <div className="space-y-1">
               <p className="font-medium">{t('solution')}</p>
@@ -240,16 +252,19 @@ function Picks({
     inFlight.current = true
     setFailed(false)
     try {
-      const match =
-        ['knowbench/expert-match/v2', 'knowbench/expert-match/v3'].includes(result.contract ?? '')
-          ? matchSelectionSchema.parse({
-              match_task_id: result.match_task_id,
-              match_artifact_version: result.match_artifact_version,
-              question_revision: result.question_revision,
-              knowbot_id: pick.knowbot_id,
-              version: pick.version,
-            })
-          : undefined
+      const match = [
+        'knowbench/expert-match/v2',
+        'knowbench/expert-match/v3',
+        'knowbench/expert-match/v4',
+      ].includes(result.contract ?? '')
+        ? matchSelectionSchema.parse({
+            match_task_id: result.match_task_id,
+            match_artifact_version: result.match_artifact_version,
+            question_revision: result.question_revision,
+            knowbot_id: pick.knowbot_id,
+            version: pick.version,
+          })
+        : undefined
       // 只选定并钉住，分析委托由问题页的提交按钮创建。
       const pack = await pin.mutateAsync(`${pick.knowbot_id}@${pick.version}`)
       if (!mounted.current) return

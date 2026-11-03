@@ -28,7 +28,7 @@ export function useStartFind() {
         body: {
           idempotency_key: input.key,
           question: input.question,
-          match_contract: 'knowbench/expert-match/v3',
+          match_contract: 'knowbench/expert-match/v4',
           ...(input.expert ? { expert: input.expert } : {}),
         },
       }),

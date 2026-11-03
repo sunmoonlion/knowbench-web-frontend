@@ -107,3 +107,9 @@
 全量Vitest395 passed/2既有skipped，typecheck、eslint、i18n通过；集成回归覆盖AI选中后提交、删除清空选中、商城回跳保留输入、无自动分析请求。基于已发布#67及前一个回跳修复，不包含撤回的第二轨候选；发布交qwen。
 
 2026-11-04 所有者最终文案：两个入口分别为“自己去knowmart请专家”和“ai去knowmart请回专家”；专家首页市场链接同步。选中高亮、提交才执行及列表删除行为不变。
+
+## 2026-11-04 撤回候选的代码纠正：声明匹配入口
+
+开发分支合入当前独立发布的请回高亮/列表删除补丁。新查找显式请求 expert-match/v4，展示公开声明依据与已知限制，不显示为结果保证；历史v2/v3方案与覆盖仍按原回包展示。AI请回只钉版高亮，提交才创建分析委托，保留收费、身份、原题、项目与收据核验。
+全量401 passed / 2既有skipped；typecheck、lint、i18n及标准生产build通过。新增v4无coverage/solution也能显示并选中，绝不自动开分析的组件回归。没有调用真实模型/生产接口，没有改qwen当前fix/market-arrival-selection精确候选；此批需后端v4同版支持。
+日志 /tmp/luna-declaration-ui-final.txt、/tmp/luna-declaration-build.txt。后续仍需真实浏览器和模型验收。

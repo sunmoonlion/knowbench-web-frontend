@@ -941,6 +941,11 @@ const pickSchema = z
       )
       .optional(),
     unresolved_conditions: z.array(z.string()).optional(),
+    fit: z.enum(['suitable', 'unsuitable', 'clarify']).optional(),
+    declarations: z
+      .array(z.object({ capability_id: z.string().nullable(), quote: z.string() }))
+      .optional(),
+    limitations: z.array(z.string()).optional(),
     solution: z
       .object({
         approach: z.string(),
@@ -968,7 +973,9 @@ export const findResultSchema = z
     error: z.string().optional(),
     // 没结束时没有下面几项
     outcome: z.enum(['summon', 'candidates', 'none', 'clarify']).optional(),
-    contract: z.enum(['knowbench/expert-match/v2', 'knowbench/expert-match/v3']).optional(),
+    contract: z
+      .enum(['knowbench/expert-match/v2', 'knowbench/expert-match/v3', 'knowbench/expert-match/v4'])
+      .optional(),
     match_task_id: uuid.optional(),
     match_artifact_version: z.number().int().positive().optional(),
     question_revision: z.number().int().positive().optional(),

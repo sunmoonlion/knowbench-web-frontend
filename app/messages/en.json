@@ -959,7 +959,9 @@
       "user_explicit": "Your requirement",
       "goal_inferred": "Inferred from your goal"
     },
-    "selected": "Selected: {name}. Review and submit your question to start."
+    "selected": "Selected: {name}. Review and submit your question to start.",
+    "declarationBasis": "Selected from the expert’s public declaration",
+    "selectionLimits": "This is a suitability judgment, not a guarantee of accuracy or completion. Data and methods still need checking during execution."
   },
   "reviewPage": {
     "title": "Waiting for me",
