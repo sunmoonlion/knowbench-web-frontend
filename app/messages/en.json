@@ -378,6 +378,7 @@
     },
     "stopped": "You stopped this turn.",
     "failed": "This turn did not succeed.",
+    "stalled": "No visible progress on this step for {minutes} minutes. It will not stop on its own: keep waiting, or stop the run.",
     "activity": {
       "waiting": "Sent, waiting for it to start",
       "thinking": "Thinking",

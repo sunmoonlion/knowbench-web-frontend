@@ -392,3 +392,26 @@ describe('同项目专家排队', () => {
     expect(queuedTaskOf([queued, event('task/state', { to })])).toBeNull()
   })
 })
+
+describe('一步久无进展的提醒（账 183）', () => {
+  const event = (cursor: number, type: string, payload: Record<string, unknown>) =>
+    conversationEventSchema.parse({
+      id: `00000000-0000-4000-8000-${String(cursor).padStart(12, '0')}`,
+      session_id: '00000000-0000-4000-8000-000000000999',
+      cursor,
+      kind: 'task',
+      type,
+      payload,
+      task_id: null,
+      attempt_id: null,
+      created_at: '2026-11-06T00:00:00Z',
+    })
+
+  it('只摆一条提醒，不算停下、不算失败', () => {
+    const line = timeline([event(1, 'step/stalled', { step_id: 's1', minutes: 30 })])
+    expect(line.entries).toEqual([
+      { kind: 'notice', key: 'notice:1', what: 'stalled', minutes: 30 },
+    ])
+    expect(line.last).not.toBe('failed')
+  })
+})

@@ -90,6 +90,8 @@ export type Entry =
   // 专家这一步交回的原文（给验收看的 JSON）：默认折成一行，写它的一句说明，点开看原文（账 148）
   | { kind: 'returned'; key: string; summary: string | null; raw: string }
   | { kind: 'notice'; key: string; what: 'stopped' | 'failed' }
+  // 一步久无可见进展：只提醒，不停、不算失败（账 183）
+  | { kind: 'notice'; key: string; what: 'stalled'; minutes: number }
 
 export type Activity =
   | 'waiting'
@@ -231,6 +233,14 @@ export function timeline(events: readonly ConversationEvent[]): Timeline {
         }
         break
       }
+      case 'step/stalled':
+        entries.push({
+          kind: 'notice',
+          key: `notice:${event.cursor}`,
+          what: 'stalled',
+          minutes: Number(payload.minutes) || 0,
+        })
+        break
       case 'command/failed':
         if (live !== null && text(payload.kind).startsWith('turn')) {
           live = null

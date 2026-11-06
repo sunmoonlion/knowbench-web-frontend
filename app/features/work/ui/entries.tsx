@@ -442,6 +442,13 @@ export function TimelineEntry({
     case 'returned':
       return <Returned entry={entry} />
     case 'notice':
+      if (entry.what === 'stalled') {
+        return (
+          <Marker className="text-muted-foreground">
+            <MarkerContent>{tc('stalled', { minutes: entry.minutes })}</MarkerContent>
+          </Marker>
+        )
+      }
       return (
         <Marker className={entry.what === 'failed' ? 'text-destructive' : undefined}>
           <MarkerContent>{tc(entry.what === 'stopped' ? 'stopped' : 'failed')}</MarkerContent>
