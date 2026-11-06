@@ -89,6 +89,14 @@ beforeEach(() => {
           201,
         )
       }
+      if (path === '/api/web/v1/cross-app/links')
+        return json({
+          app: 'knowbench',
+          targets: {
+            knowlab: { web_base_url: 'https://knowlab.example.test' },
+            knowmart: { web_base_url: 'https://knowmart.example.test' },
+          },
+        })
       if (path === '/api/workbench/packs') return json(PACKS)
       if (path.startsWith('/api/workbench/find-expert/')) {
         return json(
@@ -153,6 +161,24 @@ describe('请专家：数据按问题定', () => {
     expect(calls[0].body.question).toBe(revised)
     expect(calls[0].body).not.toHaveProperty('match')
     expect(calls[0].body).not.toHaveProperty('plan')
+  })
+
+  it('未填问题也能从并列入口到 knowlab 提交创意，不创建申请或收费任务', async () => {
+    window.sessionStorage.removeItem('workbench.question')
+    page(<AskExpertScreen project={project} from={null} expert={null} />)
+    const link = await screen.findByRole('link', { name: '去knowlab提交创意' })
+    expect(link).toHaveAttribute(
+      'href',
+      'https://knowlab.example.test/zh-CN/applications/new?from=knowbench&ref=expert',
+    )
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(screen.getByRole('link', { name: '自己去knowmart请专家' }).parentElement).toBe(
+      link.parentElement,
+    )
+    expect(screen.getByRole('button', { name: 'ai去knowmart请回专家' }).parentElement).toBe(
+      link.parentElement,
+    )
+    expect(calls).toHaveLength(0)
   })
 
   it('项目已有分析任务仍可查找，查找不会同时提交分析', async () => {
