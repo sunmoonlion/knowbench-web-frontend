@@ -679,7 +679,9 @@ export const dataRequestSchema = z
     key: z.string(),
     name: z.string(),
     subject: z.string().nullable().optional(),
-    doc_type: z.string(),
+    // 要哪些数（SDD 0051）带 kind: facts、codes、start、end，没有 doc_type 与 period
+    kind: z.literal('facts').optional(),
+    doc_type: z.string().optional(),
     source_query: z
       .object({
         channel: z.string(),
@@ -698,7 +700,8 @@ export const dataRequestSchema = z
         count: z.number().int().nullable().optional(),
         months: z.number().int().nullable().optional(),
       })
-      .loose(),
+      .loose()
+      .optional(),
     required: z.boolean().default(false),
     reading: z.string().default('original'),
     description: z.string().default(''),
@@ -744,11 +747,14 @@ export const listedItemSchema = z
     need_key: z.string(),
     key: z
       .object({
+        // 要哪些数的条目（kind: facts）只有主体、期末日与科目，没有 doc_type（SDD 0051）
+        kind: z.literal('facts').optional(),
         subject: z.string().nullable().optional(),
-        doc_type: z.string(),
+        doc_type: z.string().optional(),
         period_start: z.string().nullable().optional(),
         period_end: z.string().nullable().optional(),
         edition: z.string().nullable().optional(),
+        codes: z.array(z.string()).optional(),
       })
       .loose(),
     status: listedStatusSchema,
@@ -776,8 +782,9 @@ export const taskDataSchema = z
             id: z.string(),
             key: z
               .object({
+                kind: z.literal('facts').optional(),
                 subject: z.string().nullable().optional(),
-                doc_type: z.string(),
+                doc_type: z.string().optional(),
                 period_start: z.string().nullable().optional(),
                 period_end: z.string().nullable().optional(),
               })

@@ -394,7 +394,8 @@ function ItemRow({
         >
           {off ? t('undrop') : t('drop')}
         </button>
-        {!off && need && !editing ? (
+        {/* 要哪些数的条目（SDD 0051）这一版不在这里改主体与期间，只能确认或去掉 */}
+        {!off && need && !editing && item.key.kind !== 'facts' ? (
           <button
             type="button"
             className="text-muted-foreground underline underline-offset-3"
@@ -513,8 +514,8 @@ function EditOrdinaryItem({
 }) {
   const t = useTranslations('expert.data')
   const [code, setCode] = useState(subject ?? '')
-  const [from, setFrom] = useState(need.period.start?.slice(0, 4) ?? '')
-  const [to, setTo] = useState(need.period.end?.slice(0, 4) ?? '')
+  const [from, setFrom] = useState(need.period?.start?.slice(0, 4) ?? '')
+  const [to, setTo] = useState(need.period?.end?.slice(0, 4) ?? '')
   const normal = normalSubject(code)
   const badCode = normal !== null && !SUBJECT.test(normal)
   const years = from || to ? [year(from), year(to)] : null

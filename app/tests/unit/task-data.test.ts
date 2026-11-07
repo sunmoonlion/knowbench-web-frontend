@@ -119,3 +119,48 @@ describe('预切合与直达上传（SDD 0043 第 3.2、3.3 节）', () => {
     ).toEqual({ doc_type: 'research_company', edition: 'full' })
   })
 })
+
+// 要哪些数（SDD 0051）：条目只有主体、期末日与科目，没有 doc_type；页面照样能读、能列
+describe('facts items', () => {
+  const facts = {
+    ref: 'r1-facts',
+    need_key: 'req1_1',
+    key: {
+      kind: 'facts' as const,
+      subject: '300750.SZ',
+      period_end: '2025-12-31',
+      codes: ['IS.REVENUE'],
+      consolidation: 'consolidated',
+      duration: 'year',
+      disclosure: 'first',
+    },
+    status: 'to_confirm' as const,
+    chosen: [],
+    candidates: [],
+    reason: 'facts_missing',
+  }
+
+  it('parses a data list that holds a facts item and its facts need', async () => {
+    const { listedItemSchema, dataRequestSchema } = await import('@/contracts/workbench-v2')
+    expect(listedItemSchema.parse(facts).key.kind).toBe('facts')
+    const need = dataRequestSchema.parse({
+      kind: 'facts',
+      key: 'req1_1',
+      name: '营业收入',
+      subject: '300750.SZ',
+      start: '2025-01-01',
+      end: '2025-12-31',
+      codes: ['IS.REVENUE'],
+    })
+    expect(need.doc_type).toBeUndefined()
+    expect(need.period).toBeUndefined()
+  })
+
+  it('shows the year of a facts item and uploads without a document type', () => {
+    expect(periodOf(facts)).toBe('2025')
+    expect(periodOf({ ...facts, key: { ...facts.key, period_end: '2025-06-30' } })).toBe(
+      '2025-06-30',
+    )
+    expect(uploadValues(facts)).toEqual({ subject: '300750.SZ', period_end: '2025-12-31' })
+  })
+})

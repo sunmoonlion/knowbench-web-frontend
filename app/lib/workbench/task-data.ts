@@ -157,6 +157,11 @@ export function chosenOf(item: ListedItem, picks: Record<string, Pick>): ListedC
 // 期间的写法：定期报告「2025」，其余「2025-01-01 ~ 2025-10-27」，不限期间是 null
 export function periodOf(item: ListedItem): string | null {
   const { period_start: start, period_end: end } = item.key
+  if (item.key.kind === 'facts') {
+    // 要哪些数：一期一条，只有期末日（年末写年份）
+    if (!end) return null
+    return end.endsWith('-12-31') ? end.slice(0, 4) : end
+  }
   if (!start || !end) return null
   if (start.endsWith('-01-01') && end.endsWith('-12-31') && start.slice(0, 4) === end.slice(0, 4)) {
     return start.slice(0, 4)
@@ -167,7 +172,7 @@ export function periodOf(item: ListedItem): string | null {
 // 去 knowbase 直达上传时按这一样的描述预填（没有的不带）
 export function uploadValues(item: ListedItem): Record<string, string> {
   const { subject, doc_type, period_start, period_end, edition } = item.key
-  const out: Record<string, string> = { doc_type }
+  const out: Record<string, string> = doc_type ? { doc_type } : {}
   for (const [name, value] of Object.entries({ subject, period_start, period_end, edition })) {
     if (typeof value === 'string' && value) out[name] = value
   }
