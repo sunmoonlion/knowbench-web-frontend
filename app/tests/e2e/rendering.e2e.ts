@@ -29,10 +29,16 @@ test('public route is rendered and indexable', async ({ page }) => {
 test('anonymous workspace request is redirected by the SSR authorization boundary', async ({
   page,
 }) => {
+  // Stop at the provider entry: this test covers the real SSR redirect chain,
+  // without depending on an external identity provider or its login state.
+  await page.route('**/api/auth/web/login?**', (route) =>
+    route.fulfill({ contentType: 'text/plain', body: 'SSO authorization started' }),
+  )
   await page.goto('/en/dashboard')
 
-  await expect(page).toHaveURL(/\/en\/login$/)
-  await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible()
+  await expect(page).toHaveURL(/\/api\/auth\/web\/login\?return_to=%2Fen%2Fdashboard$/)
+  await expect(page.getByText('SSO authorization started')).toBeVisible()
+  await expect(page.locator('[data-route-class="login"]')).toHaveCount(0)
 })
 
 test('workspace route renders only after the paired backend validates its opaque session', async ({
