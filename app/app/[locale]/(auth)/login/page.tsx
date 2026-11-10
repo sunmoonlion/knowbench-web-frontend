@@ -50,6 +50,10 @@ export default async function LoginPage({ params, searchParams }: Props) {
 
   const signupOk = paramsQ.registered === '1' || paramsQ.registered === 'true'
 
+  // Let the identity provider reuse the shared SSO session before showing a
+  // login form. Callback errors must stay here so a failed login cannot loop.
+  if (!paramsQ.error && !signupOk) redirect(loginUrl)
+
   return (
     <main
       className="bg-background flex min-h-screen items-center justify-center"
