@@ -5,6 +5,9 @@ import LoginPage from '@/app/[locale]/(auth)/login/page'
 import { getBrowserSession } from '@/lib/server/auth-session'
 import { redirect } from 'next/navigation'
 
+vi.mock('@/components/auth/switch-account', () => ({
+  SwitchAccount: () => <button>switch-account</button>,
+}))
 vi.mock('@/lib/server/auth-session', () => ({ getBrowserSession: vi.fn() }))
 vi.mock('next-intl/server', () => ({ getTranslations: async () => (key: string) => key }))
 vi.mock('next/navigation', () => ({
@@ -61,7 +64,7 @@ describe('automatic web SSO entry', () => {
   it('shows callback errors and a manual retry instead of automatically looping', async () => {
     render(await login({ error: 'auth_failed', reason: 'provider_unavailable' }))
     expect(redirect).not.toHaveBeenCalled()
-    expect(screen.getByRole('alert')).toHaveTextContent('errorAuthFailed')
+    expect(screen.getByRole('alert')).toHaveTextContent('errorIdentityUnavailable')
     expect(screen.getByRole('link', { name: 'login' })).toHaveAttribute(
       'href',
       '/api/auth/web/login?return_to=%2Fzh-CN%2Fdashboard',
@@ -79,4 +82,17 @@ describe('automatic web SSO entry', () => {
     await expect(login()).rejects.toThrow('backend_unavailable')
     expect(redirect).not.toHaveBeenCalled()
   })
+})
+
+it.each([
+  ['organization_not_allowed', 'errorAccountOrganization'],
+  ['oidc_transaction_invalid', 'errorLoginTransaction'],
+  ['token_invalid', 'errorIdentityRejected'],
+  ['login_required', 'errorLoginRequired'],
+  ['authorization_denied', 'errorOAuthGeneric'],
+  ['unexpected', 'errorAuthFailed'],
+])('shows the actual callback failure (%s)', async (reason, expected) => {
+  render(await login({ error: 'auth_failed', reason }))
+  expect(screen.getByRole('alert')).toHaveTextContent(expected)
+  expect(redirect).not.toHaveBeenCalled()
 })

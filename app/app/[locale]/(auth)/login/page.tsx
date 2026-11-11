@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SwitchAccount } from '@/components/auth/switch-account'
 import { getTranslations } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 import { nextPath } from '@/lib/auth/next-path'
@@ -45,7 +46,20 @@ export default async function LoginPage({ params, searchParams }: Props) {
 
   let errorText: string | null = null
   if (paramsQ.error === 'auth_failed') {
-    errorText = t('errorAuthFailed')
+    const reasons = {
+      oidc_transaction_invalid: 'errorLoginTransaction',
+      organization_not_allowed: 'errorAccountOrganization',
+      provider_unavailable: 'errorIdentityUnavailable',
+      token_invalid: 'errorIdentityRejected',
+      issuer_mismatch: 'errorIdentityRejected',
+      audience_mismatch: 'errorIdentityRejected',
+      authorization_denied: 'errorOAuthGeneric',
+      login_required: 'errorLoginRequired',
+    } as const
+    const key = Object.hasOwn(reasons, paramsQ.reason ?? '')
+      ? reasons[paramsQ.reason as keyof typeof reasons]
+      : 'errorAuthFailed'
+    errorText = t(key)
   }
 
   const signupOk = paramsQ.registered === '1' || paramsQ.registered === 'true'
@@ -84,6 +98,7 @@ export default async function LoginPage({ params, searchParams }: Props) {
         <a href={loginUrl} className={cn(buttonVariants({ className: 'w-full' }))}>
           {t('login')}
         </a>
+        {paramsQ.error === 'auth_failed' ? <SwitchAccount /> : null}
         <p className="text-muted-foreground text-center text-sm">
           <a
             href={signupUrl}
