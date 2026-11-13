@@ -121,6 +121,20 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
               <p className="text-sm">
                 {t('dependenciesCount', { count: asset.detail.dependencies?.length ?? 0 })}
               </p>
+              {asset.detail.files?.length ? (
+                <details>
+                  <summary className="cursor-pointer text-sm">
+                    {t('packageFiles', { count: asset.detail.files.length })}
+                  </summary>
+                  <ul className="mt-2 max-h-48 overflow-auto text-xs break-all">
+                    {asset.detail.files.map((file) => (
+                      <li key={file.path}>
+                        {file.path} · {file.size} B
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              ) : null}
               <details>
                 <summary className="cursor-pointer text-sm">{t('instructions')}</summary>
                 <pre className="mt-2 max-h-72 overflow-auto text-sm whitespace-pre-wrap">
@@ -143,19 +157,21 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
             >
               {t(asset.status === 'active' ? 'disable' : 'enable')}
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={action.isPending || asset.status !== 'active'}
-              onClick={() =>
-                action.mutate({
-                  asset,
-                  action: asset.default_selected ? 'default_off' : 'default_on',
-                })
-              }
-            >
-              {t(asset.default_selected ? 'removeDefault' : 'makeDefault')}
-            </Button>
+            {kind === 'connection' ? (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={action.isPending || asset.status !== 'active'}
+                onClick={() =>
+                  action.mutate({
+                    asset,
+                    action: asset.default_selected ? 'default_off' : 'default_on',
+                  })
+                }
+              >
+                {t(asset.default_selected ? 'removeDefault' : 'makeDefault')}
+              </Button>
+            ) : null}
             {kind === 'connection' ? (
               <>
                 <Button
@@ -305,13 +321,28 @@ function SkillForm({ done, assets }: { done: () => void; assets: api.Asset[] }) 
     [content, setContent] = useState(''),
     [error, setError] = useState('')
   const [dependencies, setDependencies] = useState<string[]>([])
+  const [archive, setArchive] = useState('')
+  const [filename, setFilename] = useState('')
+  const [reading, setReading] = useState(false)
   const [requestId] = useState(() => crypto.randomUUID())
   const save = useMutation({
     mutationFn: () =>
-      api.createSkill(
-        { request_id: requestId, name, description, version, content, dependencies },
-        csrfToken,
-      ),
+      archive
+        ? api.createSkillPackage(
+            {
+              request_id: requestId,
+              name,
+              description,
+              version,
+              archive_base64: archive,
+              dependencies,
+            },
+            csrfToken,
+          )
+        : api.createSkill(
+            { request_id: requestId, name, description, version, content, dependencies },
+            csrfToken,
+          ),
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey })
       done()
@@ -361,35 +392,47 @@ function SkillForm({ done, assets }: { done: () => void; assets: api.Asset[] }) 
         {t('importFile')}
         <input
           type="file"
-          accept=".md,text/markdown,text/plain"
+          accept=".md,.zip,text/markdown,application/zip"
+          disabled={reading || save.isPending}
           className={input}
           onChange={async (e) => {
             const file = e.target.files?.[0]
             if (!file) return
-            if (file.size > 65536 || !file.name.toLowerCase().endsWith('.md')) {
-              setError(t('fileError'))
-              return
-            }
+            setReading(true)
+            setArchive('')
+            setContent('')
+            setFilename('')
             try {
-              setContent(await file.text())
+              const upload = await api.readSkillUpload(file)
+              setContent(upload.content)
+              setArchive(upload.archive)
+              setFilename(file.name)
               setError('')
             } catch {
               setError(t('fileError'))
+            } finally {
+              setReading(false)
             }
           }}
         />
       </label>
-      <label className="block text-sm">
-        {t('instructions')}
-        <textarea
-          className={input}
-          rows={10}
-          required
-          value={content}
-          maxLength={64000}
-          onChange={(e) => setContent(e.target.value)}
-        />
-      </label>
+      {archive ? (
+        <p role="status" className="text-sm">
+          {t('packageReady', { filename })}
+        </p>
+      ) : (
+        <label className="block text-sm">
+          {t('instructions')}
+          <textarea
+            className={input}
+            rows={10}
+            required
+            value={content}
+            maxLength={64000}
+            onChange={(e) => setContent(e.target.value)}
+          />
+        </label>
+      )}
       <fieldset className="space-y-2">
         <legend>{t('manageDependencies')}</legend>
         {assets
@@ -418,7 +461,10 @@ function SkillForm({ done, assets }: { done: () => void; assets: api.Asset[] }) 
       <p className="text-muted-foreground text-sm">{t('skillHint')}</p>
       {error ? <p role="alert">{error}</p> : null}
       {save.isError ? <RequestFailure error={save.error} retry={() => save.mutate()} /> : null}
-      <Button type="submit" disabled={save.isPending || !content.trim()}>
+      <Button
+        type="submit"
+        disabled={save.isPending || reading || (!archive && !content.trim()) || !!error}
+      >
         {t(save.isPending ? 'saving' : 'import')}
       </Button>
     </form>

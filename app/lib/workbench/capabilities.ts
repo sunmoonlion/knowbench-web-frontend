@@ -23,6 +23,18 @@ const detail = z
     digest: z.string().optional(),
     dependencies: z.array(z.string()).optional(),
     format: z.string().optional(),
+    files: z
+      .array(
+        z
+          .object({
+            path: z.string(),
+            size: z.number().int(),
+            sha256: z.string(),
+            media_type: z.string(),
+          })
+          .strict(),
+      )
+      .optional(),
   })
   .strict()
 export const assetSchema = z
@@ -63,6 +75,7 @@ export const selectionSchema = z
     revision: z.number().int(),
     tools: z.array(z.string()),
     skills: z.array(z.string()),
+    skill_mode: z.enum(['auto', 'explicit']),
     purpose: z.string(),
     editable: z.boolean(),
     applied_revision: z.number().nullable(),
@@ -132,11 +145,38 @@ export const assetAction = (id: string, revision: number, action: string, csrfTo
     csrfToken,
     body: { revision, action },
   })
+
+export const createSkillPackage = (
+  body: {
+    request_id: string
+    name: string
+    description: string
+    version: string
+    archive_base64: string
+    dependencies: string[]
+  },
+  csrfToken: string,
+) => sendJson(assetSchema, `${base}/capabilities/skill-packages`, { csrfToken, body })
+
+export async function readSkillUpload(file: File) {
+  const zip = file.name.toLowerCase().endsWith('.zip')
+  if (
+    (!zip && !file.name.toLowerCase().endsWith('.md')) ||
+    file.size > (zip ? 2 * 1024 * 1024 : 65536)
+  )
+    throw new Error('invalid_skill_file')
+  const bytes = new Uint8Array(await file.arrayBuffer())
+  if (!zip) return { content: new TextDecoder('utf-8', { fatal: true }).decode(bytes), archive: '' }
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += 8192)
+    binary += String.fromCharCode(...bytes.subarray(i, i + 8192))
+  return { content: '', archive: btoa(binary) }
+}
 export const selection = (id: string) =>
   getJson(selectionSchema, `${base}/sessions/${encodeURIComponent(id)}/capabilities`)
 export const saveSelection = (
   id: string,
-  body: Pick<Selection, 'revision' | 'tools' | 'skills' | 'purpose'>,
+  body: Pick<Selection, 'revision' | 'tools' | 'skills' | 'purpose' | 'skill_mode'>,
   csrfToken: string,
 ) =>
   sendJson(selectionSchema, `${base}/sessions/${encodeURIComponent(id)}/capabilities`, {

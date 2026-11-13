@@ -86,11 +86,18 @@ function SelectionForm({ value }: { value: api.Selection }) {
   const [tools, setTools] = useState(value.tools),
     [skills, setSkills] = useState(value.skills),
     [purpose, setPurpose] = useState(value.purpose)
+  const [skillMode, setSkillMode] = useState(value.skill_mode)
   const save = useMutation({
     mutationFn: () =>
       api.saveSelection(
         value.session_id,
-        { revision: value.revision, tools, skills, purpose },
+        {
+          revision: value.revision,
+          tools,
+          skills: skillMode === 'auto' ? [] : skills,
+          purpose,
+          skill_mode: skillMode,
+        },
         csrfToken,
       ),
     onSuccess: async (result) => {
@@ -153,12 +160,26 @@ function SelectionForm({ value }: { value: api.Selection }) {
       </fieldset>
       <fieldset disabled={!value.editable || save.isPending} className="space-y-2">
         <legend className="font-medium">{t('skills')}</legend>
+        <label className="block">
+          {t('skillScope')}
+          <select
+            className="mt-1 w-full rounded border px-3 py-2"
+            value={skillMode}
+            onChange={(e) => setSkillMode(e.target.value as 'auto' | 'explicit')}
+          >
+            <option value="auto">{t('skillAuto')}</option>
+            <option value="explicit">{t('skillExplicit')}</option>
+          </select>
+        </label>
+        <p className="text-muted-foreground">{t('skillDiscoveryHint')}</p>
         {(value.method ? [] : value.available_skills).map((skill) => (
           <label key={skill.id} className="flex items-start gap-2 rounded border p-2">
             <input
               type="checkbox"
-              checked={skills.includes(skill.id)}
-              disabled={skill.status !== 'active' && !skills.includes(skill.id)}
+              checked={skillMode === 'auto' ? skill.status === 'active' : skills.includes(skill.id)}
+              disabled={
+                skillMode === 'auto' || (skill.status !== 'active' && !skills.includes(skill.id))
+              }
               onChange={(e) => setSkills(toggle(skills, skill.id, e.target.checked))}
             />
             <span>
@@ -194,6 +215,7 @@ function SelectionForm({ value }: { value: api.Selection }) {
         onClick={() => {
           setTools([])
           setSkills([])
+          setSkillMode('explicit')
         }}
       >
         {t('clearSelection')}

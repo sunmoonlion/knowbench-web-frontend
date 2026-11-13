@@ -1,4 +1,17 @@
-# 2026-11-13 本地增量发布候选
+# 2026-11-13 技能包与自动发现扩展（待本地发布）
+
+网页支持 ZIP 导入、文件清单、技能自动发现／限定范围选择；同步提供方契约和双语说明。
+用户明确用途为 KnowBench 网页聊天／工作；自动可用只提供名称用途，正文和附件按需读取。
+普通聊天不用原生 Skill 目录，不开放命令执行。按轮冻结版本与范围，停用不能擦除历史正文。
+代码和实际边界见 knowbench-backend/docs/managed-capabilities.md。
+验证：相关 PostgreSQL/HTTP 18 passed，单元/内核/分层 43 passed，网页组件/契约9 passed；
+原有 runner/路由/账房回归57 passed。Ruff、Pyright、Node24 TypeScript/ESLint通过。
+固定Codex0.155.1断网容器验证 lazy reference read，
+本地证据 /home/zymun/sunmoon-probe-runs/skill-package-20261113。未发起真实模型付费调用。
+Agently完整包已在本地桌面 agently-skills-384a6fb0.zip；尚未导入任何真实平台账号。
+发布仍沿用上次隔离分支 capabilities-release-20261113，仅挑选本次改动；不带其他未发布开发。
+
+# 2026-11-13 首期本地增量发布记录
 
 所有者授权：到本地按原Jenkins流程发布；外部MCP目录先空，仅发布入口和纯指令Skill。
 工位 /home/zymun/worktrees/capabilities-release-20261113，分支 capabilities-release-20261113。

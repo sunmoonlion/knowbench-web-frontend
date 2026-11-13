@@ -55,7 +55,8 @@ beforeEach(() => {
           catalog.assets[0].status = 'disconnected'
           return Response.json(catalog.assets[0])
         }
-        if (path.endsWith('/skills')) return Response.json(catalog.assets[1], { status: 201 })
+        if (path.endsWith('/skills') || path.endsWith('/skill-packages'))
+          return Response.json(catalog.assets[1], { status: 201 })
         if (path.endsWith('/capabilities')) {
           selection = { ...selection, ...body, revision: selection.revision + 1 }
           return Response.json(selection)
@@ -146,6 +147,43 @@ it('lets the user remove disabled selections and save a revision-bound empty sco
       tools: [],
       skills: [],
       purpose: 'Notify reader',
+      skill_mode: 'explicit',
     }),
   )
+})
+
+it('offers automatic discovery without selecting every skill and can restrict the scope', async () => {
+  // Fixture represents explicit scope; switching to automatic clears the pinned list.
+  page(<CapabilityPanel sessionId={fixtures.Selection.session_id} />)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+  const scope = await screen.findByRole('combobox', { name: zh.capabilities.skillScope })
+  fireEvent.change(scope, { target: { value: 'auto' } })
+  expect(screen.getByRole('checkbox', { name: /notice · 1/ })).toBeDisabled()
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.saveSelection }))
+  await waitFor(() => expect(writes[0]?.body).toMatchObject({ skill_mode: 'auto', skills: [] }))
+})
+
+it('uploads a package instead of silently discarding its resources', async () => {
+  page(<CapabilitySettings kind="skill" />)
+  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.add }))
+  fireEvent.change(screen.getByLabelText(zh.capabilities.skillName), {
+    target: { value: 'agently-suite' },
+  })
+  fireEvent.change(screen.getByLabelText(zh.capabilities.description), {
+    target: { value: 'Agently guidance' },
+  })
+  const file = new File(['PK-synthetic'], 'skills.zip', { type: 'application/zip' })
+  Object.defineProperty(file, 'arrayBuffer', {
+    value: async () => new TextEncoder().encode('PK-synthetic').buffer,
+  })
+  fireEvent.change(screen.getByLabelText(zh.capabilities.importFile), { target: { files: [file] } })
+  await screen.findByRole('status')
+  expect(
+    screen.queryByRole('textbox', { name: zh.capabilities.instructions }),
+  ).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.import }))
+  await waitFor(() => expect(writes).toHaveLength(1))
+  expect(writes[0].path).toMatch(/\/skill-packages$/)
+  expect(writes[0].body.archive_base64).toBe(btoa('PK-synthetic'))
+  expect(writes[0].body).not.toHaveProperty('content')
 })
