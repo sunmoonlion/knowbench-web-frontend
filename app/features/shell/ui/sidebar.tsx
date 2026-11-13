@@ -16,7 +16,7 @@ import {
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 
 import { ResizeHandle } from '@/components/common/resize-handle'
 import { Button } from '@/components/ui/button'
@@ -140,11 +140,23 @@ function RemoveControl({
   )
 }
 
+function subscribeNarrow(listener: () => void) {
+  const query = window.matchMedia('(max-width: 767px)')
+  query.addEventListener('change', listener)
+  return () => query.removeEventListener('change', listener)
+}
+
 export function Sidebar() {
   const t = useTranslations('shell')
   const tAuth = useTranslations('auth')
   const { csrfToken, locale, user } = useWorkbench()
   const pathname = usePathname()
+  const narrow = useSyncExternalStore(
+    subscribeNarrow,
+    () => window.matchMedia('(max-width: 767px)').matches,
+    () => false,
+  )
+  const [mobileOpenAt, setMobileOpenAt] = useState<string | null>(null)
   const search = useSearchParams().toString()
 
   const workspaces = useWorkspaces()
@@ -206,7 +218,7 @@ export function Sidebar() {
   const waitingIn = (projectId: string) =>
     (pending.data ?? []).filter((each) => each.where.project?.id === projectId).length
 
-  if (panes.sidebarCollapsed) {
+  if (narrow ? mobileOpenAt !== pathname : panes.sidebarCollapsed) {
     return (
       <aside
         aria-label={t('brand')}
@@ -218,7 +230,7 @@ export function Sidebar() {
           size="icon-sm"
           aria-label={tp('expandSidebar')}
           title={tp('expandSidebar')}
-          onClick={() => panes.collapseSidebar(false)}
+          onClick={() => (narrow ? setMobileOpenAt(pathname) : panes.collapseSidebar(false))}
         >
           <PanelLeftOpenIcon />
         </Button>
@@ -238,6 +250,10 @@ export function Sidebar() {
     <aside
       aria-label={t('brand')}
       data-state="open"
+      onClickCapture={(event) => {
+        if (narrow && event.target instanceof Element && event.target.closest('a'))
+          setMobileOpenAt(null)
+      }}
       style={{ width }}
       className="bg-muted/40 relative flex h-full shrink-0 flex-col gap-4 border-r p-3"
     >
@@ -270,7 +286,7 @@ export function Sidebar() {
           size="icon-xs"
           aria-label={tp('collapseSidebar')}
           title={tp('collapseSidebar')}
-          onClick={() => panes.collapseSidebar(true)}
+          onClick={() => (narrow ? setMobileOpenAt(null) : panes.collapseSidebar(true))}
         >
           <PanelLeftCloseIcon />
         </Button>
@@ -657,10 +673,7 @@ export function Sidebar() {
         })}
         <div className="mt-2 space-y-1 px-2">
           {user ? (
-            <p
-              className="text-muted-foreground truncate text-xs"
-              title={user.email ?? undefined}
-            >
+            <p className="text-muted-foreground truncate text-xs" title={user.email ?? undefined}>
               {tAuth('signedInAs', { name: user.name })}
             </p>
           ) : null}

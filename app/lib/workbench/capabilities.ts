@@ -1,6 +1,15 @@
 import { z } from 'zod'
 import { getJson, sendJson } from '@/lib/workbench/http'
 
+export const methodRequirementsSchema = z
+  .object({
+    tools: z.array(z.object({ url: z.string(), name: z.string() }).strict()),
+    skills: z.array(
+      z.object({ name: z.string(), version: z.string(), digest: z.string(), required_tools: z.array(z.object({url: z.string(), name: z.string()}).strict()).optional() }).strict(),
+    ),
+  })
+  .strict()
+
 const tool = z
   .object({
     key: z.string().optional(),
@@ -9,6 +18,33 @@ const tool = z
     inputSchema: z.record(z.string(), z.unknown()),
   })
   .strict()
+export type ToolRequirement = { url: string; name: string }
+export const skillDependencySchema = z
+  .object({
+    service_url: z.string().nullable(),
+    tool_name: z.string(),
+    legacy_tool_key: z.string().nullable().optional(),
+    status: z.enum([
+      'available',
+      'selected',
+      'selection_required',
+      'connection_required',
+      'connection_inactive',
+    ]),
+    candidates: z.array(
+      z
+        .object({
+          key: z.string(),
+          connection_id: z.uuid(),
+          connection_name: z.string(),
+          account_label: z.string(),
+          status: z.string(),
+        })
+        .strict(),
+    ),
+  })
+  .strict()
+export type SkillDependency = z.infer<typeof skillDependencySchema>
 const detail = z
   .object({
     url: z.string().optional(),
@@ -22,7 +58,14 @@ const detail = z
     content: z.string().optional(),
     digest: z.string().optional(),
     dependencies: z.array(z.string()).optional(),
+    tool_requirements: z.array(z.object({ url: z.string(), name: z.string() }).strict()).optional(),
+    dependency_status: z.array(skillDependencySchema).optional(),
     format: z.string().optional(),
+    source: z
+      .object({ repository: z.string(), commit: z.string(), path: z.string() })
+      .strict()
+      .nullable()
+      .optional(),
     files: z
       .array(
         z
@@ -57,6 +100,7 @@ export const catalogSchema = z
     services: z.array(z.object({ url: z.string(), authentication: z.array(z.string()) }).strict()),
     skill_formats: z.array(z.string()),
     runtime_enabled: z.boolean(),
+    script_execution_enabled: z.boolean().optional(),
   })
   .strict()
 export const selectionSchema = z
@@ -68,7 +112,9 @@ export const selectionSchema = z
         profile_id: z.string(),
         step_id: z.string().nullable(),
         declared_tools: z.array(z.string()),
-        managed_bindings_supported: z.literal(false),
+        managed_bindings_supported: z.boolean(),
+        context: z.string().nullable().optional(),
+        requirements: methodRequirementsSchema.nullable().optional(),
       })
       .strict()
       .nullable(),
@@ -99,7 +145,8 @@ export const callSchema = z
     id: z.uuid(),
     owner_actor_id: z.uuid(),
     session_id: z.uuid(),
-    connection_id: z.uuid(),
+    source_asset_id: z.uuid().nullable().optional(),
+    connection_id: z.uuid().nullable(),
     interaction_id: z.uuid().nullable(),
     digest: z.string(),
     status: z.string(),
@@ -107,7 +154,8 @@ export const callSchema = z
     updated_at: z.string(),
     detail: z
       .object({
-        connection_id: z.uuid(),
+        source_asset_id: z.uuid().nullable().optional(),
+        connection_id: z.uuid().nullable(),
         revision: z.number(),
         connection_name: z.string(),
         account_label: z.string(),
@@ -118,11 +166,24 @@ export const callSchema = z
         runtime: z.string(),
         approval_token: z.string(),
         result: z.unknown().optional(),
+        method: z.record(z.string(), z.string()).nullable().optional(),
+        execution_kind: z.literal('skill_script').nullable().optional(),
       })
       .strict(),
   })
   .strict()
 export type CapabilityCall = z.infer<typeof callSchema>
+export const cancelScript = (callId: string, csrfToken: string) =>
+  sendJson(callSchema, `/api/workbench/capability-calls/${callId}/cancel`, { csrfToken, body: {} })
+export const scriptResultSchema = z.object({
+  exit_code: z.number().nullable(),
+  stdout: z.string(),
+  stderr: z.string(),
+  timed_out: z.boolean(),
+  output_truncated: z.boolean(),
+  artifacts: z.array(z.object({ path: z.string(), sha256: z.string(), download_url: z.string() })),
+  artifact_error: z.string().nullable().optional(),
+})
 const base = '/api/workbench'
 export const catalog = () => getJson(catalogSchema, `${base}/capabilities`)
 export const createConnection = (
@@ -136,7 +197,8 @@ export const createSkill = (
     description: string
     version: string
     content: string
-    dependencies: string[]
+    dependencies?: string[]
+    tool_requirements?: ToolRequirement[]
   },
   csrfToken: string,
 ) => sendJson(assetSchema, `${base}/capabilities/skills`, { csrfToken, body })
@@ -153,7 +215,8 @@ export const createSkillPackage = (
     description: string
     version: string
     archive_base64: string
-    dependencies: string[]
+    dependencies?: string[]
+    tool_requirements?: ToolRequirement[]
   },
   csrfToken: string,
 ) => sendJson(assetSchema, `${base}/capabilities/skill-packages`, { csrfToken, body })
@@ -176,7 +239,9 @@ export const selection = (id: string) =>
   getJson(selectionSchema, `${base}/sessions/${encodeURIComponent(id)}/capabilities`)
 export const saveSelection = (
   id: string,
-  body: Pick<Selection, 'revision' | 'tools' | 'skills' | 'purpose' | 'skill_mode'>,
+  body: Pick<Selection, 'revision' | 'tools' | 'skills' | 'purpose' | 'skill_mode'> & {
+    method_context?: string | null
+  },
   csrfToken: string,
 ) =>
   sendJson(selectionSchema, `${base}/sessions/${encodeURIComponent(id)}/capabilities`, {
@@ -200,3 +265,41 @@ export const renewConnection = (id: string, revision: number, token: string, csr
     csrfToken,
     body: { revision, ...(token ? { token } : {}) },
   })
+
+export const skillSourcePreviewSchema = z
+  .object({
+    repository: z.string(),
+    commit: z.string(),
+    candidates: z.array(
+      z
+        .object({
+          path: z.string(),
+          name: z.string(),
+          description: z.string(),
+          digest: z.string(),
+          files: z.number().int(),
+          has_scripts: z.boolean(),
+          instructions: z.string(),
+        })
+        .strict(),
+    ),
+  })
+  .strict()
+export type SkillSourcePreview = z.infer<typeof skillSourcePreviewSchema>
+export const previewSkillSource = (url: string, csrfToken: string) =>
+  sendJson(skillSourcePreviewSchema, `${base}/capabilities/skill-sources/preview`, {
+    csrfToken,
+    body: { url },
+  })
+export const installSkillSource = (
+  body: {
+    request_id: string
+    url: string
+    commit: string
+    path: string
+    digest: string
+    dependencies?: string[]
+    tool_requirements?: ToolRequirement[]
+  },
+  csrfToken: string,
+) => sendJson(assetSchema, `${base}/capabilities/skill-sources/install`, { csrfToken, body })

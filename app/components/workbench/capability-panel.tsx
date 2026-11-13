@@ -9,6 +9,7 @@ import { RequestFailure } from '@/components/common/request-failure'
 import { useWorkbench } from '@/lib/workbench/context'
 import { routes } from '@/lib/workbench/routes'
 import * as api from '@/lib/workbench/capabilities'
+import { SkillConnections } from './skill-connections'
 
 export function CapabilityPanel({ sessionId }: { sessionId: string }) {
   const t = useTranslations('capabilities'),
@@ -20,6 +21,7 @@ export function CapabilityPanel({ sessionId }: { sessionId: string }) {
     queryFn: () => api.selection(sessionId),
     enabled: open,
     refetchOnWindowFocus: true,
+    refetchInterval: open ? 5000 : false,
   })
   const calls = useQuery({
     queryKey: ['capability-calls', sessionId],
@@ -64,7 +66,10 @@ export function CapabilityPanel({ sessionId }: { sessionId: string }) {
           {selection.isError ? (
             <RequestFailure error={selection.error} retry={() => void selection.refetch()} />
           ) : selection.data ? (
-            <SelectionForm key={selection.data.revision} value={selection.data} />
+            <SelectionForm
+              key={`${selection.data.revision}:${selection.data.method?.context ?? 'chat'}:${selection.data.editable}`}
+              value={selection.data}
+            />
           ) : (
             <p>{t('loading')}</p>
           )}
@@ -97,6 +102,7 @@ function SelectionForm({ value }: { value: api.Selection }) {
           skills: skillMode === 'auto' ? [] : skills,
           purpose,
           skill_mode: skillMode,
+          method_context: value.method?.context ?? null,
         },
         csrfToken,
       ),
@@ -124,7 +130,23 @@ function SelectionForm({ value }: { value: api.Selection }) {
           <p>
             {t('declaredTools')}：{value.method.declared_tools.join(', ') || t('noneDeclared')}
           </p>
-          <p>{t('methodManagedUnavailable')}</p>
+          <p>
+            {t(
+              value.method.managed_bindings_supported
+                ? 'methodBindingHint'
+                : 'methodManagedUnavailable',
+            )}
+          </p>
+          {value.method.requirements?.tools.map((requirement) => (
+            <p key={`${requirement.url}:${requirement.name}`}>
+              {requirement.name} · {requirement.url}
+            </p>
+          ))}
+          {value.method.requirements?.skills.map((requirement) => (
+            <p key={requirement.name}>
+              {requirement.name} · {requirement.version}
+            </p>
+          ))}
         </div>
       ) : null}
       <p>
@@ -141,7 +163,7 @@ function SelectionForm({ value }: { value: api.Selection }) {
       ) : null}
       <fieldset disabled={!value.editable || save.isPending} className="space-y-2">
         <legend className="font-medium">{t('connections')}</legend>
-        {(value.method ? [] : value.available_tools).map((tool) => (
+        {value.available_tools.map((tool) => (
           <label key={tool.key} className="flex items-start gap-2 rounded border p-2">
             <input
               type="checkbox"
@@ -165,6 +187,7 @@ function SelectionForm({ value }: { value: api.Selection }) {
           <select
             className="mt-1 w-full rounded border px-3 py-2"
             value={skillMode}
+            disabled={!!value.method}
             onChange={(e) => setSkillMode(e.target.value as 'auto' | 'explicit')}
           >
             <option value="auto">{t('skillAuto')}</option>
@@ -172,21 +195,26 @@ function SelectionForm({ value }: { value: api.Selection }) {
           </select>
         </label>
         <p className="text-muted-foreground">{t('skillDiscoveryHint')}</p>
-        {(value.method ? [] : value.available_skills).map((skill) => (
-          <label key={skill.id} className="flex items-start gap-2 rounded border p-2">
-            <input
-              type="checkbox"
-              checked={skillMode === 'auto' ? skill.status === 'active' : skills.includes(skill.id)}
-              disabled={
-                skillMode === 'auto' || (skill.status !== 'active' && !skills.includes(skill.id))
-              }
-              onChange={(e) => setSkills(toggle(skills, skill.id, e.target.checked))}
-            />
-            <span>
-              {skill.name} · {skill.detail.version}
-              <small className="text-muted-foreground block">{skill.detail.description}</small>
-            </span>
-          </label>
+        {value.available_skills.map((skill) => (
+          <div key={skill.id} className="space-y-2 rounded border p-2">
+            <label className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                checked={
+                  skillMode === 'auto' ? skill.status === 'active' : skills.includes(skill.id)
+                }
+                disabled={
+                  skillMode === 'auto' || (skill.status !== 'active' && !skills.includes(skill.id))
+                }
+                onChange={(e) => setSkills(toggle(skills, skill.id, e.target.checked))}
+              />
+              <span>
+                {skill.name} · {skill.detail.version}
+                <small className="text-muted-foreground block">{skill.detail.description}</small>
+              </span>
+            </label>
+            <SkillConnections dependencies={skill.detail.dependency_status} />
+          </div>
         ))}
       </fieldset>
       {!value.available_tools.length && !value.available_skills.length ? <p>{t('empty')}</p> : null}
@@ -228,11 +256,19 @@ function SelectionForm({ value }: { value: api.Selection }) {
 }
 
 function ActionCard({ call }: { call: api.CapabilityCall }) {
+  const scriptResult =
+    call.detail.execution_kind === 'skill_script'
+      ? api.scriptResultSchema.safeParse(call.detail.result)
+      : null
   const t = useTranslations('capabilities'),
     { csrfToken } = useWorkbench(),
     client = useQueryClient()
   const decision = useMutation({
     mutationFn: (answer: 'accept' | 'decline') => api.decide(call, answer, csrfToken),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['capability-calls', call.session_id] }),
+  })
+  const stop = useMutation({
+    mutationFn: () => api.cancelScript(call.id, csrfToken),
     onSuccess: () => client.invalidateQueries({ queryKey: ['capability-calls', call.session_id] }),
   })
   return (
@@ -267,10 +303,44 @@ function ActionCard({ call }: { call: api.CapabilityCall }) {
           </Button>
         </div>
       ) : null}
-      {call.status === 'unknown' || call.status === 'dispatching' ? (
+      {call.status === 'dispatching' && call.detail.execution_kind === 'skill_script' ? (
+        <div className="space-y-2">
+          <p role="status">{t('scriptRunning')}</p>
+          <Button variant="outline" disabled={stop.isPending} onClick={() => stop.mutate()}>
+            {t('stopScript')}
+          </Button>
+        </div>
+      ) : call.status === 'unknown' || call.status === 'dispatching' ? (
         <p role="status">{t('unknownOutcome')}</p>
       ) : null}
-      {call.detail.result !== undefined ? (
+      {scriptResult?.success ? (
+        <div className="space-y-2 text-sm">
+          <p>{t('scriptExit', { code: scriptResult.data.exit_code ?? '—' })}</p>
+          {scriptResult.data.timed_out ? <p role="status">{t('scriptTimeout')}</p> : null}
+          {scriptResult.data.output_truncated ? <p>{t('scriptTruncated')}</p> : null}
+          {scriptResult.data.stdout ? (
+            <pre className="max-h-64 overflow-auto whitespace-pre-wrap">
+              {scriptResult.data.stdout}
+            </pre>
+          ) : null}
+          {scriptResult.data.stderr ? (
+            <pre className="max-h-64 overflow-auto whitespace-pre-wrap">
+              {scriptResult.data.stderr}
+            </pre>
+          ) : null}
+          {scriptResult.data.artifact_error ? <p>{scriptResult.data.artifact_error}</p> : null}
+          {scriptResult.data.artifacts.map((artifact, index) => (
+            <a
+              key={index}
+              className="block break-all underline"
+              href={`/api/workbench/capability-calls/${call.id}/artifacts/${index}`}
+              download
+            >
+              {t('downloadArtifact', { name: artifact.path })}
+            </a>
+          ))}
+        </div>
+      ) : call.detail.result !== undefined ? (
         <details>
           <summary>{t('result')}</summary>
           <pre className="max-h-64 overflow-auto text-xs whitespace-pre-wrap">
@@ -286,6 +356,7 @@ function ActionCard({ call }: { call: api.CapabilityCall }) {
           }
         />
       ) : null}
+      {stop.isError ? <RequestFailure error={stop.error} retry={() => stop.mutate()} /> : null}
     </section>
   )
 }
