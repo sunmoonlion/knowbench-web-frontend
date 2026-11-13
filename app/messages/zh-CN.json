@@ -1534,6 +1534,8 @@
       "outside_method_scope": "所选能力超出本步骤声明范围",
       "ambiguous_method_binding": "每项要求只能绑定一个账号或技能版本"
     },
+    "conversationCapabilitiesExcluded": "本轮将排除有问题的能力；不依赖它们的聊天和工作可以继续。",
+    "methodCapabilitiesBlocked": "本步骤需要的能力尚未就绪，处理以上问题后才能继续执行。",
     "returnToConversation": "返回原会话并重新检查",
     "clearSelection": "清空选择",
     "pendingApproval": "有操作待确认",

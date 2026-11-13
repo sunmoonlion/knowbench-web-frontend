@@ -156,6 +156,7 @@ function SelectionForm({ value }: { value: api.Selection }) {
       </p>
       {value.issues.length ? (
         <ul role="alert" className="space-y-1 text-amber-700">
+          <li>{t(value.method ? 'methodCapabilitiesBlocked' : 'conversationCapabilitiesExcluded')}</li>
           {value.issues.map((issue, i) => (
             <li key={i}>{t.has(`issue.${issue.code}`) ? t(`issue.${issue.code}`) : issue.code}</li>
           ))}

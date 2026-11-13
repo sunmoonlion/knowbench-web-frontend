@@ -1534,6 +1534,8 @@
       "outside_method_scope": "The selected capability is outside this step contract",
       "ambiguous_method_binding": "Bind exactly one account or Skill version per requirement"
     },
+    "conversationCapabilitiesExcluded": "Affected capabilities are excluded from this turn. Chat and work that do not need them can continue.",
+    "methodCapabilitiesBlocked": "Required capabilities are not ready. Resolve these issues before this step can continue.",
     "returnToConversation": "Return to conversation and recheck",
     "clearSelection": "Clear selection",
     "pendingApproval": "Action awaiting approval",
