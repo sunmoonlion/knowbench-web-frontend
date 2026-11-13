@@ -1,3 +1,13 @@
+# 2026-11-13 本地增量发布候选
+
+所有者授权：到本地按原Jenkins流程发布；外部MCP目录先空，仅发布入口和纯指令Skill。
+工位 /home/zymun/worktrees/capabilities-release-20261113，分支 capabilities-release-20261113。
+现网基线 4b8248e06366802b9b5e97014110332a66e6a9a7，平台基线Jenkins #90回执a81adda3。
+仅摘取e9a7ab9；不带开发分支未发布的数据清单改动。新增组件/契约7项和typecheck通过；正式镜像构建由本地Jenkins执行。
+日志 /home/zymun/sunmoon-probe-runs/capabilities-release-20261113/；迁移0039→0040。
+冻结专家新增MCP/Skill绑定仍未实现，不因发布而宣称完整接入方案完成。
+以下qwen开发记录保留为来源证据，不能把原基线当作本次发布基线。
+
 # 2026-11-13 连接、技能和本次能力入口（首期代码，未部署）
 
 分支 qwen；网页基线 67a74c703a9c0adb78d82d3a2648687f17b89ca5。
