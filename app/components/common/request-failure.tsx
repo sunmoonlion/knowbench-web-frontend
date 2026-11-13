@@ -10,6 +10,9 @@ export function requestFailureKind(error: unknown) {
   if (value.status === 403) return 'forbidden'
   if (value.status === 404) return 'notFound'
   if (value.code === 'contract_invalid') return 'contract'
+  if (value.code === 'capability_reauth_required') return 'capabilityReauth'
+  if (value.code === 'capability_unavailable') return 'capability'
+  if (value.code === 'stale_state_version') return 'changed'
   return 'unavailable'
 }
 

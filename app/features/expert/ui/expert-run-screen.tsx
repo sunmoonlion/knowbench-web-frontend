@@ -3,6 +3,8 @@
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 
+import { CapabilityPanel } from '@/components/workbench/capability-panel'
+
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -70,6 +72,7 @@ export function ExpertRunScreen({ task }: { task: string }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
+      <CapabilityPanel sessionId={sheet.session_id} />
       <header className="flex min-h-12 shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b px-4 py-2 text-sm">
         <span className="w-full min-w-0 truncate font-medium sm:w-auto sm:flex-1">
           {stopping

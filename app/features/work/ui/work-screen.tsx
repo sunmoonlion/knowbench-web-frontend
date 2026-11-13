@@ -16,6 +16,8 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from '@/components/ui/message-scroller'
+import { CapabilityPanel } from '@/components/workbench/capability-panel'
+
 import { Composer } from '@/components/workbench/composer'
 import { ConversationTitle } from '@/components/workbench/conversation-title'
 import { ActivityLine } from '@/components/workbench/activity-line'
@@ -176,6 +178,7 @@ export function WorkScreen({
             </MessageScroller>
           </MessageScrollerProvider>
 
+          <CapabilityPanel sessionId={id} />
           <Composer
             busy={line.live !== null}
             sending={act.say.isPending}

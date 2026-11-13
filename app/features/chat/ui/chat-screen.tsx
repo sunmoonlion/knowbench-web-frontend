@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
+import { CapabilityPanel } from '@/components/workbench/capability-panel'
+
 import { Composer } from '@/components/workbench/composer'
 import { ConversationTitle } from '@/components/workbench/conversation-title'
 import { ProjectPicker } from '@/components/workbench/project-picker'
@@ -144,6 +146,7 @@ export function ChatScreen({
             </MessageScroller>
           </MessageScrollerProvider>
 
+          <CapabilityPanel sessionId={id} />
           <Composer
             busy={live !== null}
             sending={act.say.isPending}
