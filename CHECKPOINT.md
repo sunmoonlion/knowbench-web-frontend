@@ -1,3 +1,24 @@
+# 2026-11-13 连接、技能和本次能力入口（首期代码，未部署）
+
+分支 qwen；网页基线 67a74c703a9c0adb78d82d3a2648687f17b89ca5。
+设置增加连接与工具/技能；聊天、工作、专家复用本次能力面板。支持多账号凭据更新、
+工具发现与参数查看、纯指令Markdown版本及依赖选择、会话选择保存、精确参数审批/回执、
+缺项提示与返回原会话。默认项只影响新会话，不冒充操作授权或加载成功。
+专家只读显示冻结方法的平台工具；新受管MCP/Skill的任务绑定和步骤执行尚未实现。
+完整后端、配置及边界见 ../knowbench-backend/docs/managed-capabilities.md。
+
+严格响应schema与提供方导出JSON/样例/SHA-256锁配套；不使用后端模块作为网页运行依赖。
+测试：新组件/契约7 passed（/tmp/capability-web-targeted-final.log）；全套运行436 passed，
+preview-server因沙箱禁止监听而未运行，提权单独重跑其16项全过；合计452通过、2既有跳过，
+不是一次全套全绿。原始输出 /tmp/capability-web-tests.log、/tmp/capability-web-preview-retest.log。
+typecheck、ESLint、Prettier、双语键检查通过。Node24/1worker/1GiB堆的Next生产webpack
+构建通过（/tmp/capability-web-build.log）；未跑默认Turbopack构建或真实浏览器/账号验收。
+
+本轮无生产配置、部署或付费调用。需要重建web并与新增API/runner及迁移一起发布；遵守
+Jenkins与活动任务检查。配置目录默认空，页面显示未配置，不展示未实现OAuth/脚本包。
+后续完整方法契约接入仍待实施，不能把本次三个入口当成全部接入方案已完成。
+按默认协作规则提交推送；回滚可回旧web/API/runner镜像，保留新增表供查账。
+
 # 2026-11-04 数据准备阶段暂停卡（待Qwen发布）
 
 基线 fefa8735a8488964a64c19860bce1df6d1c0b5ec，保留已有入口前置提示与AI排队状态修复。

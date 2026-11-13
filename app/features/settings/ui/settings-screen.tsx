@@ -7,6 +7,8 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useState } from 'react'
 
+import { CapabilitySettings } from './capabilities-section'
+
 import type { Prefs } from '@/contracts/workbench-settings'
 import { useWorkbench } from '@/lib/workbench/context'
 import { routes, SETTINGS_SECTIONS, type SettingsSection } from '@/lib/workbench/routes'
@@ -59,6 +61,8 @@ export function SettingsScreen({ section }: { section: SettingsSection }) {
           </ul>
         </nav>
         <div className="min-w-0 flex-1 space-y-6">
+          {section === 'connections' ? <CapabilitySettings kind="connection" /> : null}
+          {section === 'skills' ? <CapabilitySettings kind="skill" /> : null}
           {section === 'preferences' ? <PreferencesSection /> : null}
           {section === 'cloud' ? <CloudSection csrfToken={csrfToken} /> : null}
           {section === 'computer' ? <ComputerSection csrfToken={csrfToken} /> : null}

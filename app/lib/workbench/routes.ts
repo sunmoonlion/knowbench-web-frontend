@@ -4,7 +4,13 @@ import type { ConversationKind } from '@/contracts/workbench-v2'
 export type Mode = 'chat' | 'work' | 'expert'
 export const MODES: readonly Mode[] = ['chat', 'work', 'expert']
 // 设置分三类（0021）：个人偏好 / 云端与模型 / 我的电脑
-export const SETTINGS_SECTIONS = ['preferences', 'cloud', 'computer'] as const
+export const SETTINGS_SECTIONS = [
+  'preferences',
+  'cloud',
+  'computer',
+  'connections',
+  'skills',
+] as const
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number]
 
 function at(locale: string, ...parts: string[]) {
