@@ -10,6 +10,8 @@ import { RequestFailure } from '@/components/common/request-failure'
 import { useWorkbench } from '@/lib/workbench/context'
 import { routes } from '@/lib/workbench/routes'
 import * as api from '@/lib/workbench/capabilities'
+import { SkillSourceInstaller, SkillDependencies, toolRequirements } from './skill-source-installer'
+import { SkillConnections } from '@/components/workbench/skill-connections'
 
 const input = 'mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm'
 const card = 'rounded-xl border p-5 space-y-3'
@@ -29,6 +31,7 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
   const query = useQuery({ queryKey, queryFn: api.catalog })
   const client = useQueryClient()
   const [creating, setCreating] = useState(false)
+  const [installSource, setInstallSource] = useState<'repository' | 'file'>('repository')
   const [renewing, setRenewing] = useState<string | null>(null)
   const [disconnecting, setDisconnecting] = useState<api.Asset | null>(null)
   const action = useMutation({
@@ -60,7 +63,9 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
             {t(kind === 'connection' ? 'connectionsLead' : 'skillsLead')}
           </p>
         </div>
-        <Button onClick={() => setCreating(!creating)}>{t(creating ? 'close' : 'add')}</Button>
+        <Button onClick={() => setCreating(!creating)}>
+          {t(creating ? 'close' : kind === 'skill' ? 'installSkill' : 'add')}
+        </Button>
       </header>
       {kind === 'connection' && !query.data.runtime_enabled ? (
         <p role="status" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
@@ -71,7 +76,33 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
         kind === 'connection' ? (
           <ConnectionForm services={query.data.services} done={() => setCreating(false)} />
         ) : (
-          <SkillForm assets={query.data.assets} done={() => setCreating(false)} />
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={installSource === 'repository' ? 'default' : 'outline'}
+                aria-pressed={installSource === 'repository'}
+                onClick={() => setInstallSource('repository')}
+              >
+                {t('fromRepository')}
+              </Button>
+              <Button
+                variant={installSource === 'file' ? 'default' : 'outline'}
+                aria-pressed={installSource === 'file'}
+                onClick={() => setInstallSource('file')}
+              >
+                {t('fromFile')}
+              </Button>
+            </div>
+            {installSource === 'repository' ? (
+              <SkillSourceInstaller
+                assets={query.data.assets}
+                scriptsEnabled={query.data.script_execution_enabled}
+                done={() => setCreating(false)}
+              />
+            ) : (
+              <SkillForm assets={query.data.assets} done={() => setCreating(false)} />
+            )}
+          </div>
         )
       ) : null}
       {action.isError ? (
@@ -83,7 +114,11 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="font-medium">{asset.name}</h3>
             <span className="bg-muted rounded-full px-2 py-1 text-xs">
-              {t.has(`state.${asset.status}`) ? t(`state.${asset.status}`) : asset.status}
+              {kind === 'skill' && asset.status === 'disconnected'
+                ? t('uninstalled')
+                : t.has(`state.${asset.status}`)
+                  ? t(`state.${asset.status}`)
+                  : asset.status}
             </span>
           </div>
           <p className="text-muted-foreground text-sm break-all">
@@ -95,7 +130,18 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
             {t('revision', { revision: asset.revision })}
             {asset.detail.checked_at ? ` · ${t('checked')} ${asset.detail.checked_at}` : ''}
           </p>
+          {asset.detail.source ? (
+            <p className="text-muted-foreground text-xs break-all">
+              {t('installedFrom')} {asset.detail.source.repository} · {asset.detail.source.path}
+            </p>
+          ) : null}
           {asset.detail.revocation ? <p className="text-sm">{t('revokeAtProvider')}</p> : null}
+          {kind === 'skill' &&
+          asset.detail.files?.some((file) => /\.(py|sh|js|mjs|cjs)$/.test(file.path)) ? (
+            <p className="text-sm">
+              {t(query.data.script_execution_enabled ? 'scriptsSupported' : 'scriptsNotSupported')}
+            </p>
+          ) : null}
           {kind === 'connection' ? (
             <details>
               <summary className="cursor-pointer text-sm">
@@ -119,8 +165,13 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
           ) : (
             <>
               <p className="text-sm">
-                {t('dependenciesCount', { count: asset.detail.dependencies?.length ?? 0 })}
+                {t('dependenciesCount', {
+                  count:
+                    (asset.detail.dependencies?.length ?? 0) +
+                    (asset.detail.tool_requirements?.length ?? 0),
+                })}
               </p>
+              <SkillConnections dependencies={asset.detail.dependency_status} />
               {asset.detail.files?.length ? (
                 <details>
                   <summary className="cursor-pointer text-sm">
@@ -172,6 +223,16 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
                 {t(asset.default_selected ? 'removeDefault' : 'makeDefault')}
               </Button>
             ) : null}
+            {kind === 'skill' ? (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={action.isPending || asset.status === 'disconnected'}
+                onClick={() => setDisconnecting(asset)}
+              >
+                {t('uninstall')}
+              </Button>
+            ) : null}
             {kind === 'connection' ? (
               <>
                 <Button
@@ -207,12 +268,16 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
           ) : null}
           {disconnecting?.id === asset.id ? (
             <div role="alert" className="rounded-lg border p-3">
-              <p className="mb-3 text-sm">{t('disconnectWarning')}</p>
+              <p className="mb-3 text-sm">
+                {t(kind === 'skill' ? 'uninstallWarning' : 'disconnectWarning')}
+              </p>
               <Button
                 disabled={action.isPending}
-                onClick={() => action.mutate({ asset, action: 'disconnect' })}
+                onClick={() =>
+                  action.mutate({ asset, action: kind === 'skill' ? 'remove' : 'disconnect' })
+                }
               >
-                {t('confirmDisconnect')}
+                {t(kind === 'skill' ? 'confirmUninstall' : 'confirmDisconnect')}
               </Button>{' '}
               <Button variant="outline" onClick={() => setDisconnecting(null)}>
                 {t('cancel')}
@@ -335,12 +400,19 @@ function SkillForm({ done, assets }: { done: () => void; assets: api.Asset[] }) 
               description,
               version,
               archive_base64: archive,
-              dependencies,
+              tool_requirements: toolRequirements(assets, dependencies),
             },
             csrfToken,
           )
         : api.createSkill(
-            { request_id: requestId, name, description, version, content, dependencies },
+            {
+              request_id: requestId,
+              name,
+              description,
+              version,
+              content,
+              tool_requirements: toolRequirements(assets, dependencies),
+            },
             csrfToken,
           ),
     onSuccess: async () => {
@@ -433,31 +505,12 @@ function SkillForm({ done, assets }: { done: () => void; assets: api.Asset[] }) 
           />
         </label>
       )}
-      <fieldset className="space-y-2">
-        <legend>{t('manageDependencies')}</legend>
-        {assets
-          .filter((a) => a.kind === 'connection' && a.status === 'active')
-          .flatMap((a) =>
-            (a.detail.tools ?? [])
-              .filter((t) => t.key)
-              .map((tool) => (
-                <label key={tool.key} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={dependencies.includes(tool.key!)}
-                    onChange={(e) =>
-                      setDependencies(
-                        e.target.checked
-                          ? [...dependencies, tool.key!]
-                          : dependencies.filter((k) => k !== tool.key),
-                      )
-                    }
-                  />
-                  {a.name} · {a.detail.account_label} · {tool.name}
-                </label>
-              )),
-          )}
-      </fieldset>
+      <SkillDependencies
+        assets={assets}
+        value={dependencies}
+        onChange={setDependencies}
+        disabled={save.isPending}
+      />
       <p className="text-muted-foreground text-sm">{t('skillHint')}</p>
       {error ? <p role="alert">{error}</p> : null}
       {save.isError ? <RequestFailure error={save.error} retry={() => save.mutate()} /> : null}

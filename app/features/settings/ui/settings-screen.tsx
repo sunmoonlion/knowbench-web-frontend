@@ -1,6 +1,6 @@
 'use client'
 
-// 设置分三项（0021；会合点备忘第七节 2026-10-23 改）：个人偏好 / 模型 / 电脑与沙箱。左边一列三项，右边一次只显示一项。
+// 设置导航在桌面左列、窄屏上方；连接与技能和既有设置共用同一布局。
 // 「模型」的路由名仍是 cloud；沙箱从「模型」挪到「电脑与沙箱」。
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
@@ -37,10 +37,10 @@ export function SettingsScreen({ section }: { section: SettingsSection }) {
   const { csrfToken, locale } = useWorkbench()
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-5xl gap-8 px-6 py-10">
-        <nav aria-label={t('title')} className="w-44 shrink-0">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 lg:flex-row lg:gap-8 lg:px-6 lg:py-10">
+        <nav aria-label={t('title')} className="w-full shrink-0 lg:w-44">
           <h1 className="px-2 text-2xl font-semibold tracking-tight">{t('title')}</h1>
-          <ul className="mt-4 space-y-1">
+          <ul className="mt-4 grid grid-cols-2 gap-1 lg:block lg:space-y-1">
             {SETTINGS_SECTIONS.map((each) => (
               <li key={each}>
                 <Link
