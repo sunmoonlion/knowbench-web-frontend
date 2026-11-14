@@ -154,6 +154,7 @@ export const selectionSchema = z
         context: z.string().nullable().optional(),
         requirements: methodRequirementsSchema.nullable().optional(),
         access_requirements: z.array(accessRequirementSchema),
+        permission_status: z.enum(['not_required', 'unconfirmed', 'active', 'revoked', 'expired']),
       })
       .strict()
       .nullable(),
@@ -288,6 +289,19 @@ export const saveSelection = (
     method: 'PUT',
     body,
   })
+export const revokeMethodPermissions = (
+  id: string,
+  body: { revision: number; method_context: string },
+  csrfToken: string,
+) =>
+  sendJson(
+    selectionSchema,
+    `${base}/sessions/${encodeURIComponent(id)}/capabilities/revoke-method`,
+    {
+      csrfToken,
+      body,
+    },
+  )
 export const calls = (id: string) =>
   getJson(
     z.object({ calls: z.array(callSchema) }).strict(),

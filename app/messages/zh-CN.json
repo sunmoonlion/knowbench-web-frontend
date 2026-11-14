@@ -1534,7 +1534,9 @@
       "method_bindings_required": "本步骤还缺少声明的 MCP 或 Skill 绑定",
       "outside_method_scope": "所选能力超出本步骤声明范围",
       "ambiguous_method_binding": "每项要求只能绑定一个账号或技能版本",
-      "method_permission_unconfirmed": "方法权限需要重新确认，请核对范围并保存绑定。"
+      "method_permission_unconfirmed": "方法权限需要重新确认，请核对范围并保存绑定。",
+      "method_permission_revoked": "方法授权已撤销，请在步骤暂停时重新确认。",
+      "method_permission_expired": "方法授权已过期，请重新确认。"
     },
     "conversationCapabilitiesExcluded": "本轮将排除有问题的能力；不依赖它们的聊天和工作可以继续。",
     "methodCapabilitiesBlocked": "本步骤需要的能力尚未就绪，处理以上问题后才能继续执行。",
@@ -1577,7 +1579,9 @@
     "methodPermissionResources": "资源范围（{role}）：{values}",
     "methodPermissionTransfer": "外发到：{destination}；允许发送的参数：{fields}",
     "methodPermissionPurpose": "用途：{purpose}",
-    "methodPermissionConfirmHint": "确认后仅允许所选账号在上述范围内申请操作；每次外部调用仍需单独批准。",
-    "confirmMethodPermissions": "确认权限并保存绑定"
+    "methodPermissionConfirmHint": "确认后，当前步骤仅能在上述账号、资源和用途范围内申请操作，授权最长有效 24 小时。外部操作仍逐次审批。",
+    "confirmMethodPermissions": "确认权限并保存绑定",
+    "methodRevoke": "撤销此委托的方法授权",
+    "methodRevokeHint": "撤销此委托已确认的方法权限，阻止相关步骤及下层调用继续访问；已经发出的操作不会撤回。"
   }
 }

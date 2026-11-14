@@ -46,6 +46,15 @@ beforeEach(() => {
       if (init.method && init.method !== 'GET') {
         const body = JSON.parse(String(init.body))
         writes.push({ path, body, headers: init.headers })
+        if (path.endsWith('/revoke-method')) {
+          selection = {
+            ...selection,
+            revision: selection.revision + 1,
+            method: { ...selection.method!, permission_status: 'revoked' },
+            issues: [{ ref: 'method', code: 'method_permission_revoked' }],
+          }
+          return Response.json(selection)
+        }
         if (path.endsWith('/decision')) {
           calls.calls[0].status = 'succeeded'
           return Response.json(calls.calls[0])
@@ -292,6 +301,7 @@ it('binds installed account assets to the frozen step without changing its requi
     step_id: 'deliver',
     declared_tools: [],
     managed_bindings_supported: true,
+    permission_status: 'active',
     context: 'a'.repeat(64),
     access_requirements: [
       {
@@ -334,6 +344,36 @@ it('binds installed account assets to the frozen step without changing its requi
     }),
   )
   await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
+})
+
+it('can revoke method permissions while the step is running without clearing selected assets', async () => {
+  selection.editable = false
+  selection.method = {
+    task_id: '33333333-3333-4333-8333-333333333333',
+    profile_id: 'notice-expert',
+    step_id: 'deliver',
+    declared_tools: [],
+    managed_bindings_supported: true,
+    permission_status: 'active',
+    context: 'a'.repeat(64),
+    access_requirements: [],
+  }
+  const selectedTools = [...selection.tools]
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.methodRevoke }))
+  await waitFor(() => expect(writes[0]?.path).toMatch(/\/capabilities\/revoke-method$/))
+  expect(writes[0].body).toEqual({
+    revision: fixtures.Selection.revision,
+    method_context: 'a'.repeat(64),
+  })
+  expect(
+    await screen.findByText(zh.capabilities.issue.method_permission_revoked),
+  ).toBeInTheDocument()
+  expect(
+    screen.queryByRole('button', { name: zh.capabilities.methodRevoke }),
+  ).not.toBeInTheDocument()
+  expect(selection.tools).toEqual(selectedTools)
 })
 
 it('installs from a reviewed repository preview and pins the selected content automatically', async () => {

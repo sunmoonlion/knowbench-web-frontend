@@ -1534,7 +1534,9 @@
       "method_bindings_required": "Bind every declared MCP tool and Skill before running this step",
       "outside_method_scope": "The selected capability is outside this step contract",
       "ambiguous_method_binding": "Bind exactly one account or Skill version per requirement",
-      "method_permission_unconfirmed": "Review and confirm the method permissions before saving bindings."
+      "method_permission_unconfirmed": "Review and confirm the method permissions before saving bindings.",
+      "method_permission_revoked": "Method permissions were revoked. Confirm again at an idle step.",
+      "method_permission_expired": "Method permissions expired. Confirm again."
     },
     "conversationCapabilitiesExcluded": "Affected capabilities are excluded from this turn. Chat and work that do not need them can continue.",
     "methodCapabilitiesBlocked": "Required capabilities are not ready. Resolve these issues before this step can continue.",
@@ -1577,7 +1579,9 @@
     "methodPermissionResources": "Resource scope ({role}): {values}",
     "methodPermissionTransfer": "Destination: {destination}; permitted argument fields: {fields}",
     "methodPermissionPurpose": "Purpose: {purpose}",
-    "methodPermissionConfirmHint": "Confirming permits requests only for the selected accounts within these limits. Each external call still requires separate approval.",
-    "confirmMethodPermissions": "Confirm permissions and save bindings"
+    "methodPermissionConfirmHint": "Confirming permits the current step to request only these accounts, resources and purposes for up to 24 hours. External operations still require individual approval.",
+    "confirmMethodPermissions": "Confirm permissions and save bindings",
+    "methodRevoke": "Revoke this task's method permissions",
+    "methodRevokeHint": "Revoke the method permissions confirmed for this task, stopping further access by its steps and child calls. Operations already sent cannot be undone."
   }
 }

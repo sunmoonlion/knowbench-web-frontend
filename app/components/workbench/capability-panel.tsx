@@ -112,6 +112,21 @@ function SelectionForm({ value }: { value: api.Selection }) {
   })
   const toggle = (items: string[], key: string, on: boolean) =>
     on ? [...items, key] : items.filter((x) => x !== key)
+  const revoke = useMutation({
+    mutationFn: () =>
+      api.revokeMethodPermissions(
+        value.session_id,
+        {
+          revision: value.revision,
+          method_context: value.method!.context!,
+        },
+        csrfToken,
+      ),
+    onSuccess: (result) => {
+      client.setQueryData(['capability-selection', value.session_id], result)
+      void client.invalidateQueries({ queryKey: ['capability-calls', value.session_id] })
+    },
+  })
   return (
     <form
       className="space-y-3"
@@ -176,6 +191,20 @@ function SelectionForm({ value }: { value: api.Selection }) {
           {value.method.access_requirements.length ? (
             <p>{t('methodPermissionConfirmHint')}</p>
           ) : null}
+          {value.method.permission_status === 'active' && value.method.context ? (
+            <div className="space-y-2">
+              <p>{t('methodRevokeHint')}</p>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={revoke.isPending || save.isPending}
+                onClick={() => revoke.mutate()}
+              >
+                {t('methodRevoke')}
+              </Button>
+            </div>
+          ) : null}
+          {revoke.isError ? <RequestFailure error={revoke.error} /> : null}
         </div>
       ) : null}
       <p>
