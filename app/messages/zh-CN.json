@@ -1526,6 +1526,7 @@
     },
     "issue": {
       "connection_unavailable": "所选连接不可用，请重新连接或移除选择。",
+      "operation_unavailable": "此工具的操作与资源范围尚未核定或已变化，暂不可用，请联系管理员。",
       "skill_unavailable": "所选技能不可用，请检查状态。",
       "revision_changed": "能力版本已变化，请核对后重新保存选择。",
       "missing_dependencies": "技能依赖未选齐，请补齐所需工具。",

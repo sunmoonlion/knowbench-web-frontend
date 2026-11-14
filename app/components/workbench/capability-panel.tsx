@@ -156,7 +156,9 @@ function SelectionForm({ value }: { value: api.Selection }) {
       </p>
       {value.issues.length ? (
         <ul role="alert" className="space-y-1 text-amber-700">
-          <li>{t(value.method ? 'methodCapabilitiesBlocked' : 'conversationCapabilitiesExcluded')}</li>
+          <li>
+            {t(value.method ? 'methodCapabilitiesBlocked' : 'conversationCapabilitiesExcluded')}
+          </li>
           {value.issues.map((issue, i) => (
             <li key={i}>{t.has(`issue.${issue.code}`) ? t(`issue.${issue.code}`) : issue.code}</li>
           ))}
@@ -177,6 +179,9 @@ function SelectionForm({ value }: { value: api.Selection }) {
               <small className="text-muted-foreground block">
                 {tool.connection_name} · {tool.account_label}
               </small>
+              {tool.status === 'operation_unavailable' ? (
+                <small className="block text-amber-700">{t('issue.operation_unavailable')}</small>
+              ) : null}
             </span>
           </label>
         ))}

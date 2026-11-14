@@ -1,3 +1,9 @@
+# 2026-11-14 C2 操作范围未就绪提示（未发布）
+
+基线 `a9dfe11035b246f44f333df30bf20a9ff7fe901d`，qwen 工位/分支。配套 KnowBench API 的运营核定 MCP 操作候选；本次能力显示 `operation_unavailable` 原因，禁止新勾选，同时允许取消已有选择；中英文一致。未改变客户端契约形状、安装记录或实际调用权限，后端继续强制检查。
+
+Node 24.21.0：能力组件与契约 16 passed（`/tmp/c2-operations-web-tests.log`）；TypeScript、定向 ESLint、Prettier、双语键检查通过（`/tmp/c2-operations-web-{typecheck,lint,i18n}.log`）。测试覆盖不可用原因、新选禁用和移除旧选择，不代替真实浏览器/线上验收。未构建/发布镜像，不开放方法作者或脚本开关。完整 C2–C6 进展仍以 sunmoonun/docs/总纲/mcp和skill接入实施方案.md 17.6 为准。
+
 # 2026-11-13 技能包与自动发现扩展（待本地发布）
 
 网页支持 ZIP 导入、文件清单、技能自动发现／限定范围选择；同步提供方契约和双语说明。

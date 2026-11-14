@@ -206,6 +206,22 @@ it('shows pending operations without opening the panel, then approves exact acco
   })
 })
 
+it('explains unavailable operation scope and prevents new selection while allowing removal', async () => {
+  const tool = selection.available_tools[0]
+  tool.status = 'operation_unavailable'
+  selection.tools = [tool.key]
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(await screen.findByRole('button', { name: new RegExp(zh.capabilities.thisRun) }))
+  expect(await screen.findByText(zh.capabilities.issue.operation_unavailable)).toBeInTheDocument()
+  const checkbox = screen.getByRole('checkbox', { name: /Office mail/ })
+  expect(checkbox).toBeChecked()
+  expect(checkbox).not.toBeDisabled()
+  fireEvent.click(checkbox)
+  expect(checkbox).not.toBeChecked()
+  expect(checkbox).toBeDisabled()
+  expect(writes).toHaveLength(0)
+})
+
 it('keeps frozen method selections read-only', async () => {
   selection.editable = false
   page(<CapabilityPanel sessionId={fixtures.Selection.session_id} />)
