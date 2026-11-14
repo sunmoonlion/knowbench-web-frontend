@@ -1533,7 +1533,8 @@
       "runtime_unconfigured": "远程工具执行入口尚未配置。",
       "method_bindings_required": "本步骤还缺少声明的 MCP 或 Skill 绑定",
       "outside_method_scope": "所选能力超出本步骤声明范围",
-      "ambiguous_method_binding": "每项要求只能绑定一个账号或技能版本"
+      "ambiguous_method_binding": "每项要求只能绑定一个账号或技能版本",
+      "method_permission_unconfirmed": "方法权限需要重新确认，请核对范围并保存绑定。"
     },
     "conversationCapabilitiesExcluded": "本轮将排除有问题的能力；不依赖它们的聊天和工作可以继续。",
     "methodCapabilitiesBlocked": "本步骤需要的能力尚未就绪，处理以上问题后才能继续执行。",
@@ -1571,6 +1572,12 @@
     "scriptTimeout": "脚本达到执行时限，已停止。",
     "scriptTruncated": "输出超过大小限制，已截断。",
     "downloadArtifact": "下载 {name}",
-    "stopScript": "停止脚本"
+    "stopScript": "停止脚本",
+    "methodPermissionOperation": "操作：{capability}（版本 {version}）· {operations}",
+    "methodPermissionResources": "资源范围（{role}）：{values}",
+    "methodPermissionTransfer": "外发到：{destination}；允许发送的参数：{fields}",
+    "methodPermissionPurpose": "用途：{purpose}",
+    "methodPermissionConfirmHint": "确认后仅允许所选账号在上述范围内申请操作；每次外部调用仍需单独批准。",
+    "confirmMethodPermissions": "确认权限并保存绑定"
   }
 }

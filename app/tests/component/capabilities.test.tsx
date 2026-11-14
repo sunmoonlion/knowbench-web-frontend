@@ -293,16 +293,39 @@ it('binds installed account assets to the frozen step without changing its requi
     declared_tools: [],
     managed_bindings_supported: true,
     context: 'a'.repeat(64),
+    access_requirements: [
+      {
+        requirement_id: 'deliver-notice',
+        capability_ref: 'synthetic-mail',
+        version: '1',
+        operations: ['send'],
+        resources: [
+          { resource_kind: 'connector', resource_role: 'recipient', values: ['test@example.test'] },
+        ],
+        data_transfer: {
+          destination: 'https://tools.example.test/mcp',
+          argument_fields: ['to'],
+          purpose: 'Deliver the confirmed notice',
+        },
+        required_when: 'always',
+        on_unavailable: 'pause',
+      },
+    ],
     requirements: {
-      tools: [{ url: 'https://tools.example.test/mcp', name: 'send' }],
+      tools: [
+        { url: 'https://tools.example.test/mcp', name: 'send', requirement_id: 'deliver-notice' },
+      ],
       skills: [{ name: 'notice', version: '1', digest: 'b'.repeat(64) }],
     },
   }
   page(<CapabilityPanel sessionId={fixtures.Selection.session_id} />)
   fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
   expect(await screen.findByText(zh.capabilities.methodBindingHint)).toBeInTheDocument()
+  expect(screen.getByText(/test@example.test/)).toBeInTheDocument()
+  expect(screen.getByText(/Deliver the confirmed notice/)).toBeInTheDocument()
+  expect(screen.getByText(zh.capabilities.methodPermissionConfirmHint)).toBeInTheDocument()
   expect(screen.getByRole('combobox', { name: zh.capabilities.skillScope })).toBeDisabled()
-  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.saveSelection }))
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.confirmMethodPermissions }))
   await waitFor(() =>
     expect(writes[0]?.body).toMatchObject({
       method_context: 'a'.repeat(64),

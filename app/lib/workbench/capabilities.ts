@@ -3,10 +3,48 @@ import { getJson, sendJson } from '@/lib/workbench/http'
 
 export const methodRequirementsSchema = z
   .object({
-    tools: z.array(z.object({ url: z.string(), name: z.string() }).strict()),
-    skills: z.array(
-      z.object({ name: z.string(), version: z.string(), digest: z.string(), required_tools: z.array(z.object({url: z.string(), name: z.string()}).strict()).optional() }).strict(),
+    tools: z.array(
+      z.object({ url: z.string(), name: z.string(), requirement_id: z.string() }).strict(),
     ),
+    skills: z.array(
+      z
+        .object({
+          name: z.string(),
+          version: z.string(),
+          digest: z.string(),
+          required_tools: z
+            .array(z.object({ url: z.string(), name: z.string() }).strict())
+            .optional(),
+        })
+        .strict(),
+    ),
+  })
+  .strict()
+
+export const accessRequirementSchema = z
+  .object({
+    requirement_id: z.string(),
+    capability_ref: z.string(),
+    version: z.string(),
+    operations: z.array(z.string()),
+    resources: z.array(
+      z
+        .object({
+          resource_kind: z.literal('connector'),
+          resource_role: z.string(),
+          values: z.array(z.string()),
+        })
+        .strict(),
+    ),
+    data_transfer: z
+      .object({
+        destination: z.string(),
+        argument_fields: z.array(z.string()),
+        purpose: z.string(),
+      })
+      .strict(),
+    required_when: z.literal('always'),
+    on_unavailable: z.literal('pause'),
   })
   .strict()
 
@@ -115,6 +153,7 @@ export const selectionSchema = z
         managed_bindings_supported: z.boolean(),
         context: z.string().nullable().optional(),
         requirements: methodRequirementsSchema.nullable().optional(),
+        access_requirements: z.array(accessRequirementSchema),
       })
       .strict()
       .nullable(),

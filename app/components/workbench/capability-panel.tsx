@@ -147,6 +147,35 @@ function SelectionForm({ value }: { value: api.Selection }) {
               {requirement.name} · {requirement.version}
             </p>
           ))}
+          {value.method.access_requirements.map((requirement) => (
+            <div key={requirement.requirement_id} className="space-y-1 rounded border p-2">
+              <p>
+                {t('methodPermissionOperation', {
+                  capability: requirement.capability_ref,
+                  version: requirement.version,
+                  operations: requirement.operations.join(', '),
+                })}
+              </p>
+              {requirement.resources.map((resource) => (
+                <p key={`${resource.resource_kind}:${resource.resource_role}`}>
+                  {t('methodPermissionResources', {
+                    role: resource.resource_role,
+                    values: resource.values.join(', '),
+                  })}
+                </p>
+              ))}
+              <p>
+                {t('methodPermissionTransfer', {
+                  destination: requirement.data_transfer.destination,
+                  fields: requirement.data_transfer.argument_fields.join(', ') || t('noneDeclared'),
+                })}
+              </p>
+              <p>{t('methodPermissionPurpose', { purpose: requirement.data_transfer.purpose })}</p>
+            </div>
+          ))}
+          {value.method.access_requirements.length ? (
+            <p>{t('methodPermissionConfirmHint')}</p>
+          ) : null}
         </div>
       ) : null}
       <p>
@@ -255,7 +284,13 @@ function SelectionForm({ value }: { value: api.Selection }) {
         {t('clearSelection')}
       </Button>{' '}
       <Button type="submit" disabled={!value.editable || save.isPending}>
-        {t(save.isPending ? 'saving' : 'saveSelection')}
+        {t(
+          save.isPending
+            ? 'saving'
+            : value.method?.access_requirements.length
+              ? 'confirmMethodPermissions'
+              : 'saveSelection',
+        )}
       </Button>
     </form>
   )
