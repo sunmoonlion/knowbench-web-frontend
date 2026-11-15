@@ -145,12 +145,45 @@ export const catalogSchema = z
     script_execution_enabled: z.boolean().optional(),
   })
   .strict()
+export const resourceAuthorityRefSchema = z
+  .object({
+    record_id: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/),
+    revision: z.number().int().min(1),
+    digest: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+  })
+  .strict()
+const delegationIdentity = z
+  .string()
+  .min(1)
+  .max(200)
+  .regex(/^[A-Za-z0-9][A-Za-z0-9._:-]*$/)
+export const delegationOptionSchema = z
+  .object({
+    tool_key: z.string().min(1).max(256),
+    authority: resourceAuthorityRefSchema,
+    issuer: z.string().min(1).max(200),
+    expires_at: z.iso.datetime({ offset: true }),
+    binding: z
+      .object({
+        kind: z.literal('accepted_plan').default('accepted_plan'),
+        parent_method_id: delegationIdentity,
+        parent_snapshot_digest: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+        child_method_id: delegationIdentity,
+        child_method_version: delegationIdentity,
+      })
+      .strict(),
+  })
+  .strict()
+export type ResourceAuthorityRef = z.infer<typeof resourceAuthorityRefSchema>
+export type DelegationOption = z.infer<typeof delegationOptionSchema>
+const delegations = z.record(z.string(), resourceAuthorityRefSchema).default({})
 export const selectionPutSchema = z
   .object({
     revision: z.number().int().min(0),
     tools: z.array(z.string()).max(50).default([]),
     skills: z.array(z.string()).max(10).default([]),
     formal_methods: formalMethodSelectionsSchema.default([]),
+    delegations,
     purpose: z.string().max(1000).default(''),
     skill_mode: z.enum(['auto', 'explicit']).default('explicit'),
     method_context: z
@@ -162,6 +195,9 @@ export const selectionPutSchema = z
   .strict()
   .refine(
     (v) =>
+      Object.keys(v.delegations).length <= 50 &&
+      Object.keys(v.delegations).every((key) => v.tools.includes(key)) &&
+      (!Object.keys(v.delegations).length || v.method_context !== null) &&
       new Set(v.tools).size === v.tools.length &&
       new Set(v.skills).size === v.skills.length &&
       (v.skill_mode !== 'auto' || v.skills.length === 0),
@@ -170,6 +206,7 @@ export const selectionSchema = z
   .object({
     session_id: z.uuid(),
     formal_methods: formalMethodSelectionsSchema.default([]),
+    delegations,
     method: z
       .object({
         task_id: z.uuid(),
@@ -181,6 +218,7 @@ export const selectionSchema = z
         requirements: methodRequirementsSchema.nullable().optional(),
         access_requirements: z.array(accessRequirementSchema),
         permission_status: z.enum(['not_required', 'unconfirmed', 'active', 'revoked', 'expired']),
+        delegation_options: z.array(delegationOptionSchema).default([]),
       })
       .strict()
       .nullable(),

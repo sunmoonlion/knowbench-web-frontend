@@ -1589,7 +1589,8 @@
     "formalModelMethodCall": "当前模型发起的正式方法调用",
     "formalMethodOperation": "实际工具：{tool}",
     "formalMethodReference": "方法精确版本",
-    "formalMethodSource": "来源：{name} · 修订 {revision}"
+    "formalMethodSource": "来源：{name} · 修订 {revision}",
+    "delegationReviewRequired": "委派依据发生变化或不再适用，请先清除或重新选择。"
   },
   "formalMethods": {
     "title": "手动调用本人方法",
@@ -1649,5 +1650,19 @@
     "unavailable": "当前不可用，已选方法可移除",
     "missing": "当前目录尚未确认此已选版本；它不会被自动替换。可移除后保存。",
     "remove": "移除此方法选择"
+  },
+  "resourceDelegation": {
+    "title": "资源方委派依据（仅当前步骤）",
+    "hint": "仅允许这一步使用所列资源方依据接收父调用授权，不能继续委派；具体写入或外发仍须逐次批准。此选择不授予新的专家或编排资格。",
+    "defaultHint": "默认不选。不选择时继续原有精确直授，不自动继承父调用权限。",
+    "choose": "为 {tool} 选择依据",
+    "none": "不使用委派依据（精确直授）",
+    "stale": "该选择已失效、发生修订或不再适用于当前工具。请清除或重新选择后保存。",
+    "selectTool": "请先选择对应连接工具；清除旧依据不受此限制。",
+    "reference": "核对依据、有效期与当前父子方法",
+    "issuer": "核定资源方：{issuer}",
+    "expiry": "有效期至：{value}",
+    "binding": "已接受计划：{parent} → {child}（{version}）",
+    "clear": "清除此委派依据"
   }
 }

@@ -275,6 +275,7 @@ it('lets the user remove disabled selections and save a revision-bound empty sco
       skill_mode: 'explicit',
       method_context: null,
       formal_methods: [],
+      delegations: {},
     }),
   )
 })
@@ -324,6 +325,7 @@ it('binds installed account assets to the frozen step without changing its requi
     declared_tools: [],
     managed_bindings_supported: true,
     permission_status: 'active',
+    delegation_options: [],
     context: 'a'.repeat(64),
     access_requirements: [
       {
@@ -377,6 +379,7 @@ it('can revoke method permissions while the step is running without clearing sel
     declared_tools: [],
     managed_bindings_supported: true,
     permission_status: 'active',
+    delegation_options: [],
     context: 'a'.repeat(64),
     access_requirements: [],
   }
@@ -515,4 +518,140 @@ it('does not show model method selection in an expert-only capability panel', as
   fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
   await screen.findByRole('button', { name: zh.capabilities.saveSelection })
   expect(screen.queryByText(zh.formalMethodSelection.title)).not.toBeInTheDocument()
+})
+
+const delegationAuthority = {
+  record_id: 'reviewed-mail-owner',
+  revision: 1,
+  digest: 'sha256:' + 'c'.repeat(64),
+}
+function delegationStep() {
+  const option = {
+    tool_key: selection.tools[0],
+    authority: { ...delegationAuthority },
+    issuer: 'Mail resource owner',
+    expires_at: '2099-01-01T00:00:00Z',
+    binding: {
+      kind: 'accepted_plan' as const,
+      parent_method_id: 'accepted-parent-plan',
+      parent_snapshot_digest: 'sha256:' + 'd'.repeat(64),
+      child_method_id: 'send-confirmed-notice',
+      child_method_version: 'reviewed-v1',
+    },
+  }
+  selection.method = {
+    task_id: '33333333-3333-4333-8333-333333333333',
+    profile_id: 'notice-expert',
+    step_id: 'deliver',
+    declared_tools: [],
+    managed_bindings_supported: true,
+    permission_status: 'unconfirmed',
+    context: 'a'.repeat(64),
+    access_requirements: [],
+    delegation_options: [option],
+  }
+  return option
+}
+it('keeps resource delegation unselected by default and preserves exact direct grants', async () => {
+  delegationStep()
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+  await screen.findByText(zh.resourceDelegation.title)
+  expect(screen.getByText(zh.resourceDelegation.hint)).toBeInTheDocument()
+  const choice = screen.getByRole('combobox', { name: /为 Office mail · send 选择依据/ })
+  expect(choice).toHaveValue('')
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.saveSelection }))
+  await waitFor(() => expect(writes[0]?.body.delegations).toEqual({}))
+})
+it('saves only the exact resource authority reference after an explicit basis choice', async () => {
+  const option = delegationStep()
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+  const choice = await screen.findByRole('combobox', { name: /为 Office mail · send 选择依据/ })
+  const selectOption = screen.getByRole<HTMLOptionElement>('option', {
+    name: /Mail resource owner/,
+  })
+  fireEvent.change(choice, { target: { value: selectOption.value } })
+  expect(writes).toHaveLength(0)
+  expect(screen.getByText(/accepted-parent-plan → send-confirmed-notice/)).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.saveSelection }))
+  await waitFor(() => expect(writes).toHaveLength(1))
+  expect(writes[0].body.delegations).toEqual({ [option.tool_key]: delegationAuthority })
+  expect(writes[0].body).not.toHaveProperty('delegable')
+  expect(writes[0].body).not.toHaveProperty('parent_call_id')
+  expect(JSON.stringify(writes[0].body.delegations)).not.toContain('binding')
+})
+it.each(['changed', 'removed', 'expired'] as const)(
+  'requires renewed choice when a delegation option is %s during polling',
+  async (change) => {
+    const option = delegationStep()
+    page(<CapabilityPanel sessionId={selection.session_id} />)
+    fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+    const choice = await screen.findByRole('combobox', { name: /为 Office mail · send 选择依据/ })
+    fireEvent.change(choice, {
+      target: {
+        value: screen.getByRole<HTMLOptionElement>('option', { name: /Mail resource owner/ }).value,
+      },
+    })
+    selection.method!.delegation_options =
+      change === 'removed'
+        ? []
+        : [
+            {
+              ...option,
+              ...(change === 'changed'
+                ? {
+                    authority: {
+                      ...option.authority,
+                      revision: 2,
+                      digest: 'sha256:' + 'e'.repeat(64),
+                    },
+                  }
+                : { expires_at: '2020-01-01T00:00:00Z' }),
+            },
+          ]
+    fireEvent.click(screen.getByRole('button', { name: zh.capabilities.reload }))
+    await screen.findByText(zh.capabilities.delegationReviewRequired)
+    expect(screen.getByRole('button', { name: zh.capabilities.saveSelection })).toBeDisabled()
+    expect(writes).toHaveLength(0)
+    fireEvent.click(screen.getByRole('button', { name: zh.resourceDelegation.clear }))
+    fireEvent.click(screen.getByRole('button', { name: zh.capabilities.saveSelection }))
+    await waitFor(() => expect(writes[0]?.body.delegations).toEqual({}))
+  },
+)
+it('does not expose delegation choices in an ordinary conversation', async () => {
+  page(<CapabilityPanel sessionId={selection.session_id} enableFormalInvocations />)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+  await screen.findByRole('button', { name: zh.capabilities.saveSelection })
+  expect(screen.queryByText(zh.resourceDelegation.title)).not.toBeInTheDocument()
+})
+it('does not permit delegation changes during an executing method step', async () => {
+  delegationStep()
+  selection.editable = false
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+  expect(
+    await screen.findByRole('combobox', { name: /为 Office mail · send 选择依据/ }),
+  ).toBeDisabled()
+  expect(writes).toHaveLength(0)
+})
+
+it('rechecks delegation expiry at submit even without a new server snapshot', async () => {
+  delegationStep()
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+  const choice = await screen.findByRole('combobox', { name: /为 Office mail · send 选择依据/ })
+  fireEvent.change(choice, {
+    target: {
+      value: screen.getByRole<HTMLOptionElement>('option', { name: /Mail resource owner/ }).value,
+    },
+  })
+  const now = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2100-01-01T00:00:00Z'))
+  try {
+    fireEvent.click(screen.getByRole('button', { name: zh.capabilities.saveSelection }))
+    await screen.findByText(zh.capabilities.delegationReviewRequired)
+    expect(writes).toHaveLength(0)
+  } finally {
+    now.mockRestore()
+  }
 })

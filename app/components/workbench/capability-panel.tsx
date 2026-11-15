@@ -12,6 +12,10 @@ import * as api from '@/lib/workbench/capabilities'
 import { SkillConnections } from './skill-connections'
 import { CapabilityActionCard } from './capability-action-card'
 import { FormalMethodSelection } from './formal-method-selection'
+import {
+  ResourceDelegationSelection,
+  delegationSelectionValid,
+} from './resource-delegation-selection'
 import { FormalMethodPanel } from './formal-method-panel'
 
 export function CapabilityPanel({
@@ -124,6 +128,10 @@ function SelectionForm({
     [purpose, setPurpose] = useState(value.purpose)
   const [skillMode, setSkillMode] = useState(value.skill_mode)
   const [formalMethods, setFormalMethods] = useState(value.formal_methods ?? [])
+  const [delegations, setDelegations] = useState(value.delegations ?? {})
+  const [delegationReviewRequired, setDelegationReviewRequired] = useState(false)
+  const delegationOptions = value.method?.delegation_options ?? []
+  const validDelegations = delegationSelectionValid(delegationOptions, delegations, tools)
   const save = useMutation({
     mutationFn: () =>
       api.saveSelection(
@@ -136,6 +144,7 @@ function SelectionForm({
           skill_mode: skillMode,
           method_context: value.method?.context ?? null,
           formal_methods: formalMethods,
+          delegations,
         },
         csrfToken,
       ),
@@ -165,6 +174,10 @@ function SelectionForm({
       className="space-y-3"
       onSubmit={(e) => {
         e.preventDefault()
+        if (!delegationSelectionValid(delegationOptions, delegations, tools)) {
+          setDelegationReviewRequired(true)
+          return
+        }
         save.mutate()
       }}
     >
@@ -277,6 +290,23 @@ function SelectionForm({
           </label>
         ))}
       </fieldset>
+      {value.method?.context &&
+      (delegationOptions.length > 0 || Object.keys(delegations).length > 0) ? (
+        <ResourceDelegationSelection
+          options={delegationOptions}
+          selected={delegations}
+          tools={tools}
+          availableTools={value.available_tools}
+          disabled={!value.editable || save.isPending}
+          onChange={(next) => {
+            setDelegations(next)
+            setDelegationReviewRequired(false)
+          }}
+        />
+      ) : null}
+      {delegationReviewRequired || !validDelegations ? (
+        <p role="alert">{t('delegationReviewRequired')}</p>
+      ) : null}
       <fieldset disabled={!value.editable || save.isPending} className="space-y-2">
         <legend className="font-medium">{t('skills')}</legend>
         <label className="block">
@@ -351,11 +381,13 @@ function SelectionForm({
           setSkills([])
           setSkillMode('explicit')
           setFormalMethods([])
+          setDelegations({})
+          setDelegationReviewRequired(false)
         }}
       >
         {t('clearSelection')}
       </Button>{' '}
-      <Button type="submit" disabled={!value.editable || save.isPending}>
+      <Button type="submit" disabled={!value.editable || save.isPending || !validDelegations}>
         {t(
           save.isPending
             ? 'saving'

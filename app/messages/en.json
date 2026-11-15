@@ -1589,7 +1589,8 @@
     "formalModelMethodCall": "Formal method invoked by the current model",
     "formalMethodOperation": "Underlying operation: {tool}",
     "formalMethodReference": "Exact method reference",
-    "formalMethodSource": "Source: {name} · revision {revision}"
+    "formalMethodSource": "Source: {name} · revision {revision}",
+    "delegationReviewRequired": "A delegation basis changed or no longer applies. Clear it or select a current basis first."
   },
   "formalMethods": {
     "title": "Invoke my methods manually",
@@ -1649,5 +1650,19 @@
     "unavailable": "Currently unavailable; selected methods can be removed",
     "missing": "This selected version is not confirmed by the current catalog and will not be replaced automatically. Remove it and save if needed.",
     "remove": "Remove this method selection"
+  },
+  "resourceDelegation": {
+    "title": "Resource-owner delegation basis for this step",
+    "hint": "Allow only this step to receive its parent call’s authorization using the listed resource-owner basis. It cannot delegate further; each write or external transfer still requires approval. This does not establish new expert or orchestration eligibility.",
+    "defaultHint": "Nothing is selected by default. With no basis selected, the existing exact direct grant applies; parent permissions are never inherited automatically.",
+    "choose": "Choose a basis for {tool}",
+    "none": "No delegation basis (exact direct grant)",
+    "stale": "This choice expired, changed or no longer applies to the selected tool. Clear it or choose a current basis before saving.",
+    "selectTool": "Select the corresponding connection tool first. You may still clear a previous basis.",
+    "reference": "Review the basis, expiry and current parent/child methods",
+    "issuer": "Reviewed resource owner: {issuer}",
+    "expiry": "Valid until: {value}",
+    "binding": "Accepted plan: {parent} → {child} ({version})",
+    "clear": "Clear this delegation basis"
   }
 }

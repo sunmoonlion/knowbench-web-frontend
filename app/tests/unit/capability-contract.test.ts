@@ -6,6 +6,8 @@ import {
   catalogSchema,
   selectionSchema,
   selectionPutSchema,
+  resourceAuthorityRefSchema,
+  delegationOptionSchema,
   callSchema,
 } from '@/lib/workbench/capabilities'
 import {
@@ -211,4 +213,73 @@ it('parses provider-owned model selection, submission and history with strict ca
       ],
     }).success,
   ).toBe(false)
+})
+
+it('accepts only exact resource authority references in a selected method context', () => {
+  const ref = { record_id: 'resource-owner.v1', revision: 1, digest: 'sha256:' + 'c'.repeat(64) }
+  const tool = samples.Selection.tools[0]
+  const command = {
+    revision: 1,
+    tools: [tool],
+    method_context: 'a'.repeat(64),
+    delegations: { [tool]: ref },
+  }
+  expect(selectionPutSchema.parse(command).delegations).toEqual({ [tool]: ref })
+  expect(selectionPutSchema.parse({ revision: 1 }).delegations).toEqual({})
+  expect(selectionSchema.parse(samples.Selection).delegations).toEqual({})
+  for (const changed of [
+    { tools: [] },
+    { method_context: null },
+    { delegable: true },
+    { parent_call_id: samples.Call.id },
+  ]) {
+    expect(selectionPutSchema.safeParse({ ...command, ...changed }).success).toBe(false)
+  }
+  for (const changed of [
+    { record_id: 'not/a/record' },
+    { revision: 0 },
+    { digest: 'latest' },
+    { delegable: true },
+    { parent_revision: 1 },
+  ]) {
+    expect(resourceAuthorityRefSchema.safeParse({ ...ref, ...changed }).success).toBe(false)
+  }
+  const option = {
+    tool_key: tool,
+    authority: ref,
+    issuer: 'Resource owner',
+    expires_at: '2099-01-01T00:00:00Z',
+    binding: {
+      kind: 'accepted_plan',
+      parent_method_id: 'accepted:plan',
+      parent_snapshot_digest: 'sha256:' + 'b'.repeat(64),
+      child_method_id: 'child_method',
+      child_method_version: 'v1',
+    },
+  }
+  expect(delegationOptionSchema.safeParse(option).success).toBe(true)
+  expect(
+    delegationOptionSchema.safeParse({
+      ...option,
+      binding: { ...option.binding, kind: 'formal_method' },
+    }).success,
+  ).toBe(false)
+  expect(
+    delegationOptionSchema.safeParse({
+      ...option,
+      binding: { ...option.binding, child_method_id: 'unbounded/name' },
+    }).success,
+  ).toBe(false)
+})
+
+it('consumes provider-owned accepted-plan delegation options and exact selection references', () => {
+  const selected = selectionSchema.parse(samples.ResourceDelegationSelection)
+  const command = selectionPutSchema.parse(samples.ResourceDelegationSelectionPut)
+  expect(selected.method?.delegation_options).toHaveLength(1)
+  const option = selected.method!.delegation_options[0]
+  expect(delegationOptionSchema.parse(option).binding.kind).toBe('accepted_plan')
+  expect(command.delegations).toEqual({ [option.tool_key]: option.authority })
+  expect(selected.delegations).toEqual(command.delegations)
+  expect(command.delegations[option.tool_key]).not.toHaveProperty('delegable')
+  expect(command.delegations[option.tool_key]).not.toHaveProperty('parent_call_id')
 })
