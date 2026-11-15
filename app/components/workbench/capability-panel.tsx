@@ -347,6 +347,7 @@ function ActionCard({ call }: { call: api.CapabilityCall }) {
         {call.detail.tool.name} ·{' '}
         {t.has(`state.${call.status}`) ? t(`state.${call.status}`) : call.status}
       </h4>
+      {call.detail.execution_kind === 'formal_mcp' ? <p>{t('formalMethodCall')}</p> : null}
       <p>
         {call.detail.connection_name} · {call.detail.account_label}
       </p>

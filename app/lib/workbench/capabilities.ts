@@ -180,6 +180,31 @@ export const selectionSchema = z
   })
   .strict()
 export type Selection = z.infer<typeof selectionSchema>
+const callDetail = z.object({
+  source_asset_id: z.uuid().nullable().optional(),
+  connection_id: z.uuid().nullable(),
+  revision: z.number(),
+  connection_name: z.string(),
+  account_label: z.string(),
+  purpose: z.string(),
+  tool,
+  arguments: z.record(z.string(), z.unknown()),
+  approval_token: z.string(),
+  result: z.unknown().optional(),
+})
+const modelCallDetail = callDetail
+  .extend({
+    selection_revision: z.number(),
+    runtime: z.string(),
+    method: z.record(z.string(), z.string()).nullable().optional(),
+    execution_kind: z.literal('skill_script').nullable().optional(),
+  })
+  .strict()
+const hostCallDetail = callDetail
+  .extend({
+    execution_kind: z.literal('formal_mcp'),
+  })
+  .strict()
 export const callSchema = z
   .object({
     id: z.uuid(),
@@ -192,24 +217,7 @@ export const callSchema = z
     status: z.string(),
     created_at: z.string(),
     updated_at: z.string(),
-    detail: z
-      .object({
-        source_asset_id: z.uuid().nullable().optional(),
-        connection_id: z.uuid().nullable(),
-        revision: z.number(),
-        connection_name: z.string(),
-        account_label: z.string(),
-        purpose: z.string(),
-        tool,
-        arguments: z.record(z.string(), z.unknown()),
-        selection_revision: z.number(),
-        runtime: z.string(),
-        approval_token: z.string(),
-        result: z.unknown().optional(),
-        method: z.record(z.string(), z.string()).nullable().optional(),
-        execution_kind: z.literal('skill_script').nullable().optional(),
-      })
-      .strict(),
+    detail: z.union([modelCallDetail, hostCallDetail]),
   })
   .strict()
 export type CapabilityCall = z.infer<typeof callSchema>

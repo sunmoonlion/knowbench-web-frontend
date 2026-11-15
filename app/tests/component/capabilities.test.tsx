@@ -8,6 +8,7 @@ import { WorkbenchProvider } from '@/lib/workbench/context'
 import zh from '@/messages/zh-CN.json'
 import fixtures from '@/tests/fixtures/capabilities-v1.samples.json'
 import type { Selection, CapabilityCall } from '@/lib/workbench/capabilities'
+import { callSchema } from '@/lib/workbench/capabilities'
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/zh-CN/workbench/chat/22222222-2222-4222-8222-222222222222',
@@ -37,7 +38,7 @@ function page(child: React.ReactNode) {
 beforeEach(() => {
   catalog = structuredClone(fixtures.Catalog)
   selection = structuredClone(fixtures.Selection) as Selection
-  calls = structuredClone(fixtures.Calls)
+  calls = { calls: [callSchema.parse(structuredClone(fixtures.Call))] }
   writes.length = 0
   vi.stubGlobal(
     'fetch',
@@ -106,6 +107,21 @@ afterEach(() => {
   clients.forEach((c) => c.clear())
   clients.length = 0
   vi.unstubAllGlobals()
+})
+
+it('displays and approves a host method call using its exact existing approval', async () => {
+  calls.calls[0] = callSchema.parse(structuredClone(fixtures.HostCall))
+  const detail = calls.calls[0].detail
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.thisRun }))
+  expect(await screen.findByText(zh.capabilities.formalMethodCall)).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.allowOnce }))
+  await waitFor(() => expect(writes.some((w) => w.path.endsWith('/decision'))).toBe(true))
+  expect(writes.find((w) => w.path.endsWith('/decision'))!.body).toEqual({
+    decision: 'accept',
+    token: detail.approval_token,
+    subject_digest: calls.calls[0].digest,
+  })
 })
 
 it('shows script artifacts as downloads and can stop a running script', async () => {

@@ -25,4 +25,23 @@ describe('provider-owned capability v1', () => {
     expect(() => assetSchema.parse({ ...samples.Asset, secret: 'should-never-return' })).toThrow()
     expect(() => selectionSchema.parse({ ...samples.Selection, approved: true })).toThrow()
   })
+  it('requires an explicit host kind and rejects fabricated model authority on host calls', () => {
+    const detail: Record<string, unknown> = { ...samples.Call.detail, execution_kind: 'formal_mcp' }
+    delete detail.runtime
+    delete detail.selection_revision
+    delete detail.method
+    expect(callSchema.parse({ ...samples.Call, detail }).detail.execution_kind).toBe('formal_mcp')
+    for (const extra of [
+      { runtime: 'invented' },
+      { selection_revision: 1 },
+      { method: { task_id: samples.Call.id } },
+      { formal_host: { trusted: true } },
+      { execution_kind: undefined },
+    ]) {
+      expect(() => callSchema.parse({ ...samples.Call, detail: { ...detail, ...extra } })).toThrow()
+    }
+    const model: Record<string, unknown> = { ...samples.Call.detail }
+    delete model.runtime
+    expect(() => callSchema.parse({ ...samples.Call, detail: model })).toThrow()
+  })
 })

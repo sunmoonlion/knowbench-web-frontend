@@ -1582,6 +1582,7 @@
     "methodPermissionConfirmHint": "确认后，当前步骤仅能在上述账号、资源和用途范围内申请操作，授权最长有效 24 小时。外部操作仍逐次审批。",
     "confirmMethodPermissions": "确认权限并保存绑定",
     "methodRevoke": "撤销此委托的方法授权",
-    "methodRevokeHint": "撤销此委托已确认的方法权限，阻止相关步骤及下层调用继续访问；已经发出的操作不会撤回。"
+    "methodRevokeHint": "撤销此委托已确认的方法权限，阻止相关步骤及下层调用继续访问；已经发出的操作不会撤回。",
+    "formalMethodCall": "正式方法调用"
   }
 }
