@@ -1536,7 +1536,8 @@
       "ambiguous_method_binding": "Bind exactly one account or Skill version per requirement",
       "method_permission_unconfirmed": "Review and confirm the method permissions before saving bindings.",
       "method_permission_revoked": "Method permissions were revoked. Confirm again at an idle step.",
-      "method_permission_expired": "Method permissions expired. Confirm again."
+      "method_permission_expired": "Method permissions expired. Confirm again.",
+      "formal_method_unavailable": "A selected formal method is unavailable. Refresh the catalog and confirm its version and permissions."
     },
     "conversationCapabilitiesExcluded": "Affected capabilities are excluded from this turn. Chat and work that do not need them can continue.",
     "methodCapabilitiesBlocked": "Required capabilities are not ready. Resolve these issues before this step can continue.",
@@ -1584,11 +1585,15 @@
     "methodRevoke": "Revoke this task's method permissions",
     "methodRevokeHint": "Revoke the method permissions confirmed for this task, stopping further access by its steps and child calls. Operations already sent cannot be undone.",
     "formalMethodCall": "Formal method call",
-    "formalModelProbeCall": "Model-initiated formal method incubation test"
+    "formalModelProbeCall": "Model-initiated formal method incubation test",
+    "formalModelMethodCall": "Formal method invoked by the current model",
+    "formalMethodOperation": "Underlying operation: {tool}",
+    "formalMethodReference": "Exact method reference",
+    "formalMethodSource": "Source: {name} · revision {revision}"
   },
   "formalMethods": {
-    "title": "My registered methods",
-    "hint": "Call only your own verified and registered direct methods. Choose a version, enter inputs and explicitly approve each operation. This does not expose the method to a model or create an expert task.",
+    "title": "Invoke my methods manually",
+    "hint": "Choose your own verified registered version, enter inputs and start a manual call here. Select and save model-invocable methods separately in the capability scope. Each actual operation still requires individual approval.",
     "costHint": "Only MCP adapters reviewed by the server as having zero incremental call cost are supported. This does not imply other services are free.",
     "refresh": "Refresh methods and calls",
     "empty": "You have no registered methods available here yet.",
@@ -1617,7 +1622,7 @@
     "prepareAnother": "Prepare another call",
     "editRejected": "Edit rejected inputs",
     "unknown": "The outcome is unknown. Check the external service first; this call is never replayed automatically.",
-    "history": "Recent method calls",
+    "history": "Recent manual and model method calls",
     "validatedOutputs": "Results validated against the output declaration",
     "requestDetails": "View call record",
     "operation": "Underlying operation and approval",
@@ -1629,6 +1634,20 @@
       "declined": "Method declined",
       "unknown": "Method outcome unknown",
       "expired": "Approval expired"
-    }
+    },
+    "modelOrigin": "Invoked by the model within the selected conversation scope",
+    "manualOrigin": "Invoked manually by you"
+  },
+  "formalMethodSelection": {
+    "title": "Formal methods for model invocation",
+    "hint": "Only your privately registered methods with verified model invocation are listed. Save to include them in this conversation’s model scope. Selection does not approve an action; each call still needs your approval.",
+    "limit": "Select up to 20 methods, one exact version per method. Remove the previous selection before choosing another version.",
+    "refresh": "Refresh model method catalog",
+    "loading": "Loading model method catalog…",
+    "empty": "No private formal methods with verified model invocation are available.",
+    "scope": "Exact version and permission scope",
+    "unavailable": "Currently unavailable; selected methods can be removed",
+    "missing": "This selected version is not confirmed by the current catalog and will not be replaced automatically. Remove it and save if needed.",
+    "remove": "Remove this method selection"
   }
 }

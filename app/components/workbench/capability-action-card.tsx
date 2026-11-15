@@ -14,7 +14,9 @@ export function CapabilityActionCard({
   call: api.CapabilityCall
   showResult?: boolean
 }) {
-  const renderResult = showResult && call.detail.execution_kind !== 'formal_method'
+  const renderResult =
+    showResult &&
+    !['formal_method', 'formal_method_model'].includes(call.detail.execution_kind ?? '')
   const scriptResult =
     call.detail.execution_kind === 'skill_script'
       ? api.scriptResultSchema.safeParse(call.detail.result)
@@ -43,11 +45,33 @@ export function CapabilityActionCard({
   return (
     <section className="space-y-3 rounded-lg border p-3">
       <h4 className="font-medium">
-        {call.detail.tool.name} ·{' '}
-        {t.has(`state.${call.status}`) ? t(`state.${call.status}`) : call.status}
+        {call.detail.execution_kind === 'formal_method_model'
+          ? `${call.detail.method_title} · v${call.detail.reference.version}`
+          : call.detail.tool.name}{' '}
+        · {t.has(`state.${call.status}`) ? t(`state.${call.status}`) : call.status}
       </h4>
       {['formal_mcp', 'formal_method'].includes(call.detail.execution_kind ?? '') ? (
         <p>{t('formalMethodCall')}</p>
+      ) : null}
+      {call.detail.execution_kind === 'formal_method_model' ? (
+        <div className="space-y-1">
+          <p>{t('formalModelMethodCall')}</p>
+          <p>{t('formalMethodOperation', { tool: call.detail.tool.name })}</p>
+          <details>
+            <summary>{t('formalMethodReference')}</summary>
+            <p className="break-all">
+              {call.detail.reference.method_id} · v{call.detail.reference.version} ·{' '}
+              {call.detail.reference.digest}
+            </p>
+            <p>
+              {t('formalMethodSource', {
+                name: call.detail.connection_name,
+                revision: call.detail.revision,
+              })}
+            </p>
+            <p className="break-all">{call.detail.source_asset_id}</p>
+          </details>
+        </div>
       ) : null}
       {call.detail.execution_kind === 'formal_probe' ? <p>{t('formalModelProbeCall')}</p> : null}
       <p>

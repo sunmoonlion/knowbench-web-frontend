@@ -8,7 +8,7 @@ import { WorkbenchProvider } from '@/lib/workbench/context'
 import zh from '@/messages/zh-CN.json'
 import fixtures from '@/tests/fixtures/capabilities-v1.samples.json'
 import type { Selection, CapabilityCall } from '@/lib/workbench/capabilities'
-import { callSchema } from '@/lib/workbench/capabilities'
+import { callSchema, selectionSchema } from '@/lib/workbench/capabilities'
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/zh-CN/workbench/chat/22222222-2222-4222-8222-222222222222',
@@ -17,6 +17,7 @@ vi.mock('next/navigation', () => ({
       'returnTo=%2Fzh-CN%2Fworkbench%2Fchat%2F22222222-2222-4222-8222-222222222222',
     ),
 }))
+let modelItems = structuredClone(fixtures.FormalMethodCatalogResponse.items)
 let catalog: typeof fixtures.Catalog, selection: Selection, calls: { calls: CapabilityCall[] }
 const writes: { path: string; body: Record<string, unknown>; headers: unknown }[] = []
 const clients: QueryClient[] = []
@@ -36,8 +37,9 @@ function page(child: React.ReactNode) {
   )
 }
 beforeEach(() => {
+  modelItems = structuredClone(fixtures.FormalMethodCatalogResponse.items)
   catalog = structuredClone(fixtures.Catalog)
-  selection = structuredClone(fixtures.Selection) as Selection
+  selection = selectionSchema.parse(structuredClone(fixtures.Selection))
   calls = { calls: [callSchema.parse(structuredClone(fixtures.Call))] }
   writes.length = 0
   vi.stubGlobal(
@@ -96,6 +98,9 @@ beforeEach(() => {
           return Response.json(selection)
         }
       }
+      if (path.endsWith('/formal-methods?caller=model')) return Response.json({ items: modelItems })
+      if (path.endsWith('/formal-methods')) return Response.json({ items: [] })
+      if (path.endsWith('/formal-method-calls')) return Response.json({ calls: [] })
       if (path.endsWith('/capability-calls')) return Response.json(calls)
       if (path.includes('/sessions/')) return Response.json(selection)
       if (path.endsWith('/capabilities')) return Response.json(catalog)
@@ -269,6 +274,7 @@ it('lets the user remove disabled selections and save a revision-bound empty sco
       purpose: 'Notify reader',
       skill_mode: 'explicit',
       method_context: null,
+      formal_methods: [],
     }),
   )
 })
@@ -455,4 +461,58 @@ it('labels a model incubation probe distinctly and submits only its existing app
     token: call.detail.approval_token,
     subject_digest: call.digest,
   })
+})
+
+it('saves explicitly selected model methods by exact reference without approving or invoking them', async () => {
+  const item = modelItems.find((item) => item.available)!
+  page(<CapabilityPanel sessionId={selection.session_id} enableFormalInvocations />)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+  const checkbox = await screen.findByRole('checkbox', {
+    name: `${item.title} · v${item.reference.version}`,
+  })
+  expect(checkbox).not.toBeChecked()
+  expect(screen.getByText(zh.formalMethodSelection.hint)).toBeInTheDocument()
+  fireEvent.click(checkbox)
+  expect(writes).toHaveLength(0)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.saveSelection }))
+  await waitFor(() => expect(writes).toHaveLength(1))
+  expect(writes[0].path).toContain('/capabilities')
+  expect(writes[0].body).toMatchObject({
+    revision: selection.revision - 1,
+    formal_methods: [item.reference],
+  })
+  expect(
+    writes.some((w) => w.path.endsWith('/decision') || w.path.endsWith('/formal-method-calls')),
+  ).toBe(false)
+})
+it('keeps unavailable selected versions removable and never silently replaces them', async () => {
+  const item = modelItems.find((item) => item.available)!
+  const stale = { ...item.reference, version: item.reference.version + 10 }
+  selection.formal_methods = [stale]
+  page(<CapabilityPanel sessionId={selection.session_id} enableFormalInvocations />)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+  expect(await screen.findByText(zh.formalMethodSelection.missing)).toBeInTheDocument()
+  expect(
+    await screen.findByRole('checkbox', { name: `${item.title} · v${item.reference.version}` }),
+  ).toBeDisabled()
+  fireEvent.click(screen.getByRole('button', { name: zh.formalMethodSelection.remove }))
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.saveSelection }))
+  await waitFor(() => expect(writes[0]?.body.formal_methods).toEqual([]))
+})
+it('does not allow unavailable model methods or edits while the selection is locked', async () => {
+  selection.editable = false
+  page(<CapabilityPanel sessionId={selection.session_id} enableFormalInvocations />)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+  for (const item of modelItems) {
+    expect(
+      await screen.findByRole('checkbox', { name: `${item.title} · v${item.reference.version}` }),
+    ).toBeDisabled()
+  }
+  expect(writes).toHaveLength(0)
+})
+it('does not show model method selection in an expert-only capability panel', async () => {
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+  await screen.findByRole('button', { name: zh.capabilities.saveSelection })
+  expect(screen.queryByText(zh.formalMethodSelection.title)).not.toBeInTheDocument()
 })

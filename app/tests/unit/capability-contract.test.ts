@@ -5,6 +5,7 @@ import {
   assetSchema,
   catalogSchema,
   selectionSchema,
+  selectionPutSchema,
   callSchema,
 } from '@/lib/workbench/capabilities'
 import {
@@ -43,9 +44,9 @@ describe('provider-owned capability v1', () => {
       formalMethodInvocationSchema.parse(samples.FormalMethodInvocation).call.detail.execution_kind,
     ).toBe('formal_method')
     expect(formalMethodInvocationsSchema.parse(samples.FormalMethodInvocations).calls).toHaveLength(
-      1,
+      2,
     )
-    expect(samples.Calls.calls.map((call) => callSchema.parse(call))).toHaveLength(4)
+    expect(samples.Calls.calls.map((call) => callSchema.parse(call))).toHaveLength(5)
     expect(() =>
       formalMethodInvocationSchema.parse({
         ...samples.FormalMethodInvocation,
@@ -121,6 +122,93 @@ it('requires explicit model probe runtime references without allowing internal e
     formalMethodInvocationSchema.safeParse({
       ...samples.FormalMethodInvocation,
       call: { ...sample, id: samples.FormalMethodInvocation.call.id },
+    }).success,
+  ).toBe(false)
+})
+
+it('keeps legacy scopes empty and bounds exact model method selections', () => {
+  const reference = samples.FormalMethodInvocation.reference
+  const legacy = { ...samples.Selection }
+  expect(selectionSchema.parse(legacy).formal_methods).toEqual([])
+  expect(selectionSchema.parse({ ...legacy, formal_methods: [reference] }).formal_methods).toEqual([
+    reference,
+  ])
+  expect(
+    selectionSchema.safeParse({
+      ...legacy,
+      formal_methods: [reference, { ...reference, version: reference.version + 1 }],
+    }).success,
+  ).toBe(false)
+  expect(
+    selectionSchema.safeParse({ ...legacy, formal_methods: [{ ...reference, digest: 'latest' }] })
+      .success,
+  ).toBe(false)
+  const refs = Array.from({ length: 21 }, (_, i) => ({
+    ...reference,
+    method_id: `11111111-1111-4111-8111-${String(i).padStart(12, '0')}`,
+  }))
+  expect(selectionSchema.safeParse({ ...legacy, formal_methods: refs.slice(0, 20) }).success).toBe(
+    true,
+  )
+  expect(selectionSchema.safeParse({ ...legacy, formal_methods: refs }).success).toBe(false)
+})
+it('requires a model method reference/title and does not accept mismatched root history', () => {
+  const root = samples.FormalMethodInvocation
+  const detail = {
+    ...samples.FormalProbeCall.detail,
+    execution_kind: 'formal_method_model',
+    reference: root.reference,
+    method_title: root.title,
+  }
+  const call = { ...root.call, detail }
+  expect(callSchema.parse(call).detail.execution_kind).toBe('formal_method_model')
+  expect(formalMethodInvocationSchema.safeParse({ ...root, call }).success).toBe(true)
+  for (const key of ['reference', 'method_title', 'runtime', 'selection_revision']) {
+    const incomplete: Record<string, unknown> = { ...detail }
+    delete incomplete[key]
+    expect(callSchema.safeParse({ ...call, detail: incomplete }).success).toBe(false)
+  }
+  expect(
+    callSchema.safeParse({ ...call, detail: { ...detail, formal_model: { approved: true } } })
+      .success,
+  ).toBe(false)
+  expect(
+    formalMethodInvocationSchema.safeParse({
+      ...root,
+      call: { ...call, detail: { ...detail, reference: { ...root.reference, version: 99 } } },
+    }).success,
+  ).toBe(false)
+  expect(
+    formalMethodInvocationSchema.safeParse({
+      ...root,
+      call: { ...call, detail: { ...detail, method_title: 'Other method' } },
+    }).success,
+  ).toBe(false)
+})
+
+it('parses provider-owned model selection, submission and history with strict caller identity', () => {
+  expect(selectionSchema.parse(samples.FormalModelSelection).formal_methods).toEqual([
+    samples.FormalModelCall.detail.reference,
+  ])
+  expect(selectionPutSchema.parse(samples.FormalModelSelectionPut).formal_methods).toEqual([
+    samples.FormalModelCall.detail.reference,
+  ])
+  expect(callSchema.parse(samples.FormalModelCall).detail.execution_kind).toBe(
+    'formal_method_model',
+  )
+  expect(formalMethodInvocationSchema.parse(samples.FormalModelInvocation).title).toBe(
+    samples.FormalModelCall.detail.method_title,
+  )
+  expect(
+    selectionPutSchema.safeParse({ ...samples.FormalModelSelectionPut, approved: true }).success,
+  ).toBe(false)
+  expect(
+    selectionPutSchema.safeParse({
+      ...samples.FormalModelSelectionPut,
+      formal_methods: [
+        samples.FormalModelCall.detail.reference,
+        samples.FormalModelCall.detail.reference,
+      ],
     }).success,
   ).toBe(false)
 })

@@ -121,6 +121,7 @@ beforeEach(() => {
       }
       throw new Error('Unexpected mutation ' + url)
     }
+    if (url.endsWith('/formal-methods?caller=model')) return Response.json({ items: [] })
     if (url.endsWith('/formal-methods')) return Response.json({ items })
     if (url.endsWith('/formal-method-calls')) return Response.json({ calls })
     if (url.includes('/formal-method-calls/')) {
@@ -302,4 +303,43 @@ it('rejects another session or reference and rejects model authority fields on f
       }),
     ).toThrow()
   }
+})
+
+it('restores model method history distinctly and approves once without exposing raw tool output', async () => {
+  const root = samples.FormalMethodInvocation
+  const record = formalMethodInvocationSchema.parse({
+    ...root,
+    title: '模型方法名称',
+    call: {
+      ...root.call,
+      detail: {
+        ...samples.FormalProbeCall.detail,
+        execution_kind: 'formal_method_model',
+        reference: root.reference,
+        method_title: '模型方法名称',
+      },
+    },
+  })
+  calls = [record]
+  page()
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+  await screen.findByText(t.modelOrigin)
+  expect(screen.queryByText(t.manualOrigin)).not.toBeInTheDocument()
+  expect(screen.getByText(zh.capabilities.formalModelMethodCall)).toBeInTheDocument()
+  expect(screen.getAllByRole('button', { name: zh.capabilities.allowOnce })).toHaveLength(1)
+  expect(
+    screen.getByText(
+      `${zh.capabilities.formalMethodOperation.replace('{tool}', record.call.detail.tool.name)}`,
+    ),
+  ).toBeInTheDocument()
+  expect(posts).toHaveLength(0)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.allowOnce }))
+  await screen.findByText(/verified output/)
+  expect(screen.queryByText(/raw_private_result/)).not.toBeInTheDocument()
+  expect(posts).toHaveLength(1)
+  expect(posts[0].body).toEqual({
+    decision: 'accept',
+    token: record.call.detail.approval_token,
+    subject_digest: record.call.digest,
+  })
 })

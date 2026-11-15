@@ -300,6 +300,13 @@ export function FormalMethodPanel({ sessionId, visible }: { sessionId: string; v
           <h4 className="font-medium">
             {record.title} · v{record.reference.version} · {t(`status.${record.status}`)}
           </h4>
+          <p>
+            {t(
+              record.call.detail.execution_kind === 'formal_method_model'
+                ? 'modelOrigin'
+                : 'manualOrigin',
+            )}
+          </p>
           <p>{record.detail}</p>
           {record.status === 'unknown' ? <p role="status">{t('unknown')}</p> : null}
           {record.status === 'succeeded' && record.outputs !== null ? (

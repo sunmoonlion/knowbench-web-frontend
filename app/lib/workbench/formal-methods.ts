@@ -1,15 +1,10 @@
 import { z } from 'zod'
+import { formalMethodReferenceSchema } from './formal-method-reference'
 import { accessRequirementSchema, callSchema, capabilityCallStatusSchema } from './capabilities'
 import { getJson, sendJson, seg, WorkbenchError } from './http'
 
 const jsonObject = z.record(z.string(), z.json())
-export const formalMethodReferenceSchema = z
-  .object({
-    method_id: z.uuid(),
-    version: z.number().int().min(1),
-    digest: z.string().regex(/^sha256:[a-f0-9]{64}$/),
-  })
-  .strict()
+export { formalMethodReferenceSchema } from './formal-method-reference'
 const slot = z
   .object({
     description: z.string(),
@@ -48,8 +43,12 @@ export const formalMethodInvocationSchema = z
   .strict()
   .refine(
     (value) =>
-      value.call.detail.execution_kind === 'formal_method' &&
+      (value.call.detail.execution_kind === 'formal_method' ||
+        value.call.detail.execution_kind === 'formal_method_model') &&
       value.method_call_id !== value.call.id &&
+      (value.call.detail.execution_kind !== 'formal_method_model' ||
+        (formalReferenceKey(value.call.detail.reference) === formalReferenceKey(value.reference) &&
+          value.call.detail.method_title === value.title)) &&
       (value.status === value.call.status ||
         (value.status === 'failed' && value.call.status === 'succeeded')) &&
       (value.status === 'succeeded'
@@ -103,8 +102,11 @@ function checked(
     throw new WorkbenchError('contract_invalid')
   return value
 }
-export async function formalMethodCatalog(session: string) {
-  const value = await getJson(formalMethodCatalogSchema, `${base(session)}/formal-methods`)
+export async function formalMethodCatalog(session: string, caller: 'host' | 'model' = 'host') {
+  const value = await getJson(
+    formalMethodCatalogSchema,
+    `${base(session)}/formal-methods${caller === 'model' ? '?caller=model' : ''}`,
+  )
   if (
     new Set(value.items.map((item) => formalReferenceKey(item.reference))).size !==
     value.items.length

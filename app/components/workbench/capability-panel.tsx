@@ -11,6 +11,7 @@ import { routes } from '@/lib/workbench/routes'
 import * as api from '@/lib/workbench/capabilities'
 import { SkillConnections } from './skill-connections'
 import { CapabilityActionCard } from './capability-action-card'
+import { FormalMethodSelection } from './formal-method-selection'
 import { FormalMethodPanel } from './formal-method-panel'
 
 export function CapabilityPanel({
@@ -79,6 +80,8 @@ export function CapabilityPanel({
           <SelectionForm
             key={`${selection.data.revision}:${selection.data.method?.context ?? 'chat'}:${selection.data.editable}`}
             value={selection.data}
+            allowFormalSelection={enableFormalInvocations && !selection.data.method}
+            visible={open}
           />
         ) : (
           <p>{t('loading')}</p>
@@ -91,7 +94,11 @@ export function CapabilityPanel({
         ) : (
           calls.data?.calls
             .filter(
-              (call) => !enableFormalInvocations || call.detail.execution_kind !== 'formal_method',
+              (call) =>
+                !enableFormalInvocations ||
+                !['formal_method', 'formal_method_model'].includes(
+                  call.detail.execution_kind ?? '',
+                ),
             )
             .map((call) => <CapabilityActionCard key={call.id} call={call} />)
         )}
@@ -100,7 +107,15 @@ export function CapabilityPanel({
   )
 }
 
-function SelectionForm({ value }: { value: api.Selection }) {
+function SelectionForm({
+  value,
+  allowFormalSelection,
+  visible,
+}: {
+  value: api.Selection
+  allowFormalSelection: boolean
+  visible: boolean
+}) {
   const t = useTranslations('capabilities'),
     { csrfToken } = useWorkbench(),
     client = useQueryClient()
@@ -108,6 +123,7 @@ function SelectionForm({ value }: { value: api.Selection }) {
     [skills, setSkills] = useState(value.skills),
     [purpose, setPurpose] = useState(value.purpose)
   const [skillMode, setSkillMode] = useState(value.skill_mode)
+  const [formalMethods, setFormalMethods] = useState(value.formal_methods ?? [])
   const save = useMutation({
     mutationFn: () =>
       api.saveSelection(
@@ -119,6 +135,7 @@ function SelectionForm({ value }: { value: api.Selection }) {
           purpose,
           skill_mode: skillMode,
           method_context: value.method?.context ?? null,
+          formal_methods: formalMethods,
         },
         csrfToken,
       ),
@@ -297,6 +314,15 @@ function SelectionForm({ value }: { value: api.Selection }) {
           </div>
         ))}
       </fieldset>
+      {allowFormalSelection ? (
+        <FormalMethodSelection
+          sessionId={value.session_id}
+          visible={visible}
+          disabled={!value.editable || save.isPending}
+          selected={formalMethods}
+          onChange={setFormalMethods}
+        />
+      ) : null}
       {!value.available_tools.length && !value.available_skills.length ? <p>{t('empty')}</p> : null}
       <label className="block">
         {t('purpose')}
@@ -324,6 +350,7 @@ function SelectionForm({ value }: { value: api.Selection }) {
           setTools([])
           setSkills([])
           setSkillMode('explicit')
+          setFormalMethods([])
         }}
       >
         {t('clearSelection')}

@@ -1,3 +1,7 @@
+import {
+  formalMethodSelectionsSchema,
+  formalMethodReferenceSchema,
+} from './formal-method-reference'
 import { z } from 'zod'
 import { getJson, sendJson } from '@/lib/workbench/http'
 
@@ -141,9 +145,31 @@ export const catalogSchema = z
     script_execution_enabled: z.boolean().optional(),
   })
   .strict()
+export const selectionPutSchema = z
+  .object({
+    revision: z.number().int().min(0),
+    tools: z.array(z.string()).max(50).default([]),
+    skills: z.array(z.string()).max(10).default([]),
+    formal_methods: formalMethodSelectionsSchema.default([]),
+    purpose: z.string().max(1000).default(''),
+    skill_mode: z.enum(['auto', 'explicit']).default('explicit'),
+    method_context: z
+      .string()
+      .regex(/^[a-f0-9]{64}$/)
+      .nullable()
+      .default(null),
+  })
+  .strict()
+  .refine(
+    (v) =>
+      new Set(v.tools).size === v.tools.length &&
+      new Set(v.skills).size === v.skills.length &&
+      (v.skill_mode !== 'auto' || v.skills.length === 0),
+  )
 export const selectionSchema = z
   .object({
     session_id: z.uuid(),
+    formal_methods: formalMethodSelectionsSchema.default([]),
     method: z
       .object({
         task_id: z.uuid(),
@@ -216,6 +242,17 @@ const modelProbeCallDetail = callDetail
     runtime: z.string(),
   })
   .strict()
+const formalModelCallDetail = callDetail
+  .extend({
+    execution_kind: z.literal('formal_method_model'),
+    source_asset_id: z.uuid(),
+    connection_id: z.uuid(),
+    selection_revision: z.number().int(),
+    runtime: z.string(),
+    reference: formalMethodReferenceSchema,
+    method_title: z.string(),
+  })
+  .strict()
 export const capabilityCallStatusSchema = z.enum([
   'awaiting_approval',
   'dispatching',
@@ -237,7 +274,7 @@ export const callSchema = z
     status: capabilityCallStatusSchema,
     created_at: z.string(),
     updated_at: z.string(),
-    detail: z.union([modelCallDetail, hostCallDetail, modelProbeCallDetail]),
+    detail: z.union([modelCallDetail, hostCallDetail, modelProbeCallDetail, formalModelCallDetail]),
   })
   .strict()
 export type CapabilityCall = z.infer<typeof callSchema>
@@ -307,15 +344,13 @@ export const selection = (id: string) =>
   getJson(selectionSchema, `${base}/sessions/${encodeURIComponent(id)}/capabilities`)
 export const saveSelection = (
   id: string,
-  body: Pick<Selection, 'revision' | 'tools' | 'skills' | 'purpose' | 'skill_mode'> & {
-    method_context?: string | null
-  },
+  body: z.input<typeof selectionPutSchema>,
   csrfToken: string,
 ) =>
   sendJson(selectionSchema, `${base}/sessions/${encodeURIComponent(id)}/capabilities`, {
     csrfToken,
     method: 'PUT',
-    body,
+    body: selectionPutSchema.parse(body),
   })
 export const revokeMethodPermissions = (
   id: string,
