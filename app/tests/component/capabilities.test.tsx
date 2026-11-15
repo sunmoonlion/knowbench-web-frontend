@@ -425,3 +425,17 @@ it('asks for confirmation before uninstalling and removes further use without de
   await waitFor(() => expect(writes[0]?.body.action).toBe('remove'))
   expect(await screen.findByText(zh.capabilities.uninstalled)).toBeInTheDocument()
 })
+
+it('never projects raw formal method results through a generic operation card', async () => {
+  calls.calls = [
+    callSchema.parse({
+      ...fixtures.FormalCall,
+      status: 'succeeded',
+      detail: { ...fixtures.FormalCall.detail, result: { unvalidated: 'RAW-METHOD-RESULT' } },
+    }),
+  ]
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.thisRun }))
+  await screen.findByText(zh.capabilities.formalMethodCall)
+  expect(screen.queryByText(/RAW-METHOD-RESULT/)).not.toBeInTheDocument()
+})

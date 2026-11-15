@@ -7,6 +7,13 @@ import {
   selectionSchema,
   callSchema,
 } from '@/lib/workbench/capabilities'
+import {
+  formalMethodCatalogSchema,
+  formalMethodInvocationSchema,
+  formalMethodInvocationsSchema,
+  formalMethodInvokeSchema,
+  formalMethodValuesSchema,
+} from '@/lib/workbench/formal-methods'
 import samples from '@/tests/fixtures/capabilities-v1.samples.json'
 import lock from '@/contracts/provider-locks/capabilities-v1.lock.json'
 
@@ -24,6 +31,27 @@ describe('provider-owned capability v1', () => {
     expect(callSchema.parse(samples.Call).detail.arguments.to).toBe('reader@example.test')
     expect(() => assetSchema.parse({ ...samples.Asset, secret: 'should-never-return' })).toThrow()
     expect(() => selectionSchema.parse({ ...samples.Selection, approved: true })).toThrow()
+  })
+  it('parses owned method provider catalog, command and invocation examples', () => {
+    expect(formalMethodCatalogSchema.parse(samples.FormalMethodCatalogResponse).items).toHaveLength(
+      2,
+    )
+    expect(formalMethodInvokeSchema.parse(samples.FormalMethodCallRequest).reference.version).toBe(
+      1,
+    )
+    expect(
+      formalMethodInvocationSchema.parse(samples.FormalMethodInvocation).call.detail.execution_kind,
+    ).toBe('formal_method')
+    expect(formalMethodInvocationsSchema.parse(samples.FormalMethodInvocations).calls).toHaveLength(
+      1,
+    )
+    expect(samples.Calls.calls.map((call) => callSchema.parse(call))).toHaveLength(3)
+    expect(() =>
+      formalMethodInvocationSchema.parse({
+        ...samples.FormalMethodInvocation,
+        outputs: { forged: true },
+      }),
+    ).toThrow()
   })
   it('requires an explicit host kind and rejects fabricated model authority on host calls', () => {
     const detail: Record<string, unknown> = { ...samples.Call.detail, execution_kind: 'formal_mcp' }
@@ -44,4 +72,26 @@ describe('provider-owned capability v1', () => {
     delete model.runtime
     expect(() => callSchema.parse({ ...samples.Call, detail: model })).toThrow()
   })
+})
+
+it('rejects root/operation identity or state mismatches while allowing failed output validation', () => {
+  const sample = samples.FormalMethodInvocation
+  expect(() =>
+    formalMethodInvocationSchema.parse({ ...sample, method_call_id: sample.call.id }),
+  ).toThrow()
+  for (const status of ['expired', 'failed', 'unknown', 'declined']) {
+    expect(() => formalMethodInvocationSchema.parse({ ...sample, status })).toThrow()
+  }
+  expect(
+    formalMethodInvocationSchema.parse({
+      ...sample,
+      status: 'failed',
+      call: { ...sample.call, status: 'succeeded' },
+    }).outputs,
+  ).toBeNull()
+  const values = Object.fromEntries(
+    Array.from({ length: 100 }, (_, index) => [`key${index}`, true]),
+  )
+  expect(formalMethodValuesSchema.safeParse(values).success).toBe(true)
+  expect(formalMethodValuesSchema.safeParse({ ...values, extra: true }).success).toBe(false)
 })

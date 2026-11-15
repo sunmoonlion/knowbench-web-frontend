@@ -202,9 +202,20 @@ const modelCallDetail = callDetail
   .strict()
 const hostCallDetail = callDetail
   .extend({
-    execution_kind: z.literal('formal_mcp'),
+    execution_kind: z.enum(['formal_mcp', 'formal_method']),
+    source_asset_id: z.uuid(),
+    connection_id: z.uuid(),
   })
   .strict()
+export const capabilityCallStatusSchema = z.enum([
+  'awaiting_approval',
+  'dispatching',
+  'succeeded',
+  'failed',
+  'declined',
+  'unknown',
+  'expired',
+])
 export const callSchema = z
   .object({
     id: z.uuid(),
@@ -214,7 +225,7 @@ export const callSchema = z
     connection_id: z.uuid().nullable(),
     interaction_id: z.uuid().nullable(),
     digest: z.string(),
-    status: z.string(),
+    status: capabilityCallStatusSchema,
     created_at: z.string(),
     updated_at: z.string(),
     detail: z.union([modelCallDetail, hostCallDetail]),

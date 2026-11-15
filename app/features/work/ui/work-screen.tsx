@@ -178,7 +178,7 @@ export function WorkScreen({
             </MessageScroller>
           </MessageScrollerProvider>
 
-          <CapabilityPanel sessionId={id} />
+          <CapabilityPanel sessionId={id} enableFormalInvocations />
           <Composer
             busy={line.live !== null}
             sending={act.say.isPending}

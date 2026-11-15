@@ -146,7 +146,7 @@ export function ChatScreen({
             </MessageScroller>
           </MessageScrollerProvider>
 
-          <CapabilityPanel sessionId={id} />
+          <CapabilityPanel sessionId={id} enableFormalInvocations />
           <Composer
             busy={live !== null}
             sending={act.say.isPending}
