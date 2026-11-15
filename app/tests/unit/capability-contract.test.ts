@@ -45,7 +45,7 @@ describe('provider-owned capability v1', () => {
     expect(formalMethodInvocationsSchema.parse(samples.FormalMethodInvocations).calls).toHaveLength(
       1,
     )
-    expect(samples.Calls.calls.map((call) => callSchema.parse(call))).toHaveLength(3)
+    expect(samples.Calls.calls.map((call) => callSchema.parse(call))).toHaveLength(4)
     expect(() =>
       formalMethodInvocationSchema.parse({
         ...samples.FormalMethodInvocation,
@@ -94,4 +94,33 @@ it('rejects root/operation identity or state mismatches while allowing failed ou
   )
   expect(formalMethodValuesSchema.safeParse(values).success).toBe(true)
   expect(formalMethodValuesSchema.safeParse({ ...values, extra: true }).success).toBe(false)
+})
+
+it('requires explicit model probe runtime references without allowing internal evidence or manual invocation', () => {
+  const sample = samples.FormalProbeCall
+  expect(callSchema.parse(sample).detail.execution_kind).toBe('formal_probe')
+  for (const key of ['runtime', 'selection_revision', 'source_asset_id', 'connection_id']) {
+    const detail: Record<string, unknown> = { ...sample.detail }
+    delete detail[key]
+    expect(callSchema.safeParse({ ...sample, detail }).success).toBe(false)
+    expect(
+      callSchema.safeParse({ ...sample, detail: { ...sample.detail, [key]: null } }).success,
+    ).toBe(false)
+  }
+  for (const extra of [
+    { formal_probe: { approved: true } },
+    { formal_host: {} },
+    { method: {} },
+    { selection_revision: 1.5 },
+  ]) {
+    expect(
+      callSchema.safeParse({ ...sample, detail: { ...sample.detail, ...extra } }).success,
+    ).toBe(false)
+  }
+  expect(
+    formalMethodInvocationSchema.safeParse({
+      ...samples.FormalMethodInvocation,
+      call: { ...sample, id: samples.FormalMethodInvocation.call.id },
+    }).success,
+  ).toBe(false)
 })

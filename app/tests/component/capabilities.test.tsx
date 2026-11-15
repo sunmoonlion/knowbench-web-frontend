@@ -439,3 +439,20 @@ it('never projects raw formal method results through a generic operation card', 
   await screen.findByText(zh.capabilities.formalMethodCall)
   expect(screen.queryByText(/RAW-METHOD-RESULT/)).not.toBeInTheDocument()
 })
+
+it('labels a model incubation probe distinctly and submits only its existing approval identity', async () => {
+  calls.calls[0] = callSchema.parse(structuredClone(fixtures.FormalProbeCall))
+  const call = calls.calls[0]
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.thisRun }))
+  expect(await screen.findByText(zh.capabilities.formalModelProbeCall)).toBeInTheDocument()
+  expect(screen.queryByText(zh.capabilities.formalMethodCall)).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: zh.capabilities.stopScript })).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.allowOnce }))
+  await waitFor(() => expect(writes.some((w) => w.path.endsWith('/decision'))).toBe(true))
+  expect(writes.find((w) => w.path.endsWith('/decision'))!.body).toEqual({
+    decision: 'accept',
+    token: call.detail.approval_token,
+    subject_digest: call.digest,
+  })
+})

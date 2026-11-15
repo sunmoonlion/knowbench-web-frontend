@@ -1583,7 +1583,8 @@
     "confirmMethodPermissions": "确认权限并保存绑定",
     "methodRevoke": "撤销此委托的方法授权",
     "methodRevokeHint": "撤销此委托已确认的方法权限，阻止相关步骤及下层调用继续访问；已经发出的操作不会撤回。",
-    "formalMethodCall": "正式方法调用"
+    "formalMethodCall": "正式方法调用",
+    "formalModelProbeCall": "模型发起的正式方法孵化测试"
   },
   "formalMethods": {
     "title": "本人登记的方法",

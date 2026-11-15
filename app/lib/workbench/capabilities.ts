@@ -207,6 +207,15 @@ const hostCallDetail = callDetail
     connection_id: z.uuid(),
   })
   .strict()
+const modelProbeCallDetail = callDetail
+  .extend({
+    execution_kind: z.literal('formal_probe'),
+    source_asset_id: z.uuid(),
+    connection_id: z.uuid(),
+    selection_revision: z.number().int(),
+    runtime: z.string(),
+  })
+  .strict()
 export const capabilityCallStatusSchema = z.enum([
   'awaiting_approval',
   'dispatching',
@@ -228,7 +237,7 @@ export const callSchema = z
     status: capabilityCallStatusSchema,
     created_at: z.string(),
     updated_at: z.string(),
-    detail: z.union([modelCallDetail, hostCallDetail]),
+    detail: z.union([modelCallDetail, hostCallDetail, modelProbeCallDetail]),
   })
   .strict()
 export type CapabilityCall = z.infer<typeof callSchema>

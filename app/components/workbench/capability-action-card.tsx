@@ -49,6 +49,7 @@ export function CapabilityActionCard({
       {['formal_mcp', 'formal_method'].includes(call.detail.execution_kind ?? '') ? (
         <p>{t('formalMethodCall')}</p>
       ) : null}
+      {call.detail.execution_kind === 'formal_probe' ? <p>{t('formalModelProbeCall')}</p> : null}
       <p>
         {call.detail.connection_name} · {call.detail.account_label}
       </p>
