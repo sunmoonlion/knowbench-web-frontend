@@ -210,7 +210,7 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
                   </ul>
                 </details>
               ) : null}
-              <InstalledInstructions id={asset.id} />
+              {asset.status !== 'disconnected' ? <InstalledInstructions id={asset.id} /> : null}
               <Link className="text-sm underline" href={routes.settings(locale, 'connections')}>
                 {t('manageDependencies')}
               </Link>
