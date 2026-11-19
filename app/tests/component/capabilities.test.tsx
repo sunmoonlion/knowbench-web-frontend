@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { CapabilitySettings } from '@/features/settings/ui/capabilities-section'
 import { MethodConnectionPreview } from '@/components/workbench/method-connection-preview'
+import { PendingConnectorAction } from '@/components/workbench/capability-action-card'
 import { CapabilityPanel } from '@/components/workbench/capability-panel'
 import { WorkbenchProvider } from '@/lib/workbench/context'
 import zh from '@/messages/zh-CN.json'
@@ -61,7 +62,12 @@ beforeEach(() => {
           }
           return Response.json(selection)
         }
+        if (path.endsWith('/revoke-read')) {
+          calls.calls[0].detail.approval!.revoked = true
+          return Response.json(calls.calls[0])
+        }
         if (path.endsWith('/decision')) {
+          if (body.remember_read) calls.calls[0].detail.approval!.granted = true
           calls.calls[0].status = 'succeeded'
           return Response.json(calls.calls[0])
         }
@@ -105,6 +111,10 @@ beforeEach(() => {
       if (path.endsWith('/formal-methods?caller=model')) return Response.json({ items: modelItems })
       if (path.endsWith('/formal-methods')) return Response.json({ items: [] })
       if (path.endsWith('/formal-method-calls')) return Response.json({ calls: [] })
+      if (path.includes('/capability-calls?call_id=')) {
+        const id = new URL(path, 'http://localhost').searchParams.get('call_id')
+        return Response.json({ calls: calls.calls.filter((call) => call.id === id) })
+      }
       if (path.endsWith('/capability-calls')) return Response.json(calls)
       if (path.includes('/sessions/')) return Response.json(selection)
       if (path.endsWith('/capabilities')) return Response.json(catalog)
@@ -721,4 +731,66 @@ it('shows required, conditional and unresolved method connections before selecti
   expect(screen.getByText(/必需 · mail/)).toBeInTheDocument()
   expect(screen.getByText(/按所选步骤和候选确定 · chat/)).toBeInTheDocument()
   expect(screen.getByText(zh.capabilities.unresolvedConnections)).toBeInTheDocument()
+})
+
+it('shows a bounded read choice, records explicit consent and can revoke it', async () => {
+  const call = calls.calls[0]
+  call.detail.approval = {
+    effect: 'read',
+    operation: 'read_record',
+    destination: 'https://records.example.test',
+    resources: [{ resource_kind: 'connector', resource_role: 'record', values: ['a', 'b'] }],
+    attachments: [],
+    arguments_digest: 'a'.repeat(64),
+    read_until: '2099-01-01T00:00:00Z',
+    granted: false,
+    revoked: false,
+    origin: null,
+    verified_zero_cost: false,
+  }
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.thisRun }))
+  expect(await screen.findByText('record · a, b')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.allowReadScope }))
+  await waitFor(() =>
+    expect(writes.find((w) => w.path.endsWith('/decision'))?.body).toEqual({
+      token: call.detail.approval_token,
+      subject_digest: call.digest,
+      decision: 'accept',
+      remember_read: true,
+    }),
+  )
+  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.revokeRead }))
+  expect(await screen.findByText(zh.capabilities.readRevoked)).toBeInTheDocument()
+})
+
+it('shows the immutable attachment and recipient for a once-only outbound action', async () => {
+  calls.calls[0].detail.approval = {
+    effect: 'send',
+    operation: 'send',
+    destination: 'https://mail.example.test',
+    resources: [
+      { resource_kind: 'connector', resource_role: 'to', values: ['reader@example.test'] },
+    ],
+    attachments: [{ name: 'report.pdf', size: 12, sha256: 'c'.repeat(64) }],
+    arguments_digest: 'a'.repeat(64),
+    read_until: null,
+    granted: false,
+    revoked: false,
+    origin: null,
+    verified_zero_cost: false,
+  }
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.thisRun }))
+  expect(await screen.findByText(/report.pdf · 12 B · SHA-256/)).toBeInTheDocument()
+  expect(screen.getByText('to · reader@example.test')).toBeInTheDocument()
+  expect(
+    screen.queryByRole('button', { name: zh.capabilities.allowReadScope }),
+  ).not.toBeInTheDocument()
+})
+
+it('loads the named receipt from a work step and never substitutes another pending approval', async () => {
+  page(<PendingConnectorAction sessionId={selection.session_id} callId={selection.session_id} />)
+  expect(await screen.findByText(zh.capabilities.missingApproval)).toBeVisible()
+  expect(screen.queryByRole('button', { name: zh.capabilities.allowOnce })).not.toBeInTheDocument()
 })

@@ -263,7 +263,33 @@ export const selectionSchema = z
   })
   .strict()
 export type Selection = z.infer<typeof selectionSchema>
+const connectorApproval = z
+  .object({
+    effect: z.enum(['read', 'write', 'send']),
+    verified_zero_cost: z.boolean(),
+    operation: z.string(),
+    destination: z.string(),
+    resources: z.array(
+      z
+        .object({
+          resource_kind: z.string(),
+          resource_role: z.string(),
+          values: z.array(z.string()),
+        })
+        .strict(),
+    ),
+    arguments_digest: z.string(),
+    attachments: z.array(
+      z.object({ name: z.string(), size: z.number().int(), sha256: z.string() }).strict(),
+    ),
+    read_until: z.string().nullable(),
+    origin: z.uuid().nullable(),
+    granted: z.boolean(),
+    revoked: z.boolean(),
+  })
+  .strict()
 const callDetail = z.object({
+  approval: connectorApproval.nullish(),
   source_asset_id: z.uuid().nullable().optional(),
   connection_id: z.uuid().nullable(),
   revision: z.number(),
@@ -450,15 +476,31 @@ export const revokeMethodPermissions = (
       body,
     },
   )
-export const calls = (id: string) =>
+export const calls = (id: string, callId?: string) =>
   getJson(
     z.object({ calls: z.array(callSchema) }).strict(),
-    `${base}/sessions/${encodeURIComponent(id)}/capability-calls`,
+    `${base}/sessions/${encodeURIComponent(id)}/capability-calls${callId ? `?call_id=${encodeURIComponent(callId)}` : ''}`,
   )
-export const decide = (call: CapabilityCall, decision: 'accept' | 'decline', csrfToken: string) =>
+export const decide = (
+  call: CapabilityCall,
+  decision: 'accept' | 'decline',
+  csrfToken: string,
+  rememberRead = false,
+) =>
   sendJson(callSchema, `${base}/capability-calls/${call.id}/decision`, {
     csrfToken,
-    body: { decision, token: call.detail.approval_token, subject_digest: call.digest },
+    body: {
+      decision,
+      token: call.detail.approval_token,
+      subject_digest: call.digest,
+      ...(rememberRead && { remember_read: true }),
+    },
+  })
+
+export const revokeReadApproval = (id: string, csrfToken: string) =>
+  sendJson(callSchema, `${base}/capability-calls/${encodeURIComponent(id)}/revoke-read`, {
+    csrfToken,
+    body: {},
   })
 
 export const renewConnection = (id: string, revision: number, token: string, csrfToken: string) =>

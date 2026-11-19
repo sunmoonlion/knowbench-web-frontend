@@ -36,6 +36,26 @@ describe('工作页的时间线', () => {
   const all = work()
   const line = timeline(all)
 
+  it('binds reviewed connector approvals to the session and exact call receipt', () => {
+    const callId = '44444444-4444-4444-8444-444444444444'
+    const opened = {
+      ...all[0],
+      type: 'interaction/opened',
+      payload: {
+        kind: 'tool_approval',
+        interaction_id: 'pending',
+        subject: {
+          capability_call_id: callId,
+          data_transfer: { destination: 'https://example.test' },
+        },
+      },
+    }
+    expect(timeline([opened]).entries[0]).toMatchObject({
+      kind: 'approval',
+      approval: { connectorCall: { sessionId: opened.session_id, callId } },
+    })
+  })
+
   it('三句话、三段过程、一次改文件、一件等批准的事', () => {
     expect(line.entries.filter((entry) => entry.kind === 'user')).toHaveLength(3)
     const phases = line.entries.filter((entry) => entry.kind === 'phase')

@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 
+import { PendingConnectorAction } from '@/components/workbench/capability-action-card'
 import { CapabilityPanel } from '@/components/workbench/capability-panel'
 
 import { Button } from '@/components/ui/button'
@@ -138,7 +139,12 @@ export function ExpertRunScreen({ task }: { task: string }) {
             step={detail.data ?? steps.find((step) => step.index === shown)}
             loading={shown !== null && detail.isPending}
           />
-          {reviewHere && review.data ? (
+          {reviewHere && review.data?.subject?.connector_call_id ? (
+            <PendingConnectorAction
+              sessionId={sheet.session_id}
+              callId={review.data.subject.connector_call_id}
+            />
+          ) : reviewHere && review.data ? (
             <ReviewPanel
               review={review.data}
               token={pending ? tokenOf(events, pending) : null}

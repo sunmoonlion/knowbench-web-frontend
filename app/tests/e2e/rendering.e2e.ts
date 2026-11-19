@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import samples from '../fixtures/capabilities-v1.samples.json'
 
 test('runtime health endpoint is dynamic and non-cacheable', async ({ request }) => {
   const response = await request.get('/healthz')
@@ -194,4 +195,69 @@ test('connection settings redirect the browser for the selected account revision
     revision: asset.revision,
   })
   await expect(page).toHaveURL(provider)
+})
+
+test('chat approves a named resource scope and revokes the same receipt', async ({
+  context,
+  page,
+}) => {
+  await context.addCookies([
+    {
+      name: 'sunmoonai_knowbench_web_sid',
+      value: 'e2e-session',
+      domain: '127.0.0.1',
+      path: '/',
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ])
+  const call = {
+    ...samples.Call,
+    detail: {
+      ...samples.Call.detail,
+      tool: { ...samples.Call.detail.tool, name: 'read_status' },
+      arguments: { id: 'task-7' },
+      purpose: 'Check delivery',
+      approval: {
+        effect: 'read',
+        operation: 'status',
+        destination: 'https://tools.example.test/mcp',
+        resources: [{ resource_kind: 'connector', resource_role: 'task', values: ['task-7'] }],
+        arguments_digest: 'b'.repeat(64),
+        attachments: [],
+        read_until: '2099-01-01T00:00:00Z',
+        granted: false,
+        revoked: false,
+        origin: null,
+        verified_zero_cost: false,
+      },
+    },
+  }
+  await page.route('**/api/workbench/sessions/*/capability-calls', (route) =>
+    route.fulfill({ json: { calls: [call] } }),
+  )
+  await page.route('**/api/workbench/capability-calls/*/decision', (route) => {
+    expect(route.request().postDataJSON()).toEqual({
+      decision: 'accept',
+      token: call.detail.approval_token,
+      subject_digest: call.digest,
+      remember_read: true,
+    })
+    call.status = 'succeeded'
+    call.detail.approval.granted = true
+    return route.fulfill({ json: call })
+  })
+  await page.route('**/api/workbench/capability-calls/*/revoke-read', (route) => {
+    expect(new URL(route.request().url()).pathname).toBe(
+      `/api/workbench/capability-calls/${call.id}/revoke-read`,
+    )
+    call.detail.approval.revoked = true
+    return route.fulfill({ json: call })
+  })
+  await page.goto(`/en/workbench/chat/${call.session_id}`)
+  await page.getByRole('button', { name: /Capabilities for this conversation/ }).click()
+  await expect(page.getByText('task · task-7')).toBeVisible()
+  await page.getByRole('button', { name: 'Allow reads within this scope' }).click()
+  await page.getByRole('button', { name: 'Revoke read approval' }).click()
+  await expect(page.getByText('Read approval revoked.')).toBeVisible()
 })

@@ -1,11 +1,35 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useTranslations } from 'next-intl'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNow, useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { RequestFailure } from '@/components/common/request-failure'
 import { useWorkbench } from '@/lib/workbench/context'
 import * as api from '@/lib/workbench/capabilities'
+
+/** Work and expert approval surfaces share the same receipt as the session panel. */
+export function PendingConnectorAction({
+  sessionId,
+  callId,
+}: {
+  sessionId: string
+  callId: string
+}) {
+  const t = useTranslations('capabilities')
+  const calls = useQuery({
+    queryKey: ['capability-calls', sessionId, callId],
+    queryFn: () => api.calls(sessionId, callId),
+    refetchInterval: 5000,
+  })
+  if (calls.isError)
+    return <RequestFailure error={calls.error} retry={() => void calls.refetch()} />
+  const call = calls.data?.calls.find((entry) => entry.id === callId)
+  return call ? (
+    <CapabilityActionCard call={call} />
+  ) : (
+    <p role="status">{t(calls.isPending ? 'loadingApproval' : 'missingApproval')}</p>
+  )
+}
 
 export function CapabilityActionCard({
   call,
@@ -22,10 +46,19 @@ export function CapabilityActionCard({
       ? api.scriptResultSchema.safeParse(call.detail.result)
       : null
   const t = useTranslations('capabilities'),
-    { csrfToken } = useWorkbench(),
+    { csrfToken, locale } = useWorkbench(),
     client = useQueryClient()
   const decision = useMutation({
-    mutationFn: (answer: 'accept' | 'decline') => api.decide(call, answer, csrfToken),
+    mutationFn: (answer: 'accept' | 'decline' | 'read_scope' | 'revoke_read') => {
+      if (answer === 'revoke_read')
+        return api.revokeReadApproval(call.detail.approval?.origin ?? call.id, csrfToken)
+      return api.decide(
+        call,
+        answer === 'read_scope' ? 'accept' : answer,
+        csrfToken,
+        answer === 'read_scope',
+      )
+    },
     onSuccess: async () => {
       await Promise.all([
         client.invalidateQueries({ queryKey: ['capability-calls', call.session_id] }),
@@ -33,6 +66,8 @@ export function CapabilityActionCard({
       ])
     },
   })
+  const now = useNow({ updateInterval: 30_000 })
+  const approval = call.detail.approval
   const stop = useMutation({
     mutationFn: () => api.cancelScript(call.id, csrfToken),
     onSuccess: async () => {
@@ -82,7 +117,47 @@ export function CapabilityActionCard({
           {t('purpose')}：{call.detail.purpose}
         </p>
       ) : null}
-      <p>{t('actionHint')}</p>
+      {approval ? (
+        <div className="space-y-1 text-sm break-all">
+          <p>
+            {t('actionTarget', {
+              effect: t(`actionEffect.${approval.effect}`),
+              name: approval.operation,
+              destination: approval.destination,
+              revision: call.detail.revision,
+            })}
+          </p>
+          <p>{t(approval.verified_zero_cost ? 'zeroActionCost' : 'unknownActionCost')}</p>
+          {approval.resources.map((resource) => (
+            <p key={resource.resource_role}>
+              {resource.resource_role} · {resource.values.join(', ')}
+            </p>
+          ))}
+          {approval.attachments.map((file, index) => (
+            <p key={index}>
+              {file.name} · {file.size} B · SHA-256 {file.sha256}
+            </p>
+          ))}
+          {approval.read_until && (
+            <p>{t('readTerms', { date: new Date(approval.read_until).toLocaleString(locale) })}</p>
+          )}
+          {approval.origin && <p>{t('readOrigin', { id: approval.origin })}</p>}
+          {approval.revoked && <p role="status">{t('readRevoked')}</p>}
+          {(approval.granted || approval.origin) &&
+            !approval.revoked &&
+            approval.read_until &&
+            Date.parse(approval.read_until) > now.getTime() && (
+              <Button
+                variant="outline"
+                disabled={decision.isPending}
+                onClick={() => decision.mutate('revoke_read')}
+              >
+                {t('revokeRead')}
+              </Button>
+            )}
+        </div>
+      ) : null}
+      {call.status === 'awaiting_approval' && <p>{t('actionHint')}</p>}
       <pre className="bg-muted max-h-48 overflow-auto rounded p-2 text-xs whitespace-pre-wrap">
         {JSON.stringify(call.detail.arguments, null, 2)}
       </pre>
@@ -91,6 +166,15 @@ export function CapabilityActionCard({
           <Button disabled={decision.isPending} onClick={() => decision.mutate('accept')}>
             {t('allowOnce')}
           </Button>
+          {approval?.read_until && (
+            <Button
+              variant="outline"
+              disabled={decision.isPending || Date.parse(approval.read_until) <= now.getTime()}
+              onClick={() => decision.mutate('read_scope')}
+            >
+              {t('allowReadScope')}
+            </Button>
+          )}
           <Button
             variant="outline"
             disabled={decision.isPending}

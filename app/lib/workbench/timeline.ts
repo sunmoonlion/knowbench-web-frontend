@@ -17,6 +17,7 @@ import {
 } from '@/lib/workbench/items'
 
 export type Approval = {
+  connectorCall?: { sessionId: string; callId: string }
   id: string
   token: string
   command: string
@@ -287,6 +288,14 @@ export function timeline(events: readonly ConversationEvent[]): Timeline {
           key: `approval:${text(payload.interaction_id)}`,
           approval: {
             id: text(payload.interaction_id),
+            ...(typeof subject.capability_call_id === 'string' && subject.data_transfer
+              ? {
+                  connectorCall: {
+                    sessionId: event.session_id,
+                    callId: subject.capability_call_id,
+                  },
+                }
+              : {}),
             token: text(payload.token),
             command: text(subject.command) || text(subject.category),
             cwd: text(subject.cwd),

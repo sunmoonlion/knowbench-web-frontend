@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Marker, MarkerContent } from '@/components/ui/marker'
+import { PendingConnectorAction } from '@/components/workbench/capability-action-card'
 import { ChangeLine, StepLine } from '@/components/workbench/step-line'
 import type { Waiting } from '@/contracts/workbench-v2'
 import { relativeTo } from '@/lib/workbench/items'
@@ -361,6 +362,9 @@ export function TimelineEntry({
         </div>
       )
     case 'approval':
+      if (entry.approval.state === 'pending' && entry.approval.connectorCall) {
+        return <PendingConnectorAction {...entry.approval.connectorCall} />
+      }
       return (
         <ApprovalCard
           approval={entry.approval}
