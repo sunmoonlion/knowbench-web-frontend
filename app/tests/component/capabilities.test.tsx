@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { CapabilitySettings } from '@/features/settings/ui/capabilities-section'
+import { MethodConnectionPreview } from '@/components/workbench/method-connection-preview'
 import { CapabilityPanel } from '@/components/workbench/capability-panel'
 import { WorkbenchProvider } from '@/lib/workbench/context'
 import zh from '@/messages/zh-CN.json'
@@ -49,6 +50,8 @@ beforeEach(() => {
       if (init.method && init.method !== 'GET') {
         const body = JSON.parse(String(init.body))
         writes.push({ path, body, headers: init.headers })
+        if (path.endsWith('/oauth/start'))
+          return Response.json({ authorization_url: 'http://accounts.example.test/approve' })
         if (path.endsWith('/revoke-method')) {
           selection = {
             ...selection,
@@ -665,4 +668,57 @@ it('rechecks delegation expiry at submit even without a new server snapshot', as
   } finally {
     now.mockRestore()
   }
+})
+
+it('submits the exact account revision and rejects an insecure authorization redirect', async () => {
+  const source = catalog.assets[0]
+  Object.assign(source.detail, {
+    auth: 'oauth',
+    oauth: {
+      protocol: 'a2a',
+      provider_id: 'agent',
+      issuer: 'https://issuer.example',
+      account_id: 'account-a',
+      scopes: ['read'],
+    },
+  })
+  Object.assign(catalog.services[0], {
+    provider_id: 'agent',
+    protocol: 'a2a',
+    authentication: ['oauth'],
+  })
+  page(<CapabilitySettings kind="connection" />)
+  expect(await screen.findByText(/已验证账号 account-a/)).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.add }))
+  expect(screen.queryByLabelText(zh.capabilities.token)).not.toBeInTheDocument()
+  expect(screen.getByText(zh.capabilities.oauthHint)).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.reauthorizeAccount }))
+  await waitFor(() =>
+    expect(writes[0]?.body).toEqual({
+      provider_id: 'agent',
+      name: source.name,
+      locale: 'zh-CN',
+      connection_id: source.id,
+      revision: source.revision,
+      return_to: '/zh-CN/workbench/chat/22222222-2222-4222-8222-222222222222',
+    }),
+  )
+  expect(await screen.findByRole('alert')).toBeInTheDocument()
+})
+
+it('shows required, conditional and unresolved method connections before selection', () => {
+  page(
+    <MethodConnectionPreview
+      preview={{
+        complete: false,
+        services: [
+          { url: 'https://mail.example', capability_ref: 'mail', version: '1', required: true },
+          { url: 'https://chat.example', capability_ref: 'chat', version: '1', required: false },
+        ],
+      }}
+    />,
+  )
+  expect(screen.getByText(/必需 · mail/)).toBeInTheDocument()
+  expect(screen.getByText(/按所选步骤和候选确定 · chat/)).toBeInTheDocument()
+  expect(screen.getByText(zh.capabilities.unresolvedConnections)).toBeInTheDocument()
 })

@@ -58,6 +58,17 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
   const [installSource, setInstallSource] = useState<'repository' | 'file'>('repository')
   const [renewing, setRenewing] = useState<string | null>(null)
   const [disconnecting, setDisconnecting] = useState<api.Asset | null>(null)
+  const authorize = useMutation({
+    mutationFn: (asset: api.Asset) =>
+      api.authorizeConnection(
+        asset.detail.oauth!.provider_id,
+        asset.name,
+        locale,
+        csrfToken,
+        returnTo,
+        asset,
+      ),
+  })
   const action = useMutation({
     mutationFn: ({ asset, action }: { asset: api.Asset; action: string }) =>
       api.assetAction(asset.id, asset.revision, action, csrfToken),
@@ -73,6 +84,9 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
   const assets = query.data.assets.filter((a) => a.kind === kind)
   return (
     <div className="space-y-5">
+      {kind === 'connection' && params.get('authorization') === 'incomplete' && (
+        <p role="status">{t('authorizationIncomplete')}</p>
+      )}
       {returnTo ? (
         <Link className="text-sm underline" href={returnTo}>
           {t('returnToConversation')}
@@ -98,7 +112,11 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
       ) : null}
       {creating ? (
         kind === 'connection' ? (
-          <ConnectionForm services={query.data.services} done={() => setCreating(false)} />
+          <ConnectionForm
+            returnTo={returnTo}
+            services={query.data.services}
+            done={() => setCreating(false)}
+          />
         ) : (
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
@@ -128,6 +146,12 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
             )}
           </div>
         )
+      ) : null}
+      {authorize.isError ? (
+        <RequestFailure
+          error={authorize.error}
+          retry={() => authorize.mutate(authorize.variables)}
+        />
       ) : null}
       {action.isError ? (
         <RequestFailure error={action.error} retry={() => void query.refetch()} />
@@ -159,7 +183,23 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
               {t('installedFrom')} {asset.detail.source.repository} · {asset.detail.source.path}
             </p>
           ) : null}
-          {asset.detail.revocation ? <p className="text-sm">{t('revokeAtProvider')}</p> : null}
+          {asset.detail.oauth ? (
+            <p className="text-sm break-all">
+              {t('verifiedIdentity', {
+                account: asset.detail.oauth.account_id,
+                scopes: asset.detail.oauth.scopes.join(', ') || '—',
+              })}
+            </p>
+          ) : null}
+          {asset.detail.revocation ? (
+            <p className="text-sm">
+              {t(
+                asset.detail.revocation === 'provider_revoked'
+                  ? 'revokedAtProvider'
+                  : 'revokeAtProvider',
+              )}
+            </p>
+          ) : null}
           {kind === 'skill' &&
           asset.detail.files?.some((file) => /\.(py|sh|js|mjs|cjs)$/.test(file.path)) ? (
             <p className="text-sm">
@@ -220,7 +260,7 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
             <Button
               size="sm"
               variant="outline"
-              disabled={action.isPending || asset.status === 'disconnected'}
+              disabled={action.isPending || !['active', 'disabled'].includes(asset.status)}
               onClick={() =>
                 action.mutate({ asset, action: asset.status === 'active' ? 'disable' : 'enable' })
               }
@@ -277,9 +317,17 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setRenewing(renewing === asset.id ? null : asset.id)}
+              disabled={
+                authorize.isPending ||
+                Boolean(asset.detail.oauth && asset.status === 'disconnected')
+              }
+              onClick={() =>
+                asset.detail.oauth
+                  ? authorize.mutate(asset)
+                  : setRenewing(renewing === asset.id ? null : asset.id)
+              }
             >
-              {t('renew')}
+              {t(asset.detail.oauth ? 'reauthorizeAccount' : 'renew')}
             </Button>
           ) : null}
           {renewing === asset.id ? (
@@ -310,21 +358,32 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
   )
 }
 
-function ConnectionForm({ services, done }: { services: { url: string }[]; done: () => void }) {
+function ConnectionForm({
+  returnTo,
+  services,
+  done,
+}: {
+  returnTo: string | null
+  services: api.ConnectionService[]
+  done: () => void
+}) {
   const t = useTranslations('capabilities'),
-    { csrfToken } = useWorkbench(),
+    { csrfToken, locale } = useWorkbench(),
     client = useQueryClient()
   const [name, setName] = useState(''),
     [account, setAccount] = useState(''),
     [url, setUrl] = useState(services[0]?.url ?? ''),
     [token, setToken] = useState('')
   const [requestId] = useState(() => crypto.randomUUID())
+  const provider = services.find((service) => service.url === url)?.provider_id
   const save = useMutation({
-    mutationFn: () =>
-      api.createConnection(
+    mutationFn: async () => {
+      if (provider) return api.authorizeConnection(provider, name, locale, csrfToken, returnTo)
+      await api.createConnection(
         { request_id: requestId, name, account_label: account, url, ...(token ? { token } : {}) },
         csrfToken,
-      ),
+      )
+    },
     onSuccess: async () => {
       setToken('')
       await client.invalidateQueries({ queryKey })
@@ -350,16 +409,18 @@ function ConnectionForm({ services, done }: { services: { url: string }[]; done:
           onChange={(e) => setName(e.target.value)}
         />
       </label>
-      <label className="block text-sm">
-        {t('account')}
-        <input
-          className={input}
-          value={account}
-          maxLength={100}
-          required
-          onChange={(e) => setAccount(e.target.value)}
-        />
-      </label>
+      {!provider && (
+        <label className="block text-sm">
+          {t('account')}
+          <input
+            className={input}
+            value={account}
+            maxLength={100}
+            required
+            onChange={(e) => setAccount(e.target.value)}
+          />
+        </label>
+      )}
       <label className="block text-sm">
         {t('service')}
         <select className={input} value={url} required onChange={(e) => setUrl(e.target.value)}>
@@ -375,18 +436,22 @@ function ConnectionForm({ services, done }: { services: { url: string }[]; done:
           {t('noServices')}
         </p>
       ) : null}
-      <label className="block text-sm">
-        {t('token')}
-        <input
-          type="password"
-          autoComplete="off"
-          className={input}
-          value={token}
-          maxLength={4096}
-          onChange={(e) => setToken(e.target.value)}
-        />
-      </label>
-      <p className="text-muted-foreground text-sm">{t('connectionHint')}</p>
+      {!provider && (
+        <label className="block text-sm">
+          {t('token')}
+          <input
+            type="password"
+            autoComplete="off"
+            className={input}
+            value={token}
+            maxLength={4096}
+            onChange={(e) => setToken(e.target.value)}
+          />
+        </label>
+      )}
+      <p className="text-muted-foreground text-sm">
+        {t(provider ? 'oauthHint' : 'connectionHint')}
+      </p>
       {save.isError ? <RequestFailure error={save.error} retry={() => save.mutate()} /> : null}
       <Button type="submit" disabled={save.isPending || !url}>
         {t(save.isPending ? 'checking' : 'connect')}

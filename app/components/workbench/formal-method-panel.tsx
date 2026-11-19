@@ -1,6 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { MethodConnectionPreview } from './method-connection-preview'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -156,6 +157,7 @@ export function FormalMethodPanel({ sessionId, visible }: { sessionId: string; v
           {selected ? (
             <>
               <p>{selected.purpose}</p>
+              <MethodConnectionPreview preview={selected.connection_preview} />
               {!selected.available ? (
                 <p role="status">
                   {t('unavailable')}

@@ -117,3 +117,81 @@ test('sitemap uses the runtime application origin', async ({ request, baseURL })
   expect(response.status()).toBe(200)
   expect(await response.text()).toContain(`${baseURL}/en`)
 })
+
+test('connection settings redirect the browser for the selected account revision', async ({
+  context,
+  page,
+}) => {
+  await context.addCookies([
+    {
+      name: 'sunmoonai_knowbench_web_sid',
+      value: 'e2e-session',
+      domain: '127.0.0.1',
+      path: '/',
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ])
+  const provider = 'https://login.example.test/authorize?state=fixture'
+  const asset = {
+    id: '11111111-1111-4111-8111-111111111111',
+    kind: 'connection',
+    name: 'Agent workspace',
+    revision: 2,
+    status: 'reauth_required',
+    default_selected: false,
+    created_at: '2026-11-19T12:00:00Z',
+    updated_at: '2026-11-20T12:00:00Z',
+    detail: {
+      url: 'https://agent.example.test/rpc',
+      account_label: 'Office (external-one)',
+      auth: 'oauth',
+      oauth: {
+        provider_id: 'agent',
+        protocol: 'a2a',
+        issuer: 'https://login.example.test',
+        account_id: 'external-one',
+        scopes: ['task.read'],
+      },
+      tools: [],
+      checked_at: '2026-11-19T12:00:00Z',
+    },
+  }
+  await page.route('**/api/workbench/capabilities', (route) =>
+    route.fulfill({
+      json: {
+        assets: [asset],
+        services: [
+          {
+            url: asset.detail.url,
+            authentication: ['oauth'],
+            provider_id: 'agent',
+            protocol: 'a2a',
+          },
+        ],
+        skill_formats: [],
+        runtime_enabled: true,
+      },
+    }),
+  )
+  await page.route('**/api/workbench/capabilities/oauth/start', (route) =>
+    route.fulfill({ json: { authorization_url: provider } }),
+  )
+  await page.route('https://login.example.test/**', (route) =>
+    route.fulfill({ contentType: 'text/html', body: '<title>Test account service</title>' }),
+  )
+  const returnTo = '/en/workbench/chat/22222222-2222-4222-8222-222222222222'
+  await page.goto('/en/workbench/settings/connections?returnTo=' + encodeURIComponent(returnTo))
+  await expect(page.getByText('Reauthorization required', { exact: true })).toBeVisible()
+  const started = page.waitForRequest('**/api/workbench/capabilities/oauth/start')
+  await page.getByRole('button', { name: 'Reauthorize account' }).click()
+  expect((await started).postDataJSON()).toEqual({
+    provider_id: 'agent',
+    name: asset.name,
+    locale: 'en',
+    return_to: returnTo,
+    connection_id: asset.id,
+    revision: asset.revision,
+  })
+  await expect(page).toHaveURL(provider)
+})

@@ -22,6 +22,22 @@ export const formalMethodCatalogItemSchema = z
     inputs: z.record(z.string(), slot),
     outputs: z.record(z.string(), slot),
     access_requirements: z.array(accessRequirementSchema),
+    connection_preview: z
+      .object({
+        complete: z.boolean(),
+        services: z.array(
+          z
+            .object({
+              url: z.string(),
+              capability_ref: z.string(),
+              version: z.string(),
+              required: z.boolean(),
+            })
+            .strict(),
+        ),
+      })
+      .strict()
+      .nullish(),
     uncovered: z.array(
       z.object({ scenario: z.string(), reason: z.string(), scope: z.string() }).strict(),
     ),

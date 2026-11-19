@@ -92,6 +92,17 @@ const detail = z
     url: z.string().optional(),
     account_label: z.string().optional(),
     auth: z.string().optional(),
+    oauth: z
+      .object({
+        provider_id: z.string(),
+        protocol: z.enum(['mcp', 'a2a']),
+        issuer: z.string(),
+        account_id: z.string(),
+        scopes: z.array(z.string()),
+      })
+      .strict()
+      .nullish(),
+    reauth_reason: z.string().nullish(),
     tools: z.array(tool).optional(),
     checked_at: z.string().optional(),
     revocation: z.string().optional(),
@@ -138,7 +149,16 @@ export type Asset = z.infer<typeof assetSchema>
 export const catalogSchema = z
   .object({
     assets: z.array(assetSchema),
-    services: z.array(z.object({ url: z.string(), authentication: z.array(z.string()) }).strict()),
+    services: z.array(
+      z
+        .object({
+          url: z.string(),
+          authentication: z.array(z.string()),
+          provider_id: z.string().nullish(),
+          protocol: z.enum(['mcp', 'a2a']).nullish(),
+        })
+        .strict(),
+    ),
     skill_formats: z.array(z.string()),
     runtime_enabled: z.boolean(),
     script_execution_enabled: z.boolean().optional(),
@@ -330,6 +350,32 @@ const base = '/api/workbench'
 export const catalog = () => getJson(catalogSchema, `${base}/capabilities`)
 export const installedInstructions = (id: string) =>
   getJson(z.string(), `${base}/capabilities/skills/${encodeURIComponent(id)}/instructions`)
+export type ConnectionService = z.infer<typeof catalogSchema>['services'][number]
+export async function authorizeConnection(
+  provider_id: string,
+  name: string,
+  locale: string,
+  csrfToken: string,
+  returnTo: string | null,
+  asset?: Asset,
+) {
+  const response = await sendJson(
+    z.object({ authorization_url: z.url({ protocol: /^https$/ }) }).strict(),
+    `${base}/capabilities/oauth/start`,
+    {
+      csrfToken,
+      body: {
+        provider_id,
+        name,
+        locale,
+        ...(returnTo && { return_to: returnTo }),
+        ...(asset && { connection_id: asset.id, revision: asset.revision }),
+      },
+    },
+  )
+  window.location.assign(response.authorization_url)
+}
+
 export const createConnection = (
   body: { request_id: string; name: string; url: string; account_label: string; token?: string },
   csrfToken: string,

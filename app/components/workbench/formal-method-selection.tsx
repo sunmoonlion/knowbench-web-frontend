@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { MethodConnectionPreview } from './method-connection-preview'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { RequestFailure } from '@/components/common/request-failure'
@@ -80,6 +81,7 @@ export function FormalMethodSelection({
               </span>
             </label>
             <p>{item.purpose}</p>
+            <MethodConnectionPreview preview={item.connection_preview} />
             {!item.available ? (
               <p role="status">
                 {t('unavailable')}
