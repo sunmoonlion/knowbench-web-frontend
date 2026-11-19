@@ -98,6 +98,7 @@ beforeEach(() => {
           return Response.json(selection)
         }
       }
+      if (path.endsWith('/instructions')) return Response.json('Stored instruction text')
       if (path.endsWith('/formal-methods?caller=model')) return Response.json({ items: modelItems })
       if (path.endsWith('/formal-methods')) return Response.json({ items: [] })
       if (path.endsWith('/formal-method-calls')) return Response.json({ calls: [] })
@@ -182,6 +183,16 @@ it('lists connection tools, confirms local disconnection, and keeps a return pat
   expect(writes).toHaveLength(0)
   fireEvent.click(screen.getByRole('button', { name: zh.capabilities.confirmDisconnect }))
   await waitFor(() => expect(writes[0]?.body).toEqual({ revision: 1, action: 'disconnect' }))
+})
+
+it('fetches installed instructions only when their owner opens the disclosure', async () => {
+  page(<CapabilitySettings kind="skill" />)
+  const summary = await screen.findByText(zh.capabilities.instructions)
+  const path = `/api/workbench/capabilities/skills/${catalog.assets[1].id}/instructions`
+  expect(fetch).not.toHaveBeenCalledWith(path, expect.anything())
+  fireEvent.click(summary)
+  expect(await screen.findByText('Stored instruction text')).toBeVisible()
+  expect(fetch).toHaveBeenCalledWith(path, expect.objectContaining({ method: 'GET' }))
 })
 
 it('imports a pure instruction skill with explicitly chosen connection dependencies', async () => {

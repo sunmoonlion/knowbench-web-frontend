@@ -17,6 +17,30 @@ const input = 'mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm'
 const card = 'rounded-xl border p-5 space-y-3'
 const queryKey = ['capability-catalog']
 
+function InstalledInstructions({ id }: { id: string }) {
+  const t = useTranslations('capabilities')
+  const [open, setOpen] = useState(false)
+  return (
+    <details onToggle={(event) => setOpen(event.currentTarget.open)}>
+      <summary className="cursor-pointer text-sm">{t('instructions')}</summary>
+      {open ? <InstructionText id={id} /> : null}
+    </details>
+  )
+}
+
+function InstructionText({ id }: { id: string }) {
+  const t = useTranslations('capabilities')
+  const query = useQuery({
+    queryKey: ['installed-skill-instructions', id],
+    queryFn: () => api.installedInstructions(id),
+    gcTime: 0,
+  })
+  if (query.isError)
+    return <RequestFailure error={query.error} retry={() => void query.refetch()} />
+  if (query.isPending) return <p>{t('loading')}</p>
+  return <pre className="mt-2 max-h-72 overflow-auto text-sm whitespace-pre-wrap">{query.data}</pre>
+}
+
 export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
   const t = useTranslations('capabilities')
   const { csrfToken, locale } = useWorkbench()
@@ -186,12 +210,7 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
                   </ul>
                 </details>
               ) : null}
-              <details>
-                <summary className="cursor-pointer text-sm">{t('instructions')}</summary>
-                <pre className="mt-2 max-h-72 overflow-auto text-sm whitespace-pre-wrap">
-                  {asset.detail.content}
-                </pre>
-              </details>
+              <InstalledInstructions id={asset.id} />
               <Link className="text-sm underline" href={routes.settings(locale, 'connections')}>
                 {t('manageDependencies')}
               </Link>
@@ -390,31 +409,19 @@ function SkillForm({ done, assets }: { done: () => void; assets: api.Asset[] }) 
   const [filename, setFilename] = useState('')
   const [reading, setReading] = useState(false)
   const [requestId] = useState(() => crypto.randomUUID())
+  const submission = () => ({
+    request_id: requestId,
+    name,
+    description,
+    version,
+    tool_requirements: toolRequirements(assets, dependencies),
+    ...(archive ? { archive_base64: archive } : { content }),
+  })
   const save = useMutation({
-    mutationFn: () =>
-      archive
-        ? api.createSkillPackage(
-            {
-              request_id: requestId,
-              name,
-              description,
-              version,
-              archive_base64: archive,
-              tool_requirements: toolRequirements(assets, dependencies),
-            },
-            csrfToken,
-          )
-        : api.createSkill(
-            {
-              request_id: requestId,
-              name,
-              description,
-              version,
-              content,
-              tool_requirements: toolRequirements(assets, dependencies),
-            },
-            csrfToken,
-          ),
+    mutationFn: (body: ReturnType<typeof submission>) =>
+      'archive_base64' in body
+        ? api.createSkillPackage(body, csrfToken)
+        : api.createSkill(body, csrfToken),
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey })
       done()
@@ -425,7 +432,7 @@ function SkillForm({ done, assets }: { done: () => void; assets: api.Asset[] }) 
       className={card}
       onSubmit={(e) => {
         e.preventDefault()
-        save.mutate()
+        save.mutate(submission())
       }}
     >
       <h3 className="font-medium">{t('addSkill')}</h3>
@@ -513,7 +520,9 @@ function SkillForm({ done, assets }: { done: () => void; assets: api.Asset[] }) 
       />
       <p className="text-muted-foreground text-sm">{t('skillHint')}</p>
       {error ? <p role="alert">{error}</p> : null}
-      {save.isError ? <RequestFailure error={save.error} retry={() => save.mutate()} /> : null}
+      {save.isError ? (
+        <RequestFailure error={save.error} retry={() => save.mutate(submission())} />
+      ) : null}
       <Button
         type="submit"
         disabled={save.isPending || reading || (!archive && !content.trim()) || !!error}

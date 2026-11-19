@@ -97,7 +97,6 @@ const detail = z
     revocation: z.string().optional(),
     description: z.string().optional(),
     version: z.string().optional(),
-    content: z.string().optional(),
     digest: z.string().optional(),
     dependencies: z.array(z.string()).optional(),
     tool_requirements: z.array(z.object({ url: z.string(), name: z.string() }).strict()).optional(),
@@ -329,6 +328,8 @@ export const scriptResultSchema = z.object({
 })
 const base = '/api/workbench'
 export const catalog = () => getJson(catalogSchema, `${base}/capabilities`)
+export const installedInstructions = (id: string) =>
+  getJson(z.string(), `${base}/capabilities/skills/${encodeURIComponent(id)}/instructions`)
 export const createConnection = (
   body: { request_id: string; name: string; url: string; account_label: string; token?: string },
   csrfToken: string,
