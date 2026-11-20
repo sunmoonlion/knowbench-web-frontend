@@ -38,12 +38,20 @@ export function CapabilityActionCard({
   call: api.CapabilityCall
   showResult?: boolean
 }) {
+  const isScript = ['skill_script', 'formal_script'].includes(call.detail.execution_kind ?? '')
+  const running = isScript && call.status === 'dispatching'
+  const result = call.detail.result
+  const stopping =
+    running &&
+    typeof result === 'object' &&
+    result !== null &&
+    'stop_requested' in result &&
+    result.stop_requested === true
   const renderResult =
     showResult &&
+    !running &&
     !['formal_method', 'formal_method_model'].includes(call.detail.execution_kind ?? '')
-  const scriptResult = ['skill_script', 'formal_script'].includes(call.detail.execution_kind ?? '')
-    ? api.scriptResultSchema.safeParse(call.detail.result)
-    : null
+  const scriptResult = isScript ? api.scriptResultSchema.safeParse(call.detail.result) : null
   const t = useTranslations('capabilities'),
     { csrfToken, locale } = useWorkbench(),
     client = useQueryClient()
@@ -84,7 +92,9 @@ export function CapabilityActionCard({
           : call.detail.tool.name}{' '}
         · {t.has(`state.${call.status}`) ? t(`state.${call.status}`) : call.status}
       </h4>
-      {['formal_mcp', 'formal_method'].includes(call.detail.execution_kind ?? '') ? (
+      {['formal_mcp', 'formal_method', 'formal_script'].includes(
+        call.detail.execution_kind ?? '',
+      ) ? (
         <p>{t('formalMethodCall')}</p>
       ) : null}
       {call.detail.execution_kind === 'formal_method_model' ? (
@@ -193,11 +203,14 @@ export function CapabilityActionCard({
           </Button>
         </div>
       ) : null}
-      {call.status === 'dispatching' &&
-      ['skill_script', 'formal_script'].includes(call.detail.execution_kind ?? '') ? (
+      {running ? (
         <div className="space-y-2">
-          <p role="status">{t('scriptRunning')}</p>
-          <Button variant="outline" disabled={stop.isPending} onClick={() => stop.mutate()}>
+          <p role="status">{t(stopping ? 'scriptStopping' : 'scriptRunning')}</p>
+          <Button
+            variant="outline"
+            disabled={stopping || stop.isPending}
+            onClick={() => stop.mutate()}
+          >
             {t('stopScript')}
           </Button>
         </div>

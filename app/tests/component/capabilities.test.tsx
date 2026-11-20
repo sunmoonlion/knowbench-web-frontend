@@ -72,7 +72,11 @@ beforeEach(() => {
           return Response.json(calls.calls[0])
         }
         if (path.endsWith('/cancel')) {
-          calls.calls[0].status = 'failed'
+          if (calls.calls[0].detail.execution_kind === 'formal_script') {
+            calls.calls[0].detail.result = { stop_requested: true }
+          } else {
+            calls.calls[0].status = 'failed'
+          }
           return Response.json(calls.calls[0])
         }
         if (path.endsWith('/actions')) {
@@ -188,6 +192,10 @@ it('shows the approved container rate and root budget ceiling for a formal scrip
   ).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: zh.capabilities.stopScript }))
   await waitFor(() => expect(writes.some((w) => w.path.endsWith(`/${call.id}/cancel`))).toBe(true))
+  expect(await screen.findByText(zh.capabilities.scriptStopping)).toBeVisible()
+  expect(screen.getByRole('button', { name: zh.capabilities.stopScript })).toBeDisabled()
+  expect(screen.queryByText(/stop_requested/)).toBeNull()
+  expect(screen.getByText(zh.capabilities.formalMethodCall)).toBeVisible()
 })
 
 it('returns a script result with a real artifact download URL', async () => {

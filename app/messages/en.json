@@ -1591,6 +1591,7 @@
     "uninstallWarning": "Uninstalling blocks further use in conversations and method steps. Past call records and version contents are retained. Active tasks may need reconfiguration.",
     "confirmUninstall": "Confirm uninstall",
     "scriptsSupported": "Python, Shell and Node scripts can run in an isolated cloud container, without network or local project access. Additional dependencies require separate setup.",
+    "scriptStopping": "Stop requested. Waiting for the container to exit and its usage to settle.",
     "scriptRunning": "The script is running in an isolated container. Results update automatically.",
     "scriptExit": "Exit code: {code}",
     "scriptTimeout": "The script reached its time limit and was stopped.",

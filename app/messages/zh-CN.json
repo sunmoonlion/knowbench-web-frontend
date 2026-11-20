@@ -1591,6 +1591,7 @@
     "uninstallWarning": "卸载后，后续聊天和方法步骤不能再使用此技能。已发生的调用记录和版本内容保留供历史查询；正在运行的任务可能需要重新配置。",
     "confirmUninstall": "确认卸载",
     "scriptsSupported": "支持在隔离云端容器运行 Python、Shell 和 Node 脚本；不连接网络、不读取本地项目文件。额外依赖需单独准备。",
+    "scriptStopping": "已请求停止，正在等待容器退出和费用结算。",
     "scriptRunning": "脚本正在隔离容器中运行，结果会自动更新。",
     "scriptExit": "退出码：{code}",
     "scriptTimeout": "脚本达到执行时限，已停止。",
