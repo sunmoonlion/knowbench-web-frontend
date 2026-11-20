@@ -1508,6 +1508,7 @@
     "purpose": "本次用途",
     "saveSelection": "保存本次选择",
     "actionHint": "外部操作尚待独立批准。请核对完整参数中的目标和内容；只允许这一次。",
+    "scriptQuote": "隔离环境 {environment} 按容器运行时间收取每秒 {rate} {currency}，本次最多预留 {maximum} {currency}。启动前免费，失败或取消按已运行时间结算。",
     "zeroActionCost": "已核验本次操作无新增费用。",
     "unknownActionCost": "服务商费用尚未核实。",
     "actionEffect": { "read": "读取", "write": "写入", "send": "发送" },

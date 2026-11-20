@@ -41,10 +41,9 @@ export function CapabilityActionCard({
   const renderResult =
     showResult &&
     !['formal_method', 'formal_method_model'].includes(call.detail.execution_kind ?? '')
-  const scriptResult =
-    call.detail.execution_kind === 'skill_script'
-      ? api.scriptResultSchema.safeParse(call.detail.result)
-      : null
+  const scriptResult = ['skill_script', 'formal_script'].includes(call.detail.execution_kind ?? '')
+    ? api.scriptResultSchema.safeParse(call.detail.result)
+    : null
   const t = useTranslations('capabilities'),
     { csrfToken, locale } = useWorkbench(),
     client = useQueryClient()
@@ -117,6 +116,16 @@ export function CapabilityActionCard({
           {t('purpose')}：{call.detail.purpose}
         </p>
       ) : null}
+      {call.detail.execution_kind === 'formal_script' ? (
+        <p>
+          {t('scriptQuote', {
+            environment: call.detail.script_quote.environment,
+            rate: call.detail.script_quote.per_container_second,
+            currency: call.detail.script_quote.currency,
+            maximum: call.detail.script_quote.maximum,
+          })}
+        </p>
+      ) : null}
       {approval ? (
         <div className="space-y-1 text-sm break-all">
           <p>
@@ -184,7 +193,8 @@ export function CapabilityActionCard({
           </Button>
         </div>
       ) : null}
-      {call.status === 'dispatching' && call.detail.execution_kind === 'skill_script' ? (
+      {call.status === 'dispatching' &&
+      ['skill_script', 'formal_script'].includes(call.detail.execution_kind ?? '') ? (
         <div className="space-y-2">
           <p role="status">{t('scriptRunning')}</p>
           <Button variant="outline" disabled={stop.isPending} onClick={() => stop.mutate()}>

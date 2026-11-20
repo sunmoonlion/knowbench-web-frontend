@@ -1508,6 +1508,7 @@
     "purpose": "Purpose for this conversation",
     "saveSelection": "Save selection",
     "actionHint": "External actions require an exact approval. Check targets and content in all parameters; permission applies once.",
+    "scriptQuote": "The {environment} environment charges {rate} {currency} per running container second. This call reserves up to {maximum} {currency}. Time before startup is free. Failed and cancelled runs are charged for time used.",
     "zeroActionCost": "Reviewed incremental cost: zero.",
     "unknownActionCost": "Provider cost is unconfirmed.",
     "actionEffect": { "read": "Read", "write": "Write", "send": "Send" },

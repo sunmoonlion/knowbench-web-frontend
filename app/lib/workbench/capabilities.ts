@@ -316,6 +316,26 @@ const hostCallDetail = callDetail
     connection_id: z.uuid(),
   })
   .strict()
+const formalScriptCallDetail = callDetail
+  .extend({
+    execution_kind: z.literal('formal_script'),
+    source_asset_id: z.uuid(),
+    connection_id: z.null(),
+    script_quote: z
+      .object({
+        environment: z.string(),
+        revision: z.number().int().positive(),
+        currency: z.literal('CNY'),
+        per_container_second: z.string(),
+        maximum: z.string(),
+        maximum_seconds: z.number().int().positive(),
+        tariff_digest: z.string(),
+        evidence_reference: z.string(),
+        evidence_digest: z.string(),
+      })
+      .strict(),
+  })
+  .strict()
 const modelProbeCallDetail = callDetail
   .extend({
     execution_kind: z.literal('formal_probe'),
@@ -357,7 +377,13 @@ export const callSchema = z
     status: capabilityCallStatusSchema,
     created_at: z.string(),
     updated_at: z.string(),
-    detail: z.union([modelCallDetail, hostCallDetail, modelProbeCallDetail, formalModelCallDetail]),
+    detail: z.union([
+      modelCallDetail,
+      hostCallDetail,
+      formalScriptCallDetail,
+      modelProbeCallDetail,
+      formalModelCallDetail,
+    ]),
   })
   .strict()
 export type CapabilityCall = z.infer<typeof callSchema>
