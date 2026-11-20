@@ -155,6 +155,41 @@ it('shows script artifacts as downloads and can stop a running script', async ()
   )
 })
 
+it('shows the approved container rate and root budget ceiling for a formal script', async () => {
+  const call = calls.calls[0]
+  const detail: Record<string, unknown> = { ...call.detail }
+  for (const key of ['selection_revision', 'runtime', 'method']) delete detail[key]
+  calls.calls[0] = callSchema.parse({
+    ...call,
+    status: 'dispatching',
+    connection_id: null,
+    detail: {
+      ...detail,
+      source_asset_id: call.id,
+      execution_kind: 'formal_script',
+      connection_id: null,
+      script_quote: {
+        environment: 'test-pool',
+        revision: 1,
+        currency: 'CNY',
+        per_container_second: '0.01',
+        maximum: '0.91',
+        maximum_seconds: 91,
+        tariff_digest: 'a'.repeat(64),
+        evidence_reference: 'test-only',
+        evidence_digest: 'sha256:' + 'b'.repeat(64),
+      },
+    },
+  })
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.thisRun }))
+  expect(
+    await screen.findByText(/test-pool.*每秒 0.01 CNY.*最多预留 0.91 CNY.*失败或取消/),
+  ).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.stopScript }))
+  await waitFor(() => expect(writes.some((w) => w.path.endsWith(`/${call.id}/cancel`))).toBe(true))
+})
+
 it('returns a script result with a real artifact download URL', async () => {
   const call = calls.calls[0]
   call.detail.execution_kind = 'skill_script'
