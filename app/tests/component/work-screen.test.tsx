@@ -92,6 +92,8 @@ describe('工作页', () => {
     page(idOf('工作（'))
     // 它说的那句话是一段过程的标题，后面写着跑了几条命令；命令本身收着
     const phase = await screen.findByRole('button', { name: /我先看一下当前目录结构.*2 条命令/ })
+    expect(screen.getByRole('button', { name: '请专家' })).toBeInTheDocument()
+    expect(screen.queryByText('使用我的方法')).not.toBeInTheDocument()
     expect(screen.queryByText('ls -la')).toBeNull()
     fireEvent.click(phase)
     expect(screen.getByText('ls -la')).toBeInTheDocument()

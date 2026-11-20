@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { formalMethodReferenceSchema } from './formal-method-reference'
 import { accessRequirementSchema, callSchema, capabilityCallStatusSchema } from './capabilities'
-import { getJson, sendJson, seg, WorkbenchError } from './http'
+import { getJson, seg, WorkbenchError } from './http'
 
 const jsonObject = z.record(z.string(), z.json())
 export { formalMethodReferenceSchema } from './formal-method-reference'
@@ -144,17 +144,5 @@ export async function formalMethodInvocation(
     await getJson(formalMethodInvocationSchema, `${path(session)}/${seg(request.request_id)}`),
     session,
     request,
-  )
-}
-export async function invokeFormalMethod(
-  session: string,
-  command: FormalMethodInvoke,
-  csrfToken: string,
-) {
-  const body = formalMethodInvokeSchema.parse(command)
-  return checked(
-    await sendJson(formalMethodInvocationSchema, path(session), { body, csrfToken }),
-    session,
-    body,
   )
 }
