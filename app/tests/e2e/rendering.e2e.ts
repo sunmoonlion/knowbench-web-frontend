@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
 import samples from '../fixtures/capabilities-v1.samples.json'
 
@@ -65,9 +66,9 @@ test('workspace route renders only after the paired backend validates its opaque
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
 })
 
-test('paired unified Backend contract streams, cites, reconciles and accepts HITL', async ({
+test('paired run API streams evidence and accepts the authenticated confirmation', async ({
   context,
-  page,
+  baseURL,
   request,
 }) => {
   await context.addCookies([
@@ -80,29 +81,40 @@ test('paired unified Backend contract streams, cites, reconciles and accepts HIT
       sameSite: 'Lax',
     },
   ])
-  await page.goto('/en/dashboard')
-
-  await page.getByLabel('Research question').fill('Use the authorized evidence')
-  await page.getByRole('button', { name: 'Start research' }).click()
-
-  await expect(page.getByText('A streamed FastAPI response fragment.')).toBeVisible()
-  const source = page.getByRole('link', { name: 'FastAPI authorized reference' })
-  await expect(source).toBeVisible()
-  await expect(page.getByTestId('run-status')).toHaveText('Waiting for input')
-
-  const sourceHref = await source.getAttribute('href')
-  if (!sourceHref) throw new Error('citation source href is missing')
-  const anonymousSource = await request.get(sourceHref, { maxRedirects: 0 })
-  expect(anonymousSource.status()).toBe(401)
-  const sourceResponse = await request.get(sourceHref, {
-    headers: { Cookie: 'sunmoonai_knowbench_web_sid=e2e-session' },
-    maxRedirects: 0,
+  const api = context.request
+  const me = await api.get('/api/auth/web/me')
+  const headers = { Origin: baseURL!, 'X-CSRF-Token': (await me.json()).csrf_token }
+  const created = await api.post('/api/web/v1/runs', {
+    headers,
+    data: {
+      contract_version: 1,
+      idempotency_key: crypto.randomUUID(),
+      title: null,
+      input: { text: 'Use the authorized evidence' },
+    },
   })
-  expect(sourceResponse.status()).toBe(302)
-  expect(sourceResponse.headers().location).toContain('/api/web/v1/reference/sources/')
-
-  await page.getByRole('button', { name: 'Confirm and continue' }).click()
-  await expect(page.getByTestId('run-status')).toHaveText('Succeeded')
+  expect(created.ok()).toBe(true)
+  const path = `/api/web/v1/runs/${(await created.json()).run_id}`
+  const stream = await api.get(`${path}/events`)
+  expect(stream.headers()['content-type']).toContain('text/event-stream')
+  const events = (await stream.text())
+    .split('\n')
+    .filter((line) => line.startsWith('data: '))
+    .map((line) => JSON.parse(line.slice(6)))
+  expect(events.map((event) => event.type)).toEqual(['delta', 'citation', 'input_required'])
+  expect(events[0].data.text.trim()).toBe('A streamed FastAPI response fragment.')
+  const citation = events[1].data.citation
+  expect(citation.title).toBe('FastAPI authorized reference')
+  expect((await request.get(citation.source_href, { maxRedirects: 0 })).status()).toBe(401)
+  const authorized = await api.get(citation.source_href, { maxRedirects: 0 })
+  expect(authorized.status()).toBe(302)
+  expect(authorized.headers().location).toContain('/api/web/v1/reference/sources/')
+  const completed = await api.post(`${path}/actions`, {
+    headers,
+    data: { contract_version: 1, action_id: events[2].data.action.action_id, value: 'confirm' },
+  })
+  expect(completed.ok()).toBe(true)
+  expect(await completed.json()).toMatchObject({ status: 'succeeded', required_action: null })
 })
 
 test('unknown route renders a not-found boundary', async ({ page }) => {
@@ -260,4 +272,43 @@ test('chat approves a named resource scope and revokes the same receipt', async 
   await page.getByRole('button', { name: 'Allow reads within this scope' }).click()
   await page.getByRole('button', { name: 'Revoke read approval' }).click()
   await expect(page.getByText('Read approval revoked.')).toBeVisible()
+})
+
+test('live isolated script card approves, downloads, resumes and stops the original calls', async ({
+  context,
+  page,
+}) => {
+  const sid = process.env.SCRIPT_CARD_SESSION
+  test.skip(!sid, 'requires the local PostgreSQL and KIND script card probe')
+  test.setTimeout(100_000)
+  await context.addCookies([
+    {
+      name: 'sunmoonai_knowbench_web_sid',
+      value: 'e2e-session',
+      domain: '127.0.0.1',
+      path: '/',
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ])
+  await page.goto(`/en/workbench/chat/${sid}`)
+  const open = () =>
+    page.getByRole('button', { name: /Capabilities for this conversation/ }).click()
+  await open()
+  const cards = page.locator('section').filter({ has: page.locator(':scope > h4') })
+  const finish = cards.filter({ hasText: '"finish"' })
+  const stop = cards.filter({ hasText: '"stop"' })
+  await finish.getByRole('button', { name: 'Allow once' }).click()
+  const artifact = finish.getByRole('link', { name: 'Download answer.txt' })
+  await expect(artifact).toBeVisible({ timeout: 40_000 })
+  const download = page.waitForEvent('download')
+  await artifact.click()
+  expect(await readFile((await (await download).path())!, 'utf8')).toBe('42')
+  await stop.getByRole('button', { name: 'Allow once' }).click()
+  await expect(stop.getByRole('button', { name: 'Stop script' })).toBeVisible({ timeout: 30_000 })
+  await page.reload()
+  await open()
+  await stop.getByRole('button', { name: 'Stop script' }).click()
+  await expect(stop.getByRole('heading')).toContainText('Provider reported failure', { timeout: 20_000 })
+  await expect(finish.getByRole('link', { name: 'Download answer.txt' })).toBeVisible()
 })
