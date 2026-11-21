@@ -1734,6 +1734,7 @@
     "trace": "查看记录标识",
     "session": "会话",
     "path": {
+      "registered_source": "登记来源",
       "installed": "安装入口",
       "formal": "正式方法",
       "native": "Codex 原生动作",
@@ -1741,6 +1742,7 @@
       "runtime": "运行时"
     },
     "event": {
+      "task": "执行任务",
       "call": "受管调用",
       "approval": "审批决定",
       "observation": "执行事件"

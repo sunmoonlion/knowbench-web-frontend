@@ -57,10 +57,13 @@ export const registryInstallation = (id: string) =>
 
 const events = z.array(
   z.object({
-    kind: z.enum(['call', 'approval', 'observation']),
+    kind: z.enum(['call', 'approval', 'observation', 'task']),
     session_id: z.uuid(),
     record_id: z.string(),
-    path: z.enum(['installed', 'formal', 'native', 'platform', 'runtime']),
+    path: z.enum(['installed', 'formal', 'native', 'platform', 'runtime', 'registered_source']),
+    source: z
+      .object({ source_id: z.uuid(), version: z.number().int(), digest: z.string() })
+      .nullish(),
     asset_id: z.uuid().nullable(),
     reference: formalMethodReferenceSchema.nullable(),
     action: z.string(),

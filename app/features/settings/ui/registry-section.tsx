@@ -184,6 +184,11 @@ function RecentActivity() {
                   {t('path.installed')} · {e.asset_id}
                 </span>
               )}
+              {e.source && (
+                <span className="block">
+                  {e.source.source_id} · v{e.source.version} · {e.source.digest}
+                </span>
+              )}
               {e.reference && (
                 <span className="block">
                   {t('path.formal')} · {e.reference.method_id} · v{e.reference.version} ·{' '}

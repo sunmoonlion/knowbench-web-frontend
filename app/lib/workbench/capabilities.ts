@@ -336,6 +336,20 @@ const formalScriptCallDetail = callDetail
       .strict(),
   })
   .strict()
+const registryScriptCallDetail = formalScriptCallDetail.extend({
+  execution_kind: z.literal('registry_script'),
+  source_asset_id: z.null(),
+  source: z
+    .object({
+      source_id: z.uuid(),
+      version: z.number().int().positive(),
+      digest: z.string(),
+      kind: z.literal('script'),
+      name: z.string(),
+    })
+    .strict(),
+  approval_digest: z.string(),
+})
 const modelProbeCallDetail = callDetail
   .extend({
     execution_kind: z.literal('formal_probe'),
@@ -381,6 +395,7 @@ export const callSchema = z
       modelCallDetail,
       hostCallDetail,
       formalScriptCallDetail,
+      registryScriptCallDetail,
       modelProbeCallDetail,
       formalModelCallDetail,
     ]),

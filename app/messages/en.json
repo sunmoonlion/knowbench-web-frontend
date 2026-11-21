@@ -1734,6 +1734,7 @@
     "trace": "Record identifiers",
     "session": "Session",
     "path": {
+      "registered_source": "Registered source",
       "installed": "Installed entry",
       "formal": "Formal method",
       "native": "Native Codex action",
@@ -1741,6 +1742,7 @@
       "runtime": "Runtime"
     },
     "event": {
+      "task": "Execution task",
       "call": "Managed call",
       "approval": "Approval decision",
       "observation": "Observed event"
