@@ -376,8 +376,11 @@ test('registry management follows an installed source to its two frozen versions
   await page.getByRole('searchbox').fill('auditor')
   await expect(page.getByRole('heading', { name: /Notify auditor/ })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Monthly report/ })).toHaveCount(0)
-  await page.route('**/api/workbench/method-skill-center/planning-methods?**', (route) =>
-    route.fulfill({
+  const queries: unknown[] = []
+  await page.route('**/api/workbench/method-skill-center/planning-methods?**', (route) => {
+    expect(route.request().method()).toBe('POST')
+    queries.push(route.request().postDataJSON())
+    return route.fulfill({
       json: {
         items: [
           {
@@ -391,11 +394,37 @@ test('registry management follows an installed source to its two frozen versions
         ],
         next: null,
       },
-    }),
-  )
+    })
+  })
   await page.getByRole('button', { name: 'Planning candidates' }).click()
   await expect(page.getByRole('heading', { name: 'Acquired reviewer · v2' })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Notify auditor/ })).toHaveCount(0)
+  const question = 'Check the November report'
+  await page.getByLabel('What question are you working on?').fill(question)
+  await page.getByRole('button', { name: 'Find available experts' }).click()
+  await expect.poll(() => queries.at(-1)).toEqual({ stage: 'expert', question })
+  await page.getByRole('button', { name: 'Show tools and experts for composition' }).click()
+  await expect.poll(() => queries.at(-1)).toEqual({ stage: 'composition', question })
+  await page.route('**/planning-methods/declaration', (route) => {
+    const ref = route.request().postDataJSON()
+    expect(ref).toEqual({ method_id: id, version: 2, digest: 'sha256:' + 'c'.repeat(64) })
+    return route.fulfill({
+      json: {
+        reference: ref,
+        declaration: {
+          title: 'Reviewer',
+          purpose: 'Audit reports',
+          applies_when: ['Monthly filing'],
+          excludes: ['Forecasts'],
+          promises: { review: 'Checked figures' },
+        },
+      },
+    })
+  })
+  await page.getByText('View version declaration', { exact: true }).click()
+  await expect(page.getByText('Forecasts', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Browse all available versions' }).click()
+  await expect(page.getByLabel('What question are you working on?')).toHaveValue('')
 })
 
 test('author registers a standalone script and publishes a second text revision', async ({

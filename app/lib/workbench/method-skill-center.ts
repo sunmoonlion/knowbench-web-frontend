@@ -108,8 +108,43 @@ const planningPage = z.object({
   ),
   next: z.number().int().nonnegative().nullable(),
 })
-export const methodSkillCenterPlanningMethods = (offset: number) =>
-  getJson(
+export type PlanningQuery =
+  | { stage: 'directory' }
+  | { stage: 'expert' | 'composition'; question: string }
+export const methodSkillCenterPlanningMethods = (
+  offset: number,
+  query: PlanningQuery,
+  csrfToken: string,
+) =>
+  sendJson(
     planningPage,
     `/api/workbench/method-skill-center/planning-methods?limit=30&offset=${offset}`,
+    { method: 'POST', body: query, csrfToken },
   )
+
+export async function planningDeclaration(
+  reference: z.infer<typeof formalMethodReferenceSchema>,
+  csrfToken: string,
+) {
+  const result = await sendJson(
+    z.object({
+      reference: formalMethodReferenceSchema,
+      declaration: z.object({
+        title: z.string(),
+        purpose: z.string(),
+        applies_when: z.array(z.string()),
+        excludes: z.array(z.string()),
+        promises: z.record(z.string(), z.string()),
+      }),
+    }),
+    '/api/workbench/method-skill-center/planning-methods/declaration',
+    { method: 'POST', body: reference, csrfToken },
+  )
+  if (
+    result.reference.method_id !== reference.method_id ||
+    result.reference.version !== reference.version ||
+    result.reference.digest !== reference.digest
+  )
+    throw new Error('Unexpected method version')
+  return result.declaration
+}

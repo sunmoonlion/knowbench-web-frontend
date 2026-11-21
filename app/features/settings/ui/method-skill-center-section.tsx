@@ -18,6 +18,8 @@ import {
   methodSkillCenterPlanningMethods,
   methodSkillCenterActivity,
   methodSkillCenterKey,
+  planningDeclaration,
+  type PlanningQuery,
   type RegisteredMethod,
   type MethodSkillCenterAsset,
 } from '@/lib/workbench/method-skill-center'
@@ -212,48 +214,150 @@ function RecentActivity() {
   )
 }
 
+function CandidateDeclaration({
+  reference,
+}: {
+  reference: Parameters<typeof planningDeclaration>[0]
+}) {
+  const t = useTranslations('methodSkillCenter')
+  const { csrfToken } = useWorkbench()
+  const [open, setOpen] = useState(false)
+  const query = useQuery({
+    queryKey: [...methodSkillCenterKey, 'declaration', reference],
+    queryFn: () => planningDeclaration(reference, csrfToken),
+    enabled: open,
+    retry: false,
+  })
+  return (
+    <details onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary>{t('candidateDeclaration')}</summary>
+      {open &&
+        (query.isError ? (
+          <RequestFailure error={query.error} retry={() => void query.refetch()} />
+        ) : !query.data || query.isFetching ? (
+          <p>{t('loading')}</p>
+        ) : (
+          <dl>
+            <dt>{t('candidatePurpose')}</dt>
+            <dd>{query.data.purpose}</dd>
+            <dt>{t('candidateApplies')}</dt>
+            <dd>{query.data.applies_when.join(' · ')}</dd>
+            {query.data.excludes.length > 0 && (
+              <>
+                <dt>{t('candidateExcludes')}</dt>
+                <dd>{query.data.excludes.join(' · ')}</dd>
+              </>
+            )}
+            <dt>{t('candidatePromises')}</dt>
+            <dd>{Object.values(query.data.promises).join(' · ')}</dd>
+          </dl>
+        ))}
+    </details>
+  )
+}
+
 function PlanningMethods() {
   const t = useTranslations('methodSkillCenter')
+  const { csrfToken } = useWorkbench()
+  const [question, setQuestion] = useState('')
+  const [basis, setBasis] = useState<PlanningQuery>({ stage: 'directory' })
   const [offset, setOffset] = useState(0)
+  const search = (next: PlanningQuery) => {
+    setOffset(0)
+    setBasis(next)
+  }
   const query = useQuery({
-    queryKey: [...methodSkillCenterKey, 'planning', offset],
-    queryFn: () => methodSkillCenterPlanningMethods(offset),
+    queryKey: [...methodSkillCenterKey, 'planning', offset, basis],
+    queryFn: () => methodSkillCenterPlanningMethods(offset, basis, csrfToken),
   })
-  if (query.isError)
-    return <RequestFailure error={query.error} retry={() => void query.refetch()} />
-  if (!query.data) return <p>{t('loading')}</p>
   return (
     <div className="space-y-3">
-      <p className="text-muted-foreground text-sm">{t('planningScope')}</p>
-      {query.data.items.map((m) => (
-        <article className={panel} key={m.method_id + ':' + m.latest_version}>
-          <h3>
-            {m.title} · v{m.latest_version}
-          </h3>
-          <p>
-            {t('methodKind.' + m.method_kind)} · {m.summary}
-          </p>
-          <details>
-            <summary>{t('identity')}</summary>
-            <code className="break-all">
-              {m.method_id} · {m.digest}
-            </code>
-          </details>
-        </article>
-      ))}
-      {!query.data.items.length && <p>{t('empty')}</p>}
-      <div className="flex gap-2">
-        {offset > 0 && (
-          <Button variant="outline" onClick={() => setOffset(Math.max(0, offset - 30))}>
-            {t('previousPage')}
+      <form
+        className="space-y-2"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (question.trim()) search({ stage: 'expert', question: question.trim() })
+        }}
+      >
+        <label className="block">
+          {t('planningQuestion')}
+          <textarea
+            className="mt-1 w-full rounded border p-2"
+            maxLength={2000}
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+          />
+        </label>
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" disabled={!question.trim()}>
+            {t('searchExperts')}
           </Button>
-        )}
-        {query.data.next !== null && (
-          <Button variant="outline" onClick={() => setOffset(query.data.next!)}>
-            {t('nextPage')}
-          </Button>
-        )}
-      </div>
+          {basis.stage === 'expert' && basis.question === question.trim() && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => search({ stage: 'composition', question: basis.question })}
+            >
+              {t('searchComponents')}
+            </Button>
+          )}
+          {basis.stage !== 'directory' && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setQuestion('')
+                search({ stage: 'directory' })
+              }}
+            >
+              {t('allPlanningMethods')}
+            </Button>
+          )}
+        </div>
+      </form>
+      <p className="text-muted-foreground text-sm">
+        {t(basis.stage === 'directory' ? 'planningScope' : 'planningRank')}
+      </p>
+      {query.isError ? (
+        <RequestFailure error={query.error} retry={() => void query.refetch()} />
+      ) : !query.data ? (
+        <p>{t('loading')}</p>
+      ) : (
+        <>
+          {query.data.items.map((m) => (
+            <article className={panel} key={m.method_id + ':' + m.latest_version}>
+              <h3>
+                {m.title} · v{m.latest_version}
+              </h3>
+              <p>
+                {t('methodKind.' + m.method_kind)} · {m.summary}
+              </p>
+              <CandidateDeclaration
+                reference={{ method_id: m.method_id, version: m.latest_version, digest: m.digest }}
+              />
+              <details>
+                <summary>{t('identity')}</summary>
+                <code className="break-all">
+                  {m.method_id} · {m.digest}
+                </code>
+              </details>
+            </article>
+          ))}
+          {!query.data.items.length && <p>{t('empty')}</p>}
+          <div className="flex gap-2">
+            {offset > 0 && (
+              <Button variant="outline" onClick={() => setOffset(Math.max(0, offset - 30))}>
+                {t('previousPage')}
+              </Button>
+            )}
+            {query.data.next !== null && (
+              <Button variant="outline" onClick={() => setOffset(query.data.next!)}>
+                {t('nextPage')}
+              </Button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }
