@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { useWorkbench } from '@/lib/workbench/context'
 import { WorkbenchError } from '@/lib/workbench/http'
-import { useMachines } from '@/lib/workbench/queries'
+import { useLocalPresence, useMachines } from '@/lib/workbench/queries'
 import { cn } from '@/lib/utils'
 import type { PairingLookup } from '@/contracts/workbench-settings'
 
@@ -35,6 +35,7 @@ export function MachinesScreen({ embedded = false }: { embedded?: boolean }) {
           <h2 className="text-2xl font-semibold tracking-tight">{t('title')}</h2>
           <p className="text-muted-foreground mt-1 text-sm">{t('lead')}</p>
         </header>
+        <MachineList />
         <section aria-label={t('guide.title')} className="space-y-3">
           <h3 className="text-sm font-medium">{t('guide.title')}</h3>
           <p className="text-muted-foreground text-sm">{t('guide.evidence')}</p>
@@ -59,7 +60,6 @@ export function MachinesScreen({ embedded = false }: { embedded?: boolean }) {
             ))}
           </ol>
         </section>
-        <MachineList />
         <AgentDownloadPanel csrfToken={csrfToken} />
         <ConnectComputer csrfToken={csrfToken} />
         <details id="agent-advanced" className="rounded-xl border p-5">
@@ -168,7 +168,9 @@ function ConnectComputer({ csrfToken }: { csrfToken: string }) {
           <p>{found.source_ip ?? t('unknownSource')}</p>
           <p>{t('ago', { seconds: found.requested_seconds_ago })}</p>
           {found.replaces_machine ? (
-            <p className="font-semibold">{t('replace', { name: found.replaces_machine })}</p>
+            <p className="font-semibold">
+              {t('replace', { previous: found.replaces_machine, next: found.machine_name })}
+            </p>
           ) : null}
           {/* 连到哪个账号说出来：浏览器登着别的账号时点了允许，电脑就配进了那个账号（账 133） */}
           {user ? (
@@ -203,7 +205,13 @@ function MachineList() {
   const t = useTranslations('machines')
   const format = useFormatter()
   const machines = useMachines(5000)
-  const { csrfToken } = useWorkbench()
+  const { csrfToken, user } = useWorkbench()
+  const presence = useLocalPresence()
+  const browser = presence.data?.presence
+  const onlineMachine = machines.isSuccess ? machines.data.find(isOnline) : undefined
+  const comparable = browser?.device_id && onlineMachine?.device_id
+  const sameDevice = comparable && browser.device_id === onlineMachine.device_id
+  const hostConflict = browser?.host && onlineMachine?.host && browser.host !== onlineMachine.host
   const client = useQueryClient()
   const [removeFailed, setRemoveFailed] = useState<string | null>(null)
   // 账 179：没连着的电脑可以移除（账 175 合并后旧配对的记录也在列表里）
@@ -218,6 +226,38 @@ function MachineList() {
     // 一个账号同一时刻一台电脑（所有者 2026-10-12 定甲）：这一块就是那台电脑的全部，不另列清单
     <section id="computer-status" aria-label={t('current')} className="space-y-3">
       <h3 className="text-base font-semibold">{t('current')}</h3>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+        {user ? (
+          <>
+            <dt>{t('account')}</dt>
+            <dd>
+              {user.name}
+              {user.email && user.email !== user.name ? ` · ${user.email}` : ''}
+            </dd>
+          </>
+        ) : null}
+        {machines.isSuccess ? (
+          <>
+            <dt>{t('onlineComputer')}</dt>
+            <dd>
+              {onlineMachine
+                ? [onlineMachine.name, onlineMachine.os].filter(Boolean).join(' · ')
+                : t('noOnline')}
+            </dd>
+          </>
+        ) : null}
+        <dt>{t('browserComputer')}</dt>
+        <dd>
+          {browser
+            ? [browser.machine_name, browser.os].filter(Boolean).join(' · ')
+            : presence.isPending
+              ? t('loading')
+              : t('unidentified')}
+        </dd>
+      </dl>
+      {comparable && !(sameDevice && hostConflict) ? (
+        <p className="text-sm">{sameDevice ? t('browserMatches') : t('browserDiffers')}</p>
+      ) : null}
       <p className="text-muted-foreground text-sm">{t('guide.onlineHint')}</p>
       {machines.isPending ? (
         <p className="text-muted-foreground text-sm">{t('loading')}</p>
@@ -240,12 +280,19 @@ function MachineList() {
                 <span
                   className={cn('size-2 rounded-full', online ? 'bg-green-600' : 'bg-amber-500')}
                 />
-                <h3 className="text-base font-semibold">{machine.name}</h3>
+                <h4 className="text-base font-semibold">{machine.name}</h4>
+                {machine.os ? <span className="text-sm">{machine.os}</span> : null}
                 <span className={cn('text-sm', online ? label : 'text-amber-700')}>
                   {online ? t('online') : t('offline')}
                 </span>
               </header>
-              {online ? null : <p className="text-sm text-amber-700">{t('offlineNote')}</p>}
+              {online ? null : (
+                <p className="text-sm text-amber-700">
+                  {machine.os?.toLowerCase() === 'windows'
+                    ? t('offlineWindows', { name: machine.name })
+                    : t('offlineNote', { name: machine.name })}
+                </p>
+              )}
               {online ? null : (
                 <p className="text-sm">
                   <button
@@ -303,12 +350,6 @@ function MachineList() {
         })
       )}
       <p className="text-muted-foreground text-[13px]">{t('ceiling.note')}</p>
-      {/* 账号跟着人走、代理跟着电脑走；网页看不出自己在哪台电脑上（所有者 2026-10-12 定甲） */}
-      {(machines.data ?? []).length > 0 ? (
-        <p className="text-muted-foreground text-sm">
-          {t('elsewhere', { name: machines.data![0].name })}
-        </p>
-      ) : null}
     </section>
   )
 }

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -70,7 +70,11 @@ function page(children: React.ReactNode) {
   return render(
     <NextIntlClientProvider locale="zh-CN" messages={messages} timeZone="Asia/Shanghai">
       <QueryClientProvider client={client}>
-        <WorkbenchProvider csrfToken="csrf-for-test" locale="zh-CN">
+        <WorkbenchProvider
+          csrfToken="csrf-for-test"
+          locale="zh-CN"
+          user={{ name: 'knowbot-tester', email: null }}
+        >
           {children}
         </WorkbenchProvider>
       </QueryClientProvider>
@@ -105,11 +109,65 @@ describe('我的电脑', () => {
     expect(screen.queryAllByRole('checkbox')).toHaveLength(0)
   })
 
-  it('机器离线：写明本地代理没在运行', async () => {
+  it('历史电脑离线时不提示替换它，探不到本机时不猜测电脑身份', async () => {
     scenario = 'offline'
     page(<MachinesScreen />)
+    expect(await screen.findByText(messages.machines.noOnline)).toBeVisible()
+    expect(await screen.findByText(messages.machines.unidentified)).toBeVisible()
+    expect(screen.queryByText(/会断开/)).toBeNull()
+    expect(screen.queryByText(messages.machines.browserMatches)).toBeNull()
+  })
+
+  it.each([true, false])('分清账号、浏览器和在线电脑，同一设备 %s', async (sameDevice) => {
+    const base = (sample('/api/workbench/environments') as { environments: Machine[] })
+      .environments[0]
+    const local = { ...base, name: 'zymun', device_id: 'local', os: 'Windows' }
+    const remote = {
+      ...base,
+      id: '9e88a448-7416-4368-9ef4-3e23d49fa4ae',
+      name: 'knowbot-test',
+      os: 'Linux',
+      device_id: 'remote',
+    }
+    const machines = [
+      { ...remote, status: sameDevice ? 'offline' : 'online' },
+      { ...local, status: sameDevice ? 'online' : 'offline' },
+    ]
+    const fallback = globalThis.fetch
+    vi.stubGlobal('fetch', (url: string, init?: RequestInit) => {
+      if (url.endsWith('/presence'))
+        return Response.json({
+          agent: 'sunmoon-agent',
+          version: '0.5.9',
+          machine_name: 'zymun',
+          device_id: 'local',
+          os: 'Windows',
+          connected: sameDevice,
+        })
+      if (url.endsWith('/api/workbench/environments'))
+        return Response.json({ environments: machines })
+      return fallback(url, init)
+    })
+    page(<MachinesScreen />)
     expect(
-      await screen.findByText(/本地 link 当前没连着。请在这台电脑的托盘「查看状态与原因」里看原因/),
+      await screen.findByText(
+        sameDevice ? messages.machines.browserMatches : messages.machines.browserDiffers,
+      ),
+    ).toBeVisible()
+    expect(screen.getByText(messages.machines.onlineComputer).nextElementSibling).toHaveTextContent(
+      sameDevice ? 'zymun · Windows' : 'knowbot-test · Linux',
+    )
+    expect(
+      screen.getByText(messages.machines.browserComputer).nextElementSibling,
+    ).toHaveTextContent('zymun · Windows')
+    expect(screen.getByText(messages.machines.account).nextElementSibling).toHaveTextContent(
+      'knowbot-tester',
+    )
+    const offline = screen
+      .getByRole('heading', { name: sameDevice ? 'knowbot-test' : 'zymun' })
+      .closest('article')!
+    expect(
+      within(offline).getByText(sameDevice ? /检查这台电脑上的 link 服务/ : /Windows 电脑的托盘/),
     ).toBeVisible()
   })
 

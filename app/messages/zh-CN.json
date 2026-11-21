@@ -1158,13 +1158,12 @@
   },
   "machines": {
     "title": "电脑、link、沙箱与令牌",
-    "lead": "工作和专家要在你自己的电脑上读写项目。电脑上装着本地 link，它只让我们碰你加进白名单的目录。",
+    "lead": "工作和专家在账号连接的电脑上处理项目，只能访问那台电脑允许的目录。",
     "none": "还没有电脑接入。",
     "current": "已接入的电脑",
-    "elsewhere": "这是你账号下接入的电脑。你现在用的如果是另一台电脑，要在那台上按下面三步安装并接入；接入后 {name} 会断开——一个账号同一时刻只连一台电脑。",
     "online": "本地 link 连着",
     "offline": "本地 link 没连着",
-    "offlineNote": "本地 link 当前没连着。请在这台电脑的托盘「查看状态与原因」里看原因；打开了「登录时自动运行」的，登录后会自己运行。",
+    "offlineNote": "「{name}」当前离线。如需使用它，请检查这台电脑上的 link 服务。",
     "remove": "移除这台电脑",
     "removing": "正在移除…",
     "removeFailed": "没移除成。连着的电脑不能移除；没连着还失败的话刷新再试。",
@@ -1192,8 +1191,8 @@
       "folders": "选文件夹完成",
       "done": "已完成",
       "todo": "还没做",
-      "evidence": "本地 link 连着，这三步就算完成。",
-      "onlineHint": "状态每 5 秒更新。本地 link 连着后即可返回工作或专家。"
+      "evidence": "账号已有电脑在线时，这三步显示为已完成。",
+      "onlineHint": "每个账号一次只能连接一台电脑。登录网页不会更换已连接的电脑。"
     },
     "connect": {
       "title": "连接一台电脑",
@@ -1204,7 +1203,7 @@
       "wrong": "码不对或已过期",
       "unknownSource": "未知",
       "ago": "{seconds} 秒前发起",
-      "replace": "允许后，{name} 会断开",
+      "replace": "允许后，「{next}」将连接到当前账号，原连接「{previous}」会断开。",
       "intoAccount": "允许后，给这台电脑上的本地 link 颁发账号「{account}」的令牌。不是这个账号就先拒绝，换账号登录后再颁发。",
       "allow": "允许",
       "deny": "拒绝",
@@ -1254,7 +1253,15 @@
       "tokenTitle": "领取令牌与云端沙箱",
       "toSettings": "登记模型 key"
     },
-    "loadFailed": "电脑状态读取失败，暂时无法确认本地 link 连没连着。"
+    "loadFailed": "电脑状态读取失败，暂时无法确认本地 link 连没连着。",
+    "account": "当前登录账号",
+    "onlineComputer": "账号当前连接的电脑",
+    "browserComputer": "打开此网页的电脑",
+    "noOnline": "目前没有电脑在线",
+    "unidentified": "浏览器未能识别本机的 link",
+    "offlineWindows": "「{name}」当前离线。如需使用它，请在这台 Windows 电脑的托盘打开「查看状态与原因」。",
+    "browserMatches": "打开此网页的电脑就是账号当前连接的电脑。",
+    "browserDiffers": "当前账号连接的是另一台电脑。"
   },
   "results": {
     "title": "结果",
@@ -1386,7 +1393,7 @@
         "joined": "接入日期",
         "lastSeen": "最近一次联系",
         "tokenExpires": "令牌到期日",
-        "reissueHint": "要重新颁发令牌：在这台电脑的托盘点「重新颁发令牌」，在打开的确认页核对确认码和账号后点允许。",
+        "reissueHint": "如需换电脑，在要接入的电脑上发起配对，然后在网页确认电脑名和登录账号。Windows 用户可从托盘选择「重新颁发令牌」。",
         "sandbox": "沙箱",
         "ready": "就绪",
         "notReady": "没就绪",

@@ -467,9 +467,7 @@ describe('三步引导证据', () => {
     page(<MachinesScreen />)
     const guide = within(screen.getByRole('region', { name: zh.machines.guide.title }))
     await waitFor(() => expect(guide.getAllByLabelText('已完成')).toHaveLength(3))
-    expect(guide.getByText(zh.machines.guide.evidence)).toHaveTextContent(
-      '本地 link 连着，这三步就算完成',
-    )
+    expect(guide.getByText(zh.machines.guide.evidence)).toBeVisible()
     expect(guide.queryAllByRole('checkbox')).toHaveLength(0)
   })
   it('没有电脑时三步都没做；离线算安装和选文件夹；在线三步完成', async () => {

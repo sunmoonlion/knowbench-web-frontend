@@ -124,7 +124,11 @@ describe('连接码', () => {
     expect(screen.queryByText(/会断开/)).toBeNull()
     fireEvent.change(input, { target: { value: 'K3NPQ7R2' } })
     fireEvent.click(screen.getByRole('button', { name: '核对这台电脑' }))
-    expect(await screen.findByText('允许后，办公室的电脑 会断开')).toBeVisible()
+    expect(
+      await screen.findByText(
+        '允许后，「家里的电脑」将连接到当前账号，原连接「办公室的电脑」会断开。',
+      ),
+    ).toBeVisible()
   })
 
   it('复制安装命令后提示剩余时间；点太快单独说明', async () => {

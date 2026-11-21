@@ -1158,13 +1158,12 @@
   },
   "machines": {
     "title": "Computer, link, sandbox and token",
-    "lead": "Work and Expert read and write projects on your own computer. The local link runs there and lets us touch only the folders you whitelisted.",
+    "lead": "Work and experts use the computer connected to your account and can access only its allowed folders.",
     "none": "No computer connected yet.",
     "current": "Connected computer",
-    "elsewhere": "This is the computer connected to your account. If you are on a different computer now, install and connect it with the three steps below; {name} then disconnects, because an account drives one computer at a time.",
     "online": "local link connected",
     "offline": "local link not connected",
-    "offlineNote": "The local link is not connected. Check \"Status and reason\" in the tray on that computer; with \"Run at logon\" on, it starts after you log in.",
+    "offlineNote": "“{name}” is offline. To use it, check the link service on that computer.",
     "remove": "Remove this computer",
     "removing": "Removing…",
     "removeFailed": "Not removed. A connected computer cannot be removed; if it is offline, refresh and try again.",
@@ -1192,8 +1191,8 @@
       "folders": "Choose folders to finish",
       "done": "done",
       "todo": "not yet",
-      "evidence": "A connected local link means these three steps are done.",
-      "onlineHint": "Status updates every 5 seconds. Return to Work or Expert once the local link is connected."
+      "evidence": "These steps show as complete when a computer is online for this account.",
+      "onlineHint": "An account connects to one computer at a time. Signing in to the website keeps the existing connection."
     },
     "connect": {
       "title": "Connect a computer",
@@ -1204,7 +1203,7 @@
       "wrong": "The code is wrong or expired",
       "unknownSource": "Unknown",
       "ago": "Started {seconds} seconds ago",
-      "replace": "After you allow this, {name} disconnects",
+      "replace": "Allowing this connects “{next}” to the current account and disconnects the existing connection to “{previous}”.",
       "intoAccount": "After you allow this, the local link on this computer gets the token of the account \"{account}\". If that is not the right account, deny, sign in with the right one and issue again.",
       "allow": "Allow",
       "deny": "Deny",
@@ -1254,7 +1253,15 @@
       "tokenTitle": "Agent token and cloud sandbox",
       "toSettings": "Register a model key"
     },
-    "loadFailed": "Computer status could not be loaded; whether the local link is connected is unknown."
+    "loadFailed": "Computer status could not be loaded; whether the local link is connected is unknown.",
+    "account": "Signed-in account",
+    "onlineComputer": "Computer connected to this account",
+    "browserComputer": "Computer running this browser",
+    "noOnline": "No computer online",
+    "unidentified": "The browser could not identify a local link",
+    "offlineWindows": "“{name}” is offline. To use it, open “View status and reason” in the system tray on that Windows computer.",
+    "browserMatches": "This browser is on the computer connected to your account.",
+    "browserDiffers": "Your account is connected to a different computer."
   },
   "results": {
     "title": "Results",
@@ -1386,7 +1393,7 @@
         "joined": "Joined",
         "lastSeen": "Last contact",
         "tokenExpires": "Token expires",
-        "reissueHint": "To reissue the token: choose \"Reissue token\" in the tray on that computer, then check the confirmation code and account on the page that opens and allow it.",
+        "reissueHint": "To switch computers, start pairing on the computer you want to connect, then confirm its name and your account here. On Windows, choose “Reissue token” in the system tray.",
         "sandbox": "Sandbox",
         "ready": "ready",
         "notReady": "not ready",
