@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { RegistrySources } from './registry-sources'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
@@ -199,7 +200,9 @@ function RecentActivity() {
 export function RegistrySection() {
   const t = useTranslations('registry')
   const { locale } = useWorkbench()
-  const [tab, setTab] = useState<'installed' | 'formal' | 'native' | 'activity'>('formal')
+  const [tab, setTab] = useState<'installed' | 'formal' | 'sources' | 'native' | 'activity'>(
+    'formal',
+  )
   const [term, setTerm] = useState('')
   const query = useQuery({ queryKey: registryKey, queryFn: registryInventory })
   const client = useQueryClient()
@@ -232,7 +235,7 @@ export function RegistrySection() {
         </Button>
       </header>
       <div className="flex flex-wrap gap-2">
-        {(['formal', 'installed', 'native', 'activity'] as const).map((k) => (
+        {(['formal', 'sources', 'installed', 'native', 'activity'] as const).map((k) => (
           <Button
             key={k}
             size="sm"
@@ -257,7 +260,9 @@ export function RegistrySection() {
           onChange={(e) => setTerm(e.target.value)}
         />
       )}
-      {query.isError ? (
+      {tab === 'sources' ? (
+        <RegistrySources />
+      ) : query.isError ? (
         <RequestFailure error={query.error} retry={() => void query.refetch()} />
       ) : !data ? (
         <p>{t('loading')}</p>

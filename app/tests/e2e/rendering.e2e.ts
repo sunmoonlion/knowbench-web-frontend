@@ -375,3 +375,85 @@ test('registry management follows an installed source to its two frozen versions
   await expect(page.getByRole('heading', { name: /Notify auditor/ })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Monthly report/ })).toHaveCount(0)
 })
+
+test('author registers a standalone script and publishes a second text revision', async ({
+  context,
+  page,
+}) => {
+  await context.addCookies([
+    {
+      name: 'sunmoonai_knowbench_web_sid',
+      value: 'e2e-session',
+      domain: '127.0.0.1',
+      path: '/',
+      httpOnly: true,
+      secure: false,
+      sameSite: 'Lax',
+    },
+  ])
+  const records: {
+    source_id: string
+    version: number
+    name: string
+    kind: string
+    content: string
+    digest: string
+  }[] = []
+  await page.route('**/api/workbench/registry', (route) =>
+    route.fulfill({ json: { formal: [], installed: [], native: [] } }),
+  )
+  await page.route('**/api/workbench/registry/sources**', async (route) => {
+    const url = new URL(route.request().url())
+    if (url.pathname.endsWith('/sources'))
+      return route.fulfill({
+        json: records.map(({ source_id, version, name, kind, digest }) => ({
+          source_id,
+          version,
+          name,
+          kind,
+          digest,
+        })),
+      })
+    const parts = url.pathname.split('/')
+    const version = Number(parts.pop()),
+      source_id = parts.pop()!
+    if (route.request().method() === 'PUT') {
+      const row = {
+        ...route.request().postDataJSON(),
+        source_id,
+        version,
+        digest: 'sha256:' + String(version).repeat(64),
+      }
+      records.push(row)
+      return route.fulfill({ json: row })
+    }
+    const row = records.find(
+      (row) =>
+        row.source_id === source_id &&
+        row.version === version &&
+        row.digest === url.searchParams.get('digest'),
+    )
+    return route.fulfill({ status: row ? 200 : 404, json: row ?? {} })
+  })
+  await page.goto('/en/workbench/settings/registry')
+  await page.getByRole('button', { name: 'Scripts and instructions' }).click()
+  await page.getByRole('button', { name: 'New registration' }).click()
+  await page.getByLabel('Load from file').setInputFiles({
+    name: 'reconcile.py',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('print(1)\n'),
+  })
+  await expect(page.getByRole('textbox', { name: 'Content', exact: true })).toHaveValue(
+    'print(1)\n',
+  )
+  await page.getByRole('button', { name: 'Register v1' }).click()
+  await page.getByRole('button', { name: 'Create new version' }).click()
+  await page.getByRole('textbox', { name: 'Content', exact: true }).fill('print(2)')
+  await page.getByRole('button', { name: 'Register v2' }).click()
+  await expect(page.getByRole('button', { name: 'reconcile.py · v2 · Script' })).toBeVisible()
+  expect(records.map((r) => [r.version, r.content])).toEqual([
+    [1, 'print(1)\n'],
+    [2, 'print(2)'],
+  ])
+  expect(records[0].source_id).toBe(records[1].source_id)
+})

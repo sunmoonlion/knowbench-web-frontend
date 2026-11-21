@@ -1676,6 +1676,7 @@
     "clear": "清除此委派依据"
   },
   "registry": {
+    "sources": "脚本和指令",
     "title": "注册中心",
     "lead": "查看已登记的工具方法、专家方法及其执行方式，管理本人的安装入口。",
     "declaredCallers": "版本声明的发起方：{callers}",
@@ -1747,5 +1748,21 @@
     "lab": "进入 KnowLab 孵化",
     "shop": "管理 KnowMart 上架与许可",
     "qualification": "这里显示本人冻结登记的版本。实际使用时还会核对市场资格、当前安装及这次调用的授权。"
+  },
+  "directRegistry": {
+    "scope": "登记自己的脚本文件或指令正文，按版本查看和引用。",
+    "create": "新建登记",
+    "kind": "类型",
+    "script": "脚本",
+    "instruction": "指令",
+    "name": "名称",
+    "file": "从文件读取",
+    "content": "正文",
+    "fileError": "请选择 256 KiB 以内的 UTF-8 文本。",
+    "save": "登记 v{version}",
+    "cancel": "取消",
+    "loading": "读取中…",
+    "empty": "还没有直接登记的脚本或指令。",
+    "revise": "创建新版本"
   }
 }

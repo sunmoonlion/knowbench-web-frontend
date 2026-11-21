@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { getJson } from './http'
+import { getJson, sendJson } from './http'
 import { formalMethodReferenceSchema } from './formal-method-reference'
 
 const installation = z.object({
@@ -69,3 +69,22 @@ const events = z.array(
   }),
 )
 export const registryActivity = () => getJson(events, '/api/workbench/registry/activity')
+
+const source = z.object({
+  source_id: z.uuid(),
+  version: z.number().int().positive(),
+  kind: z.enum(['script', 'instruction']),
+  name: z.string(),
+  digest: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+})
+export type DirectSource = z.infer<typeof source>
+export type SourceInput = Pick<DirectSource, 'kind' | 'name'> & { content: string }
+const sourcePath = '/api/workbench/registry/sources'
+export const listSources = () => getJson(z.array(source), sourcePath)
+export const loadSource = (s: DirectSource) =>
+  getJson(
+    source.extend({ content: z.string() }),
+    `${sourcePath}/${s.source_id}/${s.version}?digest=${encodeURIComponent(s.digest)}`,
+  )
+export const saveSource = (id: string, version: number, body: SourceInput, csrfToken: string) =>
+  sendJson(source, `${sourcePath}/${id}/${version}`, { method: 'PUT', body, csrfToken })

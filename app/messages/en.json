@@ -1676,6 +1676,7 @@
     "clear": "Clear this delegation basis"
   },
   "registry": {
+    "sources": "Scripts and instructions",
     "title": "Registry",
     "lead": "Inspect registered tool and expert methods, see where each runs, and manage your installations.",
     "declaredCallers": "Callers declared by this version: {callers}",
@@ -1747,5 +1748,21 @@
     "lab": "Open KnowLab incubation",
     "shop": "Manage KnowMart listings and licenses",
     "qualification": "These are your registered versions. Use requires current market eligibility, a matching installation and authorization for the call."
+  },
+  "directRegistry": {
+    "scope": "Register a script file or instruction text, then inspect or reference its exact version.",
+    "create": "New registration",
+    "kind": "Type",
+    "script": "Script",
+    "instruction": "Instruction",
+    "name": "Name",
+    "file": "Load from file",
+    "content": "Content",
+    "fileError": "Choose UTF-8 text up to 256 KiB.",
+    "save": "Register v{version}",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "empty": "No scripts or instructions registered directly.",
+    "revise": "Create new version"
   }
 }
