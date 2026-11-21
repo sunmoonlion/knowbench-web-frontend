@@ -1690,6 +1690,7 @@
     },
     "runnerRoute": {
       "formal_mcp": "MCP 连接器执行",
+      "formal_function": "已登记服务函数",
       "formal_script": "隔离脚本环境执行",
       "formal_instruction": "隔离模型轮次执行指令",
       "orchestration": "runtime 按冻结图递归调度",

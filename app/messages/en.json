@@ -1690,6 +1690,7 @@
     },
     "runnerRoute": {
       "formal_mcp": "MCP connector",
+      "formal_function": "Registered service function",
       "formal_script": "Isolated script executor",
       "formal_instruction": "Isolated model turn",
       "orchestration": "Recursive runtime execution of the frozen graph",

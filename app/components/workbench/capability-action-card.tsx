@@ -92,7 +92,7 @@ export function CapabilityActionCard({
           : call.detail.tool.name}{' '}
         · {t.has(`state.${call.status}`) ? t(`state.${call.status}`) : call.status}
       </h4>
-      {['formal_mcp', 'formal_method', 'formal_script'].includes(
+      {['formal_mcp', 'formal_method', 'formal_script', 'formal_function'].includes(
         call.detail.execution_kind ?? '',
       ) ? (
         <p>{t('formalMethodCall')}</p>

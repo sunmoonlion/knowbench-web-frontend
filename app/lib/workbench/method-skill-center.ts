@@ -16,6 +16,7 @@ const method = z.object({
   runner_route: z.enum([
     'formal_mcp',
     'formal_script',
+    'formal_function',
     'formal_instruction',
     'orchestration',
     'unavailable',

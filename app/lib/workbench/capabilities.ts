@@ -316,6 +316,26 @@ const hostCallDetail = callDetail
     connection_id: z.uuid(),
   })
   .strict()
+const formalFunctionCallDetail = callDetail
+  .extend({
+    execution_kind: z.literal('formal_function'),
+    source_asset_id: z.null(),
+    connection_id: z.null(),
+    registered_source: z
+      .object({
+        kind: z.literal('service_function'),
+        source: z.string(),
+        version: z.string(),
+        entry: z.string(),
+        digest: z.string(),
+        asset_id: z.null().optional(),
+        asset_revision: z.null().optional(),
+        delivery_terms: z.null().optional(),
+        license_basis: z.string(),
+      })
+      .strict(),
+  })
+  .strict()
 const formalScriptCallDetail = callDetail
   .extend({
     execution_kind: z.literal('formal_script'),
@@ -395,6 +415,7 @@ export const callSchema = z
       modelCallDetail,
       hostCallDetail,
       formalScriptCallDetail,
+      formalFunctionCallDetail,
       registryScriptCallDetail,
       modelProbeCallDetail,
       formalModelCallDetail,
