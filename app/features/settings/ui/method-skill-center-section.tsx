@@ -285,9 +285,10 @@ function PlanningMethods() {
   const { csrfToken, locale } = useWorkbench()
   const [question, setQuestion] = useState('')
   const [basis, setBasis] = useState<PlanningQuery>({ stage: 'directory' })
-  const [offset, setOffset] = useState(0)
+  const [pages, setPages] = useState([0])
+  const offset = pages[pages.length - 1]
   const search = (next: PlanningQuery) => {
-    setOffset(0)
+    setPages([0])
     setBasis(next)
   }
   const query = useQuery({
@@ -391,12 +392,12 @@ function PlanningMethods() {
           {!query.data.items.length && <p>{t('empty')}</p>}
           <div className="flex gap-2">
             {offset > 0 && (
-              <Button variant="outline" onClick={() => setOffset(Math.max(0, offset - 30))}>
+              <Button variant="outline" onClick={() => setPages((prev) => prev.slice(0, -1))}>
                 {t('previousPage')}
               </Button>
             )}
             {query.data.next !== null && (
-              <Button variant="outline" onClick={() => setOffset(query.data.next!)}>
+              <Button variant="outline" onClick={() => setPages((prev) => [...prev, query.data.next!])}>
                 {t('nextPage')}
               </Button>
             )}
