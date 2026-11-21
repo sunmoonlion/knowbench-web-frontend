@@ -397,7 +397,10 @@ function PlanningMethods() {
               </Button>
             )}
             {query.data.next !== null && (
-              <Button variant="outline" onClick={() => setPages((prev) => [...prev, query.data.next!])}>
+              <Button
+                variant="outline"
+                onClick={() => setPages((prev) => [...prev, query.data.next!])}
+              >
                 {t('nextPage')}
               </Button>
             )}
