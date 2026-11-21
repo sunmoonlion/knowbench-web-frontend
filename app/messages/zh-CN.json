@@ -1,4 +1,22 @@
 {
+  "formalIntake": {
+    "named": "本轮仅核对指定方法 {id} 的第 {version} 版。",
+    "invalidPin": "指定的方法版本不完整，请从方法技能管理中心重新选择。",
+    "latest": "打开最新问题修订",
+    "round": "查看匹配进度或处理等待",
+    "title": "按本题匹配正式专家",
+    "cost": "匹配使用你的模型，本轮费用上限为 ¥2。选定专家后再确认执行范围和费用。",
+    "empty": "当前没有可用的正式专家版本。",
+    "working": "正在比对本题与专家的交付承诺…",
+    "failed": "本轮匹配未完成，可以重试。",
+    "unavailable": "无法核对当前资格或匹配结果。",
+    "retry": "重新核对",
+    "partial": "本次只比较了部分获权版本。",
+    "condition": "适用条件：{value}",
+    "excludes": "排除范围：{value}",
+    "selected": "已确认此版本，待准备执行范围。",
+    "choose": "确认选用此版本"
+  },
   "meta": {
     "title": "SunmoonAI Knowbench",
     "description": "与统一 FastAPI Backend 配对的 Knowbench 产品前端。",
@@ -855,6 +873,7 @@
     "summonKnowbot": "自己去knowmart请专家"
   },
   "askExpert": {
+    "prepareFormal": "进入正式专家匹配",
     "title": "请专家",
     "titleWith": "请专家：{name}",
     "who": "请哪一位",
@@ -1676,6 +1695,7 @@
     "clear": "清除此委派依据"
   },
   "methodSkillCenter": {
+    "askVersion": "用此版本请专家",
     "sources": "脚本和指令",
     "title": "方法技能管理中心",
     "lead": "查看已登记的工具方法、专家方法及其执行方式，管理本人的安装入口。",

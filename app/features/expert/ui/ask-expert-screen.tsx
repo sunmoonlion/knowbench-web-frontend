@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils'
 import { useAsk, useDataNeeds, usePacks, useSaid } from '../api/desk'
 import { askBlocker, busyConversation, findBlocker, sees } from '../model/ask'
 import { FindExpertPanel } from './find-expert-panel'
+import { FormalExpertIntake } from './formal-expert-intake'
 
 const QUESTION = 'workbench.question'
 const label = 'text-muted-foreground mb-1.5 text-xs font-medium'
@@ -272,6 +273,15 @@ export function AskExpertScreen({
                 onChange={(event) => setTyped(event.target.value)}
                 className="min-h-24"
               />
+              {!chosen && !findTask && (
+                <FormalExpertIntake
+                  key={projectId}
+                  from={from}
+                  project={projectId}
+                  question={question}
+                  onRestore={typed === null ? setTyped : undefined}
+                />
+              )}
               {pack ? (
                 <p className="text-muted-foreground mt-1.5 text-[13px]">
                   {t('questionHint', { input: pack.input })}

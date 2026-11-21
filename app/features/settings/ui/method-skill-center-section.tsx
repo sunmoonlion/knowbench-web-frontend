@@ -282,7 +282,7 @@ function CandidateDeclaration({
 
 function PlanningMethods() {
   const t = useTranslations('methodSkillCenter')
-  const { csrfToken } = useWorkbench()
+  const { csrfToken, locale } = useWorkbench()
   const [question, setQuestion] = useState('')
   const [basis, setBasis] = useState<PlanningQuery>({ stage: 'directory' })
   const [offset, setOffset] = useState(0)
@@ -358,6 +358,25 @@ function PlanningMethods() {
               <p>
                 {t('methodKind.' + m.method_kind)} · {m.summary}
               </p>
+              {m.method_kind === 'expert' && (
+                <Link
+                  className="underline"
+                  href={
+                    routes.home(locale) +
+                    '?' +
+                    new URLSearchParams({
+                      mode: 'expert',
+                      formalReference: JSON.stringify({
+                        method_id: m.method_id,
+                        version: m.latest_version,
+                        digest: m.digest,
+                      }),
+                    })
+                  }
+                >
+                  {t('askVersion')}
+                </Link>
+              )}
               <CandidateDeclaration
                 reference={{ method_id: m.method_id, version: m.latest_version, digest: m.digest }}
               />

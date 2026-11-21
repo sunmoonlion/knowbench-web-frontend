@@ -190,3 +190,84 @@ describe('请专家', () => {
     expect(screen.getByRole('button', { name: '交给专家' })).toBeEnabled()
   })
 })
+
+it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选择只提交确认', async () => {
+  const project = '11111111-1111-4111-8111-111111111111'
+  const task = '22222222-2222-4222-8222-222222222222'
+  const digest = 'sha256:' + 'a'.repeat(64)
+  const review = 'sha256:' + 'b'.repeat(64)
+  const refs = [1, 2].map((version) => ({ method_id: project, version, digest }))
+  let selected: (typeof refs)[number] | null = null
+  const requests: { path: string; body: unknown }[] = []
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: string, init: RequestInit = {}) => {
+      const path = String(input).split('?')[0]
+      if (path.endsWith('/find-expert') || path.endsWith('/selection')) {
+        const body = JSON.parse(String(init.body))
+        requests.push({ path, body })
+        if (path.endsWith('/selection')) {
+          selected = body.reference
+          return Response.json({ reference: selected, review_digest: review })
+        }
+        return Response.json({ task_id: task })
+      }
+      if (path.endsWith('/find-expert/' + task)) {
+        return Response.json({
+          task_id: task,
+          project_id: project,
+          question: '需要差异表',
+          state: 'SUCCEEDED',
+          formal: {
+            review_digest: review,
+            selected,
+            more: true,
+            options: refs.map((reference, i) => ({
+              reference,
+              declaration: {
+                title: '对账',
+                applies_when: ['交易'],
+                excludes: [],
+                promises: { result: ['逐笔差异', '汇总差异'][i] },
+              },
+              promise_outputs: { result: ['report'] },
+            })),
+            match: {
+              requirements: [{ id: 'r', statement: '差异表' }],
+              explanation: '请选择交付粒度',
+              clarification: null,
+              picks: refs.map((reference, i) => ({
+                reference,
+                reason: ['按每笔交易', '按科目合计'][i],
+                coverage: [{ requirement: 'r', promise: 'result', quote: '差异' }],
+                limitations: [],
+              })),
+            },
+          },
+        })
+      }
+      return Response.json(sample(path) ?? {}, { status: 200 })
+    }),
+  )
+  page(<AskExpertScreen project={project} from={null} expert={null} />)
+  const question = screen.getByRole('textbox', { name: messages.askExpert.question })
+  fireEvent.change(question, { target: { value: '需要差异表' } })
+  fireEvent.click(screen.getByRole('button', { name: messages.formalIntake.title }))
+  const options = await screen.findAllByRole('button', { name: messages.formalIntake.choose })
+  expect(options).toHaveLength(2)
+  expect(requests[0].body).toMatchObject({
+    question: '需要差异表',
+    budget_limit: '2',
+    match_contract: 'knowbench/expert-match/v5',
+  })
+  fireEvent.change(question, { target: { value: '换一个问题' } })
+  expect(screen.queryByRole('button', { name: messages.formalIntake.choose })).toBeNull()
+  fireEvent.change(question, { target: { value: '需要差异表' } })
+  fireEvent.click(screen.getAllByRole('button', { name: messages.formalIntake.choose })[1])
+  await screen.findByText(messages.formalIntake.selected)
+  expect(requests).toHaveLength(2)
+  expect(requests[1]).toEqual({
+    path: '/api/workbench/find-expert/' + task + '/selection',
+    body: { reference: refs[1], review_digest: review },
+  })
+})

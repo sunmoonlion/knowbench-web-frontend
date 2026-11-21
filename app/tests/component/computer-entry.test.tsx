@@ -364,8 +364,10 @@ describe('电脑接入入口', () => {
         method: 'DELETE',
         path: `/api/workbench/packs/${encodeURIComponent(pack.id)}`,
       })
-      expect(screen.getByRole('button', { name: zh.home.mode.expert.send })).toBeDisabled()
-      expect(navigation.push).not.toHaveBeenCalled()
+      const prepare = screen.getByRole('button', { name: zh.askExpert.prepareFormal })
+      fireEvent.click(prepare)
+      expect(navigation.push).toHaveBeenCalledWith(expect.stringContaining(project.id))
+      expect(mutations).toHaveLength(3)
     }
   })
 

@@ -103,6 +103,17 @@ export function HomeScreen() {
     if (mode === 'expert') {
       // 专家：服务端先编排再进入对话。在这里直接请，不再跳到另一页（0017）
       if (!projectId) return
+      if (!expert) {
+        window.sessionStorage.setItem('workbench.question', text.trim())
+        const reference = query.get('formalReference')
+        const url = routes.askExpert(locale, projectId)
+        router.push(
+          reference === null
+            ? url
+            : url + '?' + new URLSearchParams({ formalReference: reference }),
+        )
+        return
+      }
       const matched =
         selectedByAI?.pack.id === expert &&
         selectedByAI.question === text.trim() &&
@@ -335,10 +346,14 @@ export function HomeScreen() {
                   start.isPending ||
                   ask.isPending ||
                   finder.isPending ||
-                  (mode === 'expert' && (!selectedPack || checkingNeeds))
+                  (mode === 'expert' && !!expert && (!selectedPack || checkingNeeds))
                 }
-                aria-label={t(`mode.${mode}.send`)}
-                title={t(`mode.${mode}.send`)}
+                aria-label={
+                  mode === 'expert' && !expert ? askText('prepareFormal') : t(`mode.${mode}.send`)
+                }
+                title={
+                  mode === 'expert' && !expert ? askText('prepareFormal') : t(`mode.${mode}.send`)
+                }
               >
                 <ArrowUpIcon />
               </Button>

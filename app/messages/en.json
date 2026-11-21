@@ -1,4 +1,22 @@
 {
+  "formalIntake": {
+    "named": "This round checks only method {id}, version {version}.",
+    "invalidPin": "The specified version is incomplete. Select it again in the method and skill center.",
+    "latest": "Open the latest revision",
+    "round": "View progress or handle a waiting request",
+    "title": "Match registered experts",
+    "cost": "Matching uses your model with a ¥2 cap. Execution scope and cost are confirmed separately.",
+    "empty": "No registered expert versions are currently available.",
+    "working": "Comparing the question with expert deliverables…",
+    "failed": "Matching did not finish. You can retry.",
+    "unavailable": "The match or current access could not be verified.",
+    "retry": "Check again",
+    "partial": "Only a subset of eligible versions was reviewed.",
+    "condition": "Condition: {value}",
+    "excludes": "Excludes: {value}",
+    "selected": "Version selected. Execution scope is pending.",
+    "choose": "Confirm this version"
+  },
   "meta": {
     "title": "SunmoonAI Knowbench",
     "description": "The Knowbench product frontend paired with the unified FastAPI Backend.",
@@ -855,6 +873,7 @@
     "summonKnowbot": "Invite an expert from knowmart yourself"
   },
   "askExpert": {
+    "prepareFormal": "Review formal expert matching",
     "title": "Ask an expert",
     "titleWith": "Ask an expert: {name}",
     "who": "Which expert",
@@ -1676,6 +1695,7 @@
     "clear": "Clear this delegation basis"
   },
   "methodSkillCenter": {
+    "askVersion": "Ask this version",
     "sources": "Scripts and instructions",
     "title": "Method and Skill Management Center",
     "lead": "Inspect registered tool and expert methods, see where each runs, and manage your installations.",
