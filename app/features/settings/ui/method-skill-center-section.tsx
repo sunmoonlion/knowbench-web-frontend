@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { RegistrySources } from './registry-sources'
+import { MethodSkillCenterSources } from './method-skill-center-sources'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
@@ -13,22 +13,22 @@ import { assetAction } from '@/lib/workbench/capabilities'
 import { useWorkbench } from '@/lib/workbench/context'
 import { routes } from '@/lib/workbench/routes'
 import {
-  registryInstallation,
-  registryInventory,
-  registryPlanningMethods,
-  registryActivity,
-  registryKey,
+  methodSkillCenterInstallation,
+  methodSkillCenterInventory,
+  methodSkillCenterPlanningMethods,
+  methodSkillCenterActivity,
+  methodSkillCenterKey,
   type RegisteredMethod,
-  type RegistryAsset,
-} from '@/lib/workbench/registry'
+  type MethodSkillCenterAsset,
+} from '@/lib/workbench/method-skill-center'
 
 const panel = 'space-y-3 rounded-xl border p-4'
 
-function EntryList({ asset }: { asset: RegistryAsset }) {
-  const t = useTranslations('registry')
+function EntryList({ asset }: { asset: MethodSkillCenterAsset }) {
+  const t = useTranslations('methodSkillCenter')
   const query = useQuery({
-    queryKey: [...registryKey, asset.asset_id, asset.revision],
-    queryFn: () => registryInstallation(asset.asset_id),
+    queryKey: [...methodSkillCenterKey, asset.asset_id, asset.revision],
+    queryFn: () => methodSkillCenterInstallation(asset.asset_id),
   })
   if (query.isError)
     return <RequestFailure error={query.error} retry={() => void query.refetch()} />
@@ -45,8 +45,14 @@ function EntryList({ asset }: { asset: RegistryAsset }) {
   )
 }
 
-function Installation({ asset, methods }: { asset: RegistryAsset; methods: RegisteredMethod[] }) {
-  const t = useTranslations('registry'),
+function Installation({
+  asset,
+  methods,
+}: {
+  asset: MethodSkillCenterAsset
+  methods: RegisteredMethod[]
+}) {
+  const t = useTranslations('methodSkillCenter'),
     c = useTranslations('capabilities')
   const { csrfToken, locale } = useWorkbench()
   const client = useQueryClient()
@@ -63,7 +69,7 @@ function Installation({ asset, methods }: { asset: RegistryAsset; methods: Regis
     onSettled: async () => {
       setConfirm(false)
       await Promise.all(
-        [registryKey, ['capability-catalog'], ['capability-selection']].map((queryKey) =>
+        [methodSkillCenterKey, ['capability-catalog'], ['capability-selection']].map((queryKey) =>
           client.invalidateQueries({ queryKey }),
         ),
       )
@@ -147,7 +153,7 @@ function Installation({ asset, methods }: { asset: RegistryAsset; methods: Regis
       {action.isError && (
         <RequestFailure
           error={action.error}
-          retry={() => void client.invalidateQueries({ queryKey: registryKey })}
+          retry={() => void client.invalidateQueries({ queryKey: methodSkillCenterKey })}
         />
       )}
     </article>
@@ -155,9 +161,12 @@ function Installation({ asset, methods }: { asset: RegistryAsset; methods: Regis
 }
 
 function RecentActivity() {
-  const t = useTranslations('registry'),
+  const t = useTranslations('methodSkillCenter'),
     { locale } = useWorkbench()
-  const query = useQuery({ queryKey: [...registryKey, 'activity'], queryFn: registryActivity })
+  const query = useQuery({
+    queryKey: [...methodSkillCenterKey, 'activity'],
+    queryFn: methodSkillCenterActivity,
+  })
   if (query.isError)
     return <RequestFailure error={query.error} retry={() => void query.refetch()} />
   if (!query.data) return <p>{t('loading')}</p>
@@ -204,11 +213,11 @@ function RecentActivity() {
 }
 
 function PlanningMethods() {
-  const t = useTranslations('registry')
+  const t = useTranslations('methodSkillCenter')
   const [offset, setOffset] = useState(0)
   const query = useQuery({
-    queryKey: [...registryKey, 'planning', offset],
-    queryFn: () => registryPlanningMethods(offset),
+    queryKey: [...methodSkillCenterKey, 'planning', offset],
+    queryFn: () => methodSkillCenterPlanningMethods(offset),
   })
   if (query.isError)
     return <RequestFailure error={query.error} retry={() => void query.refetch()} />
@@ -249,14 +258,14 @@ function PlanningMethods() {
   )
 }
 
-export function RegistrySection() {
-  const t = useTranslations('registry')
+export function MethodSkillCenterSection() {
+  const t = useTranslations('methodSkillCenter')
   const { locale } = useWorkbench()
   const [tab, setTab] = useState<
     'installed' | 'formal' | 'sources' | 'planning' | 'native' | 'activity'
   >('formal')
   const [term, setTerm] = useState('')
-  const query = useQuery({ queryKey: registryKey, queryFn: registryInventory })
+  const query = useQuery({ queryKey: methodSkillCenterKey, queryFn: methodSkillCenterInventory })
   const client = useQueryClient()
   const data = query.data
   const matches = (...parts: (string | null)[]) =>
@@ -281,7 +290,7 @@ export function RegistrySection() {
           size="sm"
           variant="outline"
           disabled={query.isFetching}
-          onClick={() => void client.invalidateQueries({ queryKey: registryKey })}
+          onClick={() => void client.invalidateQueries({ queryKey: methodSkillCenterKey })}
         >
           {t('refresh')}
         </Button>
@@ -317,7 +326,7 @@ export function RegistrySection() {
       {tab === 'planning' ? (
         <PlanningMethods />
       ) : tab === 'sources' ? (
-        <RegistrySources />
+        <MethodSkillCenterSources />
       ) : query.isError ? (
         <RequestFailure error={query.error} retry={() => void query.refetch()} />
       ) : !data ? (

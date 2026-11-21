@@ -2,14 +2,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, expect, it, vi } from 'vitest'
-import { RegistrySection } from '@/features/settings/ui/registry-section'
+import { MethodSkillCenterSection } from '@/features/settings/ui/method-skill-center-section'
 import { WorkbenchProvider } from '@/lib/workbench/context'
 import zh from '@/messages/zh-CN.json'
-import * as registry from '@/lib/workbench/registry'
+import * as registry from '@/lib/workbench/method-skill-center'
 import * as api from '@/lib/workbench/capabilities'
 
 const asset_id = '088208b5-a2b2-4f7b-a2b8-b5abdedff75d'
-const asset: registry.RegistryAsset = {
+const asset: registry.MethodSkillCenterAsset = {
   asset_id,
   revision: 3,
   name: '工作邮件',
@@ -43,7 +43,7 @@ function renderPage() {
     <NextIntlClientProvider locale="zh-CN" messages={zh} timeZone="Asia/Shanghai">
       <QueryClientProvider client={client}>
         <WorkbenchProvider csrfToken="csrf" locale="zh-CN">
-          <RegistrySection />
+          <MethodSkillCenterSection />
         </WorkbenchProvider>
       </QueryClientProvider>
     </NextIntlClientProvider>,
@@ -52,7 +52,7 @@ function renderPage() {
 afterEach(() => vi.restoreAllMocks())
 it('keeps source and method identities visible and confirms before disabling the exact revision', async () => {
   let status = asset.status
-  vi.spyOn(registry, 'registryInventory').mockImplementation(async () => ({
+  vi.spyOn(registry, 'methodSkillCenterInventory').mockImplementation(async () => ({
     installed: [{ ...asset, status }],
     formal: methods,
     native: [
@@ -64,12 +64,12 @@ it('keeps source and method identities visible and confirms before disabling the
       },
     ],
   }))
-  vi.spyOn(registry, 'registryInstallation').mockResolvedValue({
+  vi.spyOn(registry, 'methodSkillCenterInstallation').mockResolvedValue({
     path: 'installed',
     ...asset,
     entries: [{ kind: 'mcp', entry: 'send', tool_key: 'opaque' }],
   })
-  vi.spyOn(registry, 'registryActivity').mockResolvedValue([
+  vi.spyOn(registry, 'methodSkillCenterActivity').mockResolvedValue([
     {
       kind: 'call',
       path: 'formal',
@@ -97,7 +97,7 @@ it('keeps source and method identities visible and confirms before disabling the
   renderPage()
   expect(await screen.findByRole('heading', { name: /发送成稿/ })).toBeVisible()
   expect(screen.getAllByText(/工具方法 · MCP/)).toHaveLength(2)
-  fireEvent.click(screen.getByRole('button', { name: zh.registry.installed }))
+  fireEvent.click(screen.getByRole('button', { name: zh.methodSkillCenter.installed }))
   expect(await screen.findByText('工作邮件')).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: '查看安装入口' }))
   expect(await screen.findByText('send')).toBeVisible()
@@ -115,7 +115,7 @@ it('keeps source and method identities visible and confirms before disabling the
   expect(screen.getByText('item/permissions/requestApproval')).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: '最近记录' }))
   expect(await screen.findByText(/正式方法 · send/)).toBeVisible()
-  fireEvent.click(screen.getByText(zh.registry.trace))
+  fireEvent.click(screen.getByText(zh.methodSkillCenter.trace))
   expect(screen.getByText(new RegExp(methods[0].reference.digest))).toBeVisible()
 })
 it('lists an expert with no installation and shows who runs each of its leaves', async () => {
@@ -126,7 +126,7 @@ it('lists an expert with no installation and shows who runs each of its leaves',
     runner_route: i ? 'formal_instruction' : 'formal_script',
     allowed_callers: ['host'],
   }))
-  vi.spyOn(registry, 'registryInventory').mockResolvedValue({
+  vi.spyOn(registry, 'methodSkillCenterInventory').mockResolvedValue({
     installed: [],
     native: [],
     formal: [
@@ -156,14 +156,14 @@ it('lists an expert with no installation and shows who runs each of its leaves',
   expect(screen.queryByRole('heading', { name: /汇总脚本/ })).toBeNull()
 })
 it('shows an empty registry with working installation links', async () => {
-  vi.spyOn(registry, 'registryInventory').mockResolvedValue({
+  vi.spyOn(registry, 'methodSkillCenterInventory').mockResolvedValue({
     installed: [],
     formal: [],
     native: [],
   })
   renderPage()
-  expect(await screen.findByText(zh.registry.empty)).toBeVisible()
-  fireEvent.click(screen.getByRole('button', { name: zh.registry.installed }))
+  expect(await screen.findByText(zh.methodSkillCenter.empty)).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: zh.methodSkillCenter.installed }))
   expect(screen.getByRole('link', { name: '安装技能' })).toHaveAttribute(
     'href',
     '/zh-CN/workbench/settings/skills',

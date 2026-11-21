@@ -1304,7 +1304,7 @@
       "computer": "Computer & sandbox",
       "connections": "Connections & tools",
       "skills": "Skills",
-      "registry": "Registry"
+      "method-skill-center": "Method and Skill Management Center"
     },
     "navHint": {
       "preferences": "Stored in this browser only",
@@ -1312,7 +1312,7 @@
       "computer": "Local link, sandbox and token",
       "connections": "Service accounts and tools",
       "skills": "Instructions and versions",
-      "registry": "Inspect registered tool and expert methods, see where each runs, and manage your installations."
+      "method-skill-center": "Inspect registered tool and expert methods, see where each runs, and manage your installations."
     },
     "preferences": {
       "title": "Preferences",
@@ -1675,9 +1675,9 @@
     "binding": "Accepted plan: {parent} → {child} ({version})",
     "clear": "Clear this delegation basis"
   },
-  "registry": {
+  "methodSkillCenter": {
     "sources": "Scripts and instructions",
-    "title": "Registry",
+    "title": "Method and Skill Management Center",
     "lead": "Inspect registered tool and expert methods, see where each runs, and manage your installations.",
     "declaredCallers": "Callers declared by this version: {callers}",
     "caller": {

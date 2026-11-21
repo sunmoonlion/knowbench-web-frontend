@@ -48,12 +48,13 @@ const details = installation.pick({ asset_id: true, revision: true, status: true
     z.object({ kind: z.string(), entry: z.string(), tool_key: z.string().nullable() }),
   ),
 })
-export type RegistryAsset = z.infer<typeof installation>
+export type MethodSkillCenterAsset = z.infer<typeof installation>
 export type RegisteredMethod = z.infer<typeof method>
-export const registryKey = ['workbench-registry'] as const
-export const registryInventory = () => getJson(inventory, '/api/workbench/registry')
-export const registryInstallation = (id: string) =>
-  getJson(details, `/api/workbench/registry/installed/${encodeURIComponent(id)}`)
+export const methodSkillCenterKey = ['workbench-method-skill-center'] as const
+export const methodSkillCenterInventory = () =>
+  getJson(inventory, '/api/workbench/method-skill-center')
+export const methodSkillCenterInstallation = (id: string) =>
+  getJson(details, `/api/workbench/method-skill-center/installed/${encodeURIComponent(id)}`)
 
 const events = z.array(
   z.object({
@@ -71,7 +72,8 @@ const events = z.array(
     at: z.string(),
   }),
 )
-export const registryActivity = () => getJson(events, '/api/workbench/registry/activity')
+export const methodSkillCenterActivity = () =>
+  getJson(events, '/api/workbench/method-skill-center/activity')
 
 const source = z.object({
   source_id: z.uuid(),
@@ -82,7 +84,7 @@ const source = z.object({
 })
 export type DirectSource = z.infer<typeof source>
 export type SourceInput = Pick<DirectSource, 'kind' | 'name'> & { content: string }
-const sourcePath = '/api/workbench/registry/sources'
+const sourcePath = '/api/workbench/method-skill-center/sources'
 export const listSources = () => getJson(z.array(source), sourcePath)
 export const loadSource = (s: DirectSource) =>
   getJson(
@@ -105,5 +107,8 @@ const planningPage = z.object({
   ),
   next: z.number().int().nonnegative().nullable(),
 })
-export const registryPlanningMethods = (offset: number) =>
-  getJson(planningPage, `/api/workbench/registry/planning-methods?limit=30&offset=${offset}`)
+export const methodSkillCenterPlanningMethods = (offset: number) =>
+  getJson(
+    planningPage,
+    `/api/workbench/method-skill-center/planning-methods?limit=30&offset=${offset}`,
+  )

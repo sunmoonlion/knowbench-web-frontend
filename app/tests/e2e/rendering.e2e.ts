@@ -330,7 +330,7 @@ test('registry management follows an installed source to its two frozen versions
     },
   ])
   const id = '088208b5-a2b2-4f7b-a2b8-b5abdedff75d'
-  await page.route('**/api/workbench/registry', (route) =>
+  await page.route('**/api/workbench/method-skill-center', (route) =>
     route.fulfill({
       json: {
         installed: [
@@ -366,7 +366,10 @@ test('registry management follows an installed source to its two frozen versions
     }),
   )
   await page.goto('/en/workbench/settings/registry')
-  await expect(page.getByRole('heading', { name: 'Registry', exact: true })).toBeVisible()
+  await expect(page).toHaveURL(/\/en\/workbench\/settings\/method-skill-center$/)
+  await expect(
+    page.getByRole('heading', { name: 'Method and Skill Management Center', exact: true }),
+  ).toBeVisible()
   await expect(page.getByRole('heading', { name: /Monthly report/ })).toBeVisible()
   await page.getByRole('button', { name: 'Installations', exact: true }).click()
   await expect(page.getByText('Office mail', { exact: true })).toBeVisible()
@@ -374,7 +377,7 @@ test('registry management follows an installed source to its two frozen versions
   await page.getByRole('searchbox').fill('auditor')
   await expect(page.getByRole('heading', { name: /Notify auditor/ })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Monthly report/ })).toHaveCount(0)
-  await page.route('**/api/workbench/registry/planning-methods?**', (route) =>
+  await page.route('**/api/workbench/method-skill-center/planning-methods?**', (route) =>
     route.fulfill({
       json: {
         items: [
@@ -419,10 +422,10 @@ test('author registers a standalone script and publishes a second text revision'
     content: string
     digest: string
   }[] = []
-  await page.route('**/api/workbench/registry', (route) =>
+  await page.route('**/api/workbench/method-skill-center', (route) =>
     route.fulfill({ json: { formal: [], installed: [], native: [] } }),
   )
-  await page.route('**/api/workbench/registry/sources**', async (route) => {
+  await page.route('**/api/workbench/method-skill-center/sources**', async (route) => {
     const url = new URL(route.request().url())
     if (url.pathname.endsWith('/sources'))
       return route.fulfill({
@@ -455,7 +458,7 @@ test('author registers a standalone script and publishes a second text revision'
     )
     return route.fulfill({ status: row ? 200 : 404, json: row ?? {} })
   })
-  await page.goto('/en/workbench/settings/registry')
+  await page.goto('/en/workbench/settings/method-skill-center')
   await page.getByRole('button', { name: 'Scripts and instructions' }).click()
   await page.getByRole('button', { name: 'New registration' }).click()
   await page.getByLabel('Load from file').setInputFiles({

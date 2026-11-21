@@ -10,7 +10,7 @@ export const SETTINGS_SECTIONS = [
   'computer',
   'connections',
   'skills',
-  'registry',
+  'method-skill-center',
 ] as const
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number]
 

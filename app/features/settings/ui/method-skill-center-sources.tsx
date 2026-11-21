@@ -10,12 +10,12 @@ import {
   listSources,
   loadSource,
   saveSource,
-  registryKey,
+  methodSkillCenterKey,
   type DirectSource,
   type SourceInput,
-} from '@/lib/workbench/registry'
+} from '@/lib/workbench/method-skill-center'
 
-const sourceKey = [...registryKey, 'sources']
+const sourceKey = [...methodSkillCenterKey, 'sources']
 type Edit = SourceInput & { id: string; version: number }
 function SourceDetail({
   source,
@@ -61,7 +61,7 @@ function SourceDetail({
   )
 }
 
-export function RegistrySources() {
+export function MethodSkillCenterSources() {
   const t = useTranslations('directRegistry')
   const { csrfToken } = useWorkbench()
   const client = useQueryClient()

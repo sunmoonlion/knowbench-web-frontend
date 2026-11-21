@@ -1304,7 +1304,7 @@
       "computer": "电脑与沙箱",
       "connections": "连接与工具",
       "skills": "技能",
-      "registry": "注册中心"
+      "method-skill-center": "方法技能管理中心"
     },
     "navHint": {
       "preferences": "只存在这个浏览器里",
@@ -1312,7 +1312,7 @@
       "computer": "本地 link、沙箱与令牌",
       "connections": "服务账号与工具接入",
       "skills": "作业指令与版本",
-      "registry": "查看已登记的工具方法、专家方法及其执行方式，管理本人的安装入口。"
+      "method-skill-center": "查看已登记的工具方法、专家方法及其执行方式，管理本人的安装入口。"
     },
     "preferences": {
       "title": "个人偏好",
@@ -1675,9 +1675,9 @@
     "binding": "已接受计划：{parent} → {child}（{version}）",
     "clear": "清除此委派依据"
   },
-  "registry": {
+  "methodSkillCenter": {
     "sources": "脚本和指令",
-    "title": "注册中心",
+    "title": "方法技能管理中心",
     "lead": "查看已登记的工具方法、专家方法及其执行方式，管理本人的安装入口。",
     "declaredCallers": "版本声明的发起方：{callers}",
     "caller": {

@@ -10,7 +10,7 @@ import { RequestFailure } from '@/components/common/request-failure'
 import { useWorkbench } from '@/lib/workbench/context'
 import { routes } from '@/lib/workbench/routes'
 import * as api from '@/lib/workbench/capabilities'
-import { registryKey } from '@/lib/workbench/registry'
+import { methodSkillCenterKey } from '@/lib/workbench/method-skill-center'
 import { SkillSourceInstaller, SkillDependencies, toolRequirements } from './skill-source-installer'
 import { SkillConnections } from '@/components/workbench/skill-connections'
 
@@ -77,7 +77,7 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
       setDisconnecting(null)
       await Promise.all([
         client.invalidateQueries({ queryKey }),
-        client.invalidateQueries({ queryKey: registryKey }),
+        client.invalidateQueries({ queryKey: methodSkillCenterKey }),
       ])
       await client.invalidateQueries({ queryKey: ['capability-selection'] })
     },
@@ -392,7 +392,7 @@ function ConnectionForm({
       setToken('')
       await Promise.all([
         client.invalidateQueries({ queryKey }),
-        client.invalidateQueries({ queryKey: registryKey }),
+        client.invalidateQueries({ queryKey: methodSkillCenterKey }),
       ])
       done()
     },
@@ -497,7 +497,7 @@ function SkillForm({ done, assets }: { done: () => void; assets: api.Asset[] }) 
     onSuccess: async () => {
       await Promise.all([
         client.invalidateQueries({ queryKey }),
-        client.invalidateQueries({ queryKey: registryKey }),
+        client.invalidateQueries({ queryKey: methodSkillCenterKey }),
       ])
       done()
     },
@@ -619,7 +619,7 @@ function RenewForm({ asset, done }: { asset: api.Asset; done: () => void }) {
       setToken('')
       await Promise.all([
         client.invalidateQueries({ queryKey }),
-        client.invalidateQueries({ queryKey: registryKey }),
+        client.invalidateQueries({ queryKey: methodSkillCenterKey }),
       ])
       await client.invalidateQueries({ queryKey: ['capability-selection'] })
       done()
