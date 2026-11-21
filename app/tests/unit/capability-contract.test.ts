@@ -99,6 +99,16 @@ it('rejects root/operation identity or state mismatches while allowing failed ou
   expect(formalMethodValuesSchema.safeParse({ ...values, extra: true }).success).toBe(false)
 })
 
+it('identifies a function probe by its registered source and actual model turn', () => {
+  const sample = samples.RegisteredFunctionProbe
+  expect(callSchema.parse(sample).detail.execution_kind).toBe('formal_probe')
+  for (const key of ['registered_source', 'selection_revision', 'runtime']) {
+    const detail: Record<string, unknown> = { ...sample.detail }
+    delete detail[key]
+    expect(callSchema.safeParse({ ...sample, detail }).success).toBe(false)
+  }
+})
+
 it('requires explicit model probe runtime references without allowing internal evidence or manual invocation', () => {
   const sample = samples.FormalProbeCall
   expect(callSchema.parse(sample).detail.execution_kind).toBe('formal_probe')

@@ -379,6 +379,11 @@ const modelProbeCallDetail = callDetail
     runtime: z.string(),
   })
   .strict()
+const registeredFunctionProbeDetail = formalFunctionCallDetail.extend({
+  execution_kind: z.literal('formal_probe'),
+  selection_revision: z.number().int(),
+  runtime: z.string(),
+})
 const formalModelCallDetail = callDetail
   .extend({
     execution_kind: z.literal('formal_method_model'),
@@ -418,6 +423,7 @@ export const callSchema = z
       formalFunctionCallDetail,
       registryScriptCallDetail,
       modelProbeCallDetail,
+      registeredFunctionProbeDetail,
       formalModelCallDetail,
     ]),
   })
