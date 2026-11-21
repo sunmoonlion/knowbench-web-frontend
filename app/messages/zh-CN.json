@@ -1747,7 +1747,11 @@
     },
     "lab": "进入 KnowLab 孵化",
     "shop": "管理 KnowMart 上架与许可",
-    "qualification": "这里显示本人冻结登记的版本。实际使用时还会核对市场资格、当前安装及这次调用的授权。"
+    "qualification": "这里显示本人冻结登记的版本。实际使用时还会核对市场资格、当前安装及这次调用的授权。",
+    "planning": "即时编排候选",
+    "planningScope": "按当前账号的正式使用资格列出的已登记方法版本。",
+    "previousPage": "上一页",
+    "nextPage": "下一页"
   },
   "directRegistry": {
     "scope": "登记自己的脚本文件或指令正文，按版本查看和引用。",

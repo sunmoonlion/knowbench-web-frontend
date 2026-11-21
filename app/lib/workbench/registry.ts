@@ -88,3 +88,19 @@ export const loadSource = (s: DirectSource) =>
   )
 export const saveSource = (id: string, version: number, body: SourceInput, csrfToken: string) =>
   sendJson(source, `${sourcePath}/${id}/${version}`, { method: 'PUT', body, csrfToken })
+
+const planningPage = z.object({
+  items: z.array(
+    z.object({
+      method_id: z.uuid(),
+      latest_version: z.number().int().positive(),
+      digest: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+      method_kind: z.enum(['tool', 'expert']),
+      title: z.string(),
+      summary: z.string(),
+    }),
+  ),
+  next: z.number().int().nonnegative().nullable(),
+})
+export const registryPlanningMethods = (offset: number) =>
+  getJson(planningPage, `/api/workbench/registry/planning-methods?limit=30&offset=${offset}`)

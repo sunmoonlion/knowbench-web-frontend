@@ -1747,7 +1747,11 @@
     },
     "lab": "Open KnowLab incubation",
     "shop": "Manage KnowMart listings and licenses",
-    "qualification": "These are your registered versions. Use requires current market eligibility, a matching installation and authorization for the call."
+    "qualification": "These are your registered versions. Use requires current market eligibility, a matching installation and authorization for the call.",
+    "planning": "Planning candidates",
+    "planningScope": "Registered method versions available for planning under your current use rights.",
+    "previousPage": "Previous page",
+    "nextPage": "Next page"
   },
   "directRegistry": {
     "scope": "Register a script file or instruction text, then inspect or reference its exact version.",

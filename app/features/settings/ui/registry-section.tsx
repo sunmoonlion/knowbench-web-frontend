@@ -15,6 +15,7 @@ import { routes } from '@/lib/workbench/routes'
 import {
   registryInstallation,
   registryInventory,
+  registryPlanningMethods,
   registryActivity,
   registryKey,
   type RegisteredMethod,
@@ -197,12 +198,58 @@ function RecentActivity() {
   )
 }
 
+function PlanningMethods() {
+  const t = useTranslations('registry')
+  const [offset, setOffset] = useState(0)
+  const query = useQuery({
+    queryKey: [...registryKey, 'planning', offset],
+    queryFn: () => registryPlanningMethods(offset),
+  })
+  if (query.isError)
+    return <RequestFailure error={query.error} retry={() => void query.refetch()} />
+  if (!query.data) return <p>{t('loading')}</p>
+  return (
+    <div className="space-y-3">
+      <p className="text-muted-foreground text-sm">{t('planningScope')}</p>
+      {query.data.items.map((m) => (
+        <article className={panel} key={m.method_id + ':' + m.latest_version}>
+          <h3>
+            {m.title} · v{m.latest_version}
+          </h3>
+          <p>
+            {t('methodKind.' + m.method_kind)} · {m.summary}
+          </p>
+          <details>
+            <summary>{t('identity')}</summary>
+            <code className="break-all">
+              {m.method_id} · {m.digest}
+            </code>
+          </details>
+        </article>
+      ))}
+      {!query.data.items.length && <p>{t('empty')}</p>}
+      <div className="flex gap-2">
+        {offset > 0 && (
+          <Button variant="outline" onClick={() => setOffset(Math.max(0, offset - 30))}>
+            {t('previousPage')}
+          </Button>
+        )}
+        {query.data.next !== null && (
+          <Button variant="outline" onClick={() => setOffset(query.data.next!)}>
+            {t('nextPage')}
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function RegistrySection() {
   const t = useTranslations('registry')
   const { locale } = useWorkbench()
-  const [tab, setTab] = useState<'installed' | 'formal' | 'sources' | 'native' | 'activity'>(
-    'formal',
-  )
+  const [tab, setTab] = useState<
+    'installed' | 'formal' | 'sources' | 'planning' | 'native' | 'activity'
+  >('formal')
   const [term, setTerm] = useState('')
   const query = useQuery({ queryKey: registryKey, queryFn: registryInventory })
   const client = useQueryClient()
@@ -235,20 +282,22 @@ export function RegistrySection() {
         </Button>
       </header>
       <div className="flex flex-wrap gap-2">
-        {(['formal', 'sources', 'installed', 'native', 'activity'] as const).map((k) => (
-          <Button
-            key={k}
-            size="sm"
-            variant={tab === k ? 'default' : 'outline'}
-            aria-pressed={tab === k}
-            onClick={() => {
-              setTab(k)
-              setTerm('')
-            }}
-          >
-            {t(k)}
-          </Button>
-        ))}
+        {(['formal', 'planning', 'sources', 'installed', 'native', 'activity'] as const).map(
+          (k) => (
+            <Button
+              key={k}
+              size="sm"
+              variant={tab === k ? 'default' : 'outline'}
+              aria-pressed={tab === k}
+              onClick={() => {
+                setTab(k)
+                setTerm('')
+              }}
+            >
+              {t(k)}
+            </Button>
+          ),
+        )}
       </div>
       {(tab === 'installed' || tab === 'formal') && (
         <input
@@ -260,7 +309,9 @@ export function RegistrySection() {
           onChange={(e) => setTerm(e.target.value)}
         />
       )}
-      {tab === 'sources' ? (
+      {tab === 'planning' ? (
+        <PlanningMethods />
+      ) : tab === 'sources' ? (
         <RegistrySources />
       ) : query.isError ? (
         <RequestFailure error={query.error} retry={() => void query.refetch()} />

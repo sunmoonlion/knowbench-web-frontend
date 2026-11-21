@@ -374,6 +374,26 @@ test('registry management follows an installed source to its two frozen versions
   await page.getByRole('searchbox').fill('auditor')
   await expect(page.getByRole('heading', { name: /Notify auditor/ })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Monthly report/ })).toHaveCount(0)
+  await page.route('**/api/workbench/registry/planning-methods?**', (route) =>
+    route.fulfill({
+      json: {
+        items: [
+          {
+            method_id: id,
+            latest_version: 2,
+            digest: 'sha256:' + 'c'.repeat(64),
+            method_kind: 'expert',
+            title: 'Acquired reviewer',
+            summary: 'Review a monthly report',
+          },
+        ],
+        next: null,
+      },
+    }),
+  )
+  await page.getByRole('button', { name: 'Planning candidates' }).click()
+  await expect(page.getByRole('heading', { name: 'Acquired reviewer · v2' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Notify auditor/ })).toHaveCount(0)
 })
 
 test('author registers a standalone script and publishes a second text revision', async ({
