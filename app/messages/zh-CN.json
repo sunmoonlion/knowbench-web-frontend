@@ -1312,7 +1312,7 @@
       "computer": "本地 link、沙箱与令牌",
       "connections": "服务账号与工具接入",
       "skills": "作业指令与版本",
-      "registry": "管理自己的安装入口，核对正式方法所引用的来源和版本。"
+      "registry": "查看已登记的工具方法、专家方法及其执行方式，管理本人的安装入口。"
     },
     "preferences": {
       "title": "个人偏好",
@@ -1677,7 +1677,23 @@
   },
   "registry": {
     "title": "注册中心",
-    "lead": "管理自己的安装入口，核对正式方法所引用的来源和版本。",
+    "lead": "查看已登记的工具方法、专家方法及其执行方式，管理本人的安装入口。",
+    "declaredCallers": "版本声明的发起方：{callers}",
+    "caller": {
+      "host": "步骤宿主（runner）",
+      "model": "模型"
+    },
+    "methodKind": {
+      "tool": "工具方法",
+      "expert": "专家方法"
+    },
+    "runnerRoute": {
+      "formal_mcp": "MCP 连接器执行",
+      "formal_script": "隔离脚本环境执行",
+      "formal_instruction": "隔离模型轮次执行指令",
+      "orchestration": "runtime 按冻结图递归调度",
+      "unavailable": "当前无已接入的宿主适配器"
+    },
     "installed": "原生安装",
     "formal": "正式方法",
     "native": "Codex 原生动作",

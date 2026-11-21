@@ -1312,7 +1312,7 @@
       "computer": "Local link, sandbox and token",
       "connections": "Service accounts and tools",
       "skills": "Instructions and versions",
-      "registry": "Manage installed entries and inspect the exact versions used by formal methods."
+      "registry": "Inspect registered tool and expert methods, see where each runs, and manage your installations."
     },
     "preferences": {
       "title": "Preferences",
@@ -1677,7 +1677,23 @@
   },
   "registry": {
     "title": "Registry",
-    "lead": "Manage installed entries and inspect the exact versions used by formal methods.",
+    "lead": "Inspect registered tool and expert methods, see where each runs, and manage your installations.",
+    "declaredCallers": "Callers declared by this version: {callers}",
+    "caller": {
+      "host": "Step host (runner)",
+      "model": "Model"
+    },
+    "methodKind": {
+      "tool": "Tool method",
+      "expert": "Expert method"
+    },
+    "runnerRoute": {
+      "formal_mcp": "MCP connector",
+      "formal_script": "Isolated script executor",
+      "formal_instruction": "Isolated model turn",
+      "orchestration": "Recursive runtime execution of the frozen graph",
+      "unavailable": "No supported host adapter"
+    },
     "installed": "Installations",
     "formal": "Formal Methods",
     "native": "Codex actions",

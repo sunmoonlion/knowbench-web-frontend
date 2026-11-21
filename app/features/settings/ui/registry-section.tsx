@@ -199,13 +199,22 @@ function RecentActivity() {
 export function RegistrySection() {
   const t = useTranslations('registry')
   const { locale } = useWorkbench()
-  const [tab, setTab] = useState<'installed' | 'formal' | 'native' | 'activity'>('installed')
+  const [tab, setTab] = useState<'installed' | 'formal' | 'native' | 'activity'>('formal')
   const [term, setTerm] = useState('')
   const query = useQuery({ queryKey: registryKey, queryFn: registryInventory })
   const client = useQueryClient()
   const data = query.data
   const matches = (...parts: (string | null)[]) =>
     parts.join(' ').toLowerCase().includes(term.trim().toLowerCase())
+  const methods = data?.formal.filter((m) =>
+    matches(
+      m.title,
+      m.reference.method_id,
+      m.source_entry,
+      t('methodKind.' + m.method_kind),
+      t('runnerRoute.' + m.runner_route),
+    ),
+  )
   return (
     <section className="space-y-4">
       <header className="flex items-start justify-between gap-3">
@@ -223,7 +232,7 @@ export function RegistrySection() {
         </Button>
       </header>
       <div className="flex flex-wrap gap-2">
-        {(['installed', 'formal', 'native', 'activity'] as const).map((k) => (
+        {(['formal', 'installed', 'native', 'activity'] as const).map((k) => (
           <Button
             key={k}
             size="sm"
@@ -281,69 +290,73 @@ export function RegistrySection() {
                 <CrossAppLink to="knowmart.shop">{t('shop')}</CrossAppLink>
               </div>
               <p className="text-muted-foreground text-sm">{t('qualification')}</p>
-              {data.formal
-                .filter((m) => matches(m.title, m.reference.method_id, m.source_entry))
-                .map((m) => {
-                  const asset = data.installed.find((a) => a.asset_id === m.source_asset_id)
-                  return (
-                    <article
-                      className={panel}
-                      key={m.reference.method_id + ':' + m.reference.version}
-                    >
-                      <h3 className="font-semibold">
-                        {m.title} · v{m.reference.version}
-                      </h3>
-                      {m.source_kind && (
-                        <p className="text-sm">
-                          {t('source')} · {asset?.name || m.source_kind} · {m.source_entry}{' '}
-                          {m.source_revision !== null && t('revision', { n: m.source_revision })}
+              {methods?.map((m) => {
+                const asset = data.installed.find((a) => a.asset_id === m.source_asset_id)
+                return (
+                  <article
+                    className={panel}
+                    key={m.reference.method_id + ':' + m.reference.version}
+                  >
+                    <h3 className="font-semibold">
+                      {m.title} · v{m.reference.version}
+                    </h3>
+                    <p className="text-sm">
+                      {t('methodKind.' + m.method_kind)} · {t('runnerRoute.' + m.runner_route)}
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      {t('declaredCallers', {
+                        callers: m.allowed_callers.map((c) => t('caller.' + c)).join(' / '),
+                      })}
+                    </p>
+                    {m.source_kind && (
+                      <p className="text-sm">
+                        {t('source')} · {asset?.name || m.source_kind} · {m.source_entry}{' '}
+                        {m.source_revision !== null && t('revision', { n: m.source_revision })}
+                      </p>
+                    )}
+                    {asset &&
+                      (asset.status !== 'active' || asset.revision !== m.source_revision) && (
+                        <p className="text-sm text-amber-800 dark:text-amber-200">
+                          {t('sourceChanged')}
                         </p>
                       )}
-                      {asset &&
-                        (asset.status !== 'active' || asset.revision !== m.source_revision) && (
-                          <p className="text-sm text-amber-800 dark:text-amber-200">
-                            {t('sourceChanged')}
-                          </p>
+                    <details>
+                      <summary className="cursor-pointer text-sm">{t('identity')}</summary>
+                      <dl className="mt-2 space-y-1 font-mono text-xs break-all">
+                        <dt>ID</dt>
+                        <dd>{m.reference.method_id}</dd>
+                        <dt>{t('digest')}</dt>
+                        <dd>{m.reference.digest}</dd>
+                        {m.source_digest && (
+                          <>
+                            <dt>{t('sourceDigest')}</dt>
+                            <dd>{m.source_digest}</dd>
+                          </>
                         )}
-                      <details>
-                        <summary className="cursor-pointer text-sm">{t('identity')}</summary>
-                        <dl className="mt-2 space-y-1 font-mono text-xs break-all">
-                          <dt>ID</dt>
-                          <dd>{m.reference.method_id}</dd>
-                          <dt>{t('digest')}</dt>
-                          <dd>{m.reference.digest}</dd>
-                          {m.source_digest && (
-                            <>
-                              <dt>{t('sourceDigest')}</dt>
-                              <dd>{m.source_digest}</dd>
-                            </>
-                          )}
-                        </dl>
-                      </details>
-                      {m.dependencies.length > 0 && (
-                        <div className="text-sm">
-                          <strong>{t('dependencies')}</strong>
-                          <ul>
-                            {m.dependencies.map((r) => (
-                              <li className="break-all" key={r.method_id + r.version}>
-                                {data.formal.find(
-                                  (f) =>
-                                    f.reference.method_id === r.method_id &&
-                                    f.reference.version === r.version &&
-                                    f.reference.digest === r.digest,
-                                )?.title || r.method_id}{' '}
-                                · v{r.version} · {r.digest}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </article>
-                  )
-                })}
-              {!data.formal.some((m) =>
-                matches(m.title, m.reference.method_id, m.source_entry),
-              ) && <p>{t('empty')}</p>}
+                      </dl>
+                    </details>
+                    {m.dependencies.length > 0 && (
+                      <div className="text-sm">
+                        <strong>{t('dependencies')}</strong>
+                        <ul>
+                          {m.dependencies.map((r) => (
+                            <li className="break-all" key={r.method_id + r.version}>
+                              {data.formal.find(
+                                (f) =>
+                                  f.reference.method_id === r.method_id &&
+                                  f.reference.version === r.version &&
+                                  f.reference.digest === r.digest,
+                              )?.title || r.method_id}{' '}
+                              · v{r.version} · {r.digest}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </article>
+                )
+              })}
+              {!methods?.length && <p>{t('empty')}</p>}
             </>
           )}
           {tab === 'activity' && <RecentActivity />}

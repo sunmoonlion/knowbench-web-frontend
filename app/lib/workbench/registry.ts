@@ -12,6 +12,15 @@ const installation = z.object({
 })
 const method = z.object({
   path: z.literal('formal'),
+  method_kind: z.enum(['tool', 'expert']),
+  runner_route: z.enum([
+    'formal_mcp',
+    'formal_script',
+    'formal_instruction',
+    'orchestration',
+    'unavailable',
+  ]),
+  allowed_callers: z.array(z.enum(['host', 'model'])),
   reference: formalMethodReferenceSchema,
   title: z.string(),
   source_asset_id: z.uuid().nullable(),

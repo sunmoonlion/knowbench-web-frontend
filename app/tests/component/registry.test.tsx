@@ -19,6 +19,9 @@ const asset: registry.RegistryAsset = {
 }
 const methods: registry.RegisteredMethod[] = ['发送成稿', '发送对账通知'].map((title, i) => ({
   path: 'formal',
+  method_kind: 'tool',
+  runner_route: 'formal_mcp',
+  allowed_callers: ['host', 'model'],
   title,
   reference: {
     method_id: 'b5ae2229-dfbc-46ac-9c30-895e75571c0' + i,
@@ -92,6 +95,9 @@ it('keeps source and method identities visible and confirms before disabling the
     }
   })
   renderPage()
+  expect(await screen.findByRole('heading', { name: /发送成稿/ })).toBeVisible()
+  expect(screen.getAllByText(/工具方法 · MCP/)).toHaveLength(2)
+  fireEvent.click(screen.getByRole('button', { name: zh.registry.installed }))
   expect(await screen.findByText('工作邮件')).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: '查看安装入口' }))
   expect(await screen.findByText('send')).toBeVisible()
@@ -112,6 +118,43 @@ it('keeps source and method identities visible and confirms before disabling the
   fireEvent.click(screen.getByText(zh.registry.trace))
   expect(screen.getByText(new RegExp(methods[0].reference.digest))).toBeVisible()
 })
+it('lists an expert with no installation and shows who runs each of its leaves', async () => {
+  const leaves: registry.RegisteredMethod[] = methods.map((m, i) => ({
+    ...m,
+    title: i ? '复核指令' : '汇总脚本',
+    source_kind: i ? 'skill_instruction' : 'skill_script',
+    runner_route: i ? 'formal_instruction' : 'formal_script',
+    allowed_callers: ['host'],
+  }))
+  vi.spyOn(registry, 'registryInventory').mockResolvedValue({
+    installed: [],
+    native: [],
+    formal: [
+      ...leaves,
+      {
+        ...methods[0],
+        title: '月末专家',
+        method_kind: 'expert',
+        runner_route: 'orchestration',
+        reference: { ...methods[0].reference, version: 2 },
+        source_kind: null,
+        source_asset_id: null,
+        source_entry: null,
+        source_revision: null,
+        source_digest: null,
+        dependencies: leaves.map((m) => m.reference),
+      },
+    ],
+  })
+  renderPage()
+  expect(await screen.findByRole('heading', { name: /月末专家/ })).toBeVisible()
+  expect(screen.getByText(/专家方法 · runtime/)).toBeVisible()
+  expect(screen.getByText(/工具方法 · 隔离脚本/)).toBeVisible()
+  expect(screen.getByText(/工具方法 · 隔离模型/)).toBeVisible()
+  fireEvent.change(screen.getByRole('searchbox'), { target: { value: '专家方法' } })
+  expect(screen.getByRole('heading', { name: /月末专家/ })).toBeVisible()
+  expect(screen.queryByRole('heading', { name: /汇总脚本/ })).toBeNull()
+})
 it('shows an empty registry with working installation links', async () => {
   vi.spyOn(registry, 'registryInventory').mockResolvedValue({
     installed: [],
@@ -120,6 +163,7 @@ it('shows an empty registry with working installation links', async () => {
   })
   renderPage()
   expect(await screen.findByText(zh.registry.empty)).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: zh.registry.installed }))
   expect(screen.getByRole('link', { name: '安装技能' })).toHaveAttribute(
     'href',
     '/zh-CN/workbench/settings/skills',

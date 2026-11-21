@@ -345,6 +345,9 @@ test('registry management follows an installed source to its two frozen versions
         ],
         formal: ['Monthly report', 'Notify auditor'].map((title, i) => ({
           path: 'formal',
+          method_kind: 'tool',
+          runner_route: 'formal_mcp',
+          allowed_callers: ['host'],
           title,
           reference: {
             method_id: 'b5ae2229-dfbc-46ac-9c30-895e75571c0' + i,
@@ -364,6 +367,8 @@ test('registry management follows an installed source to its two frozen versions
   )
   await page.goto('/en/workbench/settings/registry')
   await expect(page.getByRole('heading', { name: 'Registry', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Monthly report/ })).toBeVisible()
+  await page.getByRole('button', { name: 'Installations', exact: true }).click()
   await expect(page.getByText('Office mail', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Formal Methods' }).click()
   await page.getByRole('searchbox').fill('auditor')
