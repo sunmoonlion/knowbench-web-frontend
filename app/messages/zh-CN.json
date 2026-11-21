@@ -1756,7 +1756,7 @@
     "searchExperts": "查找可用专家",
     "searchComponents": "查看可组合的工具和专家",
     "allPlanningMethods": "查看全部可用版本",
-    "planningRank": "按本题与方法声明的用词排序。请核对适用条件和交付范围。",
+    "planningRank": "按「{question}」与方法声明的用词排序。请核对适用条件和交付范围。",
     "candidateDeclaration": "查看该版本的能力声明",
     "candidatePurpose": "用途",
     "candidateApplies": "适用条件",

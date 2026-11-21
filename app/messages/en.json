@@ -1756,7 +1756,7 @@
     "searchExperts": "Find available experts",
     "searchComponents": "Show tools and experts for composition",
     "allPlanningMethods": "Browse all available versions",
-    "planningRank": "Ordered by wording shared with your question. Check applicability and promised deliverables.",
+    "planningRank": "Ordered by wording shared with “{question}”. Check applicability and promised deliverables.",
     "candidateDeclaration": "View version declaration",
     "candidatePurpose": "Purpose",
     "candidateApplies": "Applies when",

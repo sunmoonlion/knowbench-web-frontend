@@ -316,7 +316,9 @@ function PlanningMethods() {
         </div>
       </form>
       <p className="text-muted-foreground text-sm">
-        {t(basis.stage === 'directory' ? 'planningScope' : 'planningRank')}
+        {basis.stage === 'directory'
+          ? t('planningScope')
+          : t('planningRank', { question: basis.question })}
       </p>
       {query.isError ? (
         <RequestFailure error={query.error} retry={() => void query.refetch()} />
