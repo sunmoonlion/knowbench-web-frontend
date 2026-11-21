@@ -10,6 +10,7 @@ import { RequestFailure } from '@/components/common/request-failure'
 import { useWorkbench } from '@/lib/workbench/context'
 import { routes } from '@/lib/workbench/routes'
 import * as api from '@/lib/workbench/capabilities'
+import { registryKey } from '@/lib/workbench/registry'
 import { SkillSourceInstaller, SkillDependencies, toolRequirements } from './skill-source-installer'
 import { SkillConnections } from '@/components/workbench/skill-connections'
 
@@ -74,7 +75,10 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
       api.assetAction(asset.id, asset.revision, action, csrfToken),
     onSuccess: async () => {
       setDisconnecting(null)
-      await client.invalidateQueries({ queryKey })
+      await Promise.all([
+        client.invalidateQueries({ queryKey }),
+        client.invalidateQueries({ queryKey: registryKey }),
+      ])
       await client.invalidateQueries({ queryKey: ['capability-selection'] })
     },
   })
@@ -158,7 +162,7 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
       ) : null}
       {!assets.length ? <p className={card}>{t('empty')}</p> : null}
       {assets.map((asset) => (
-        <section key={asset.id} className={card}>
+        <section id={`installation-${asset.id}`} key={asset.id} className={card}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="font-medium">{asset.name}</h3>
             <span className="bg-muted rounded-full px-2 py-1 text-xs">
@@ -386,7 +390,10 @@ function ConnectionForm({
     },
     onSuccess: async () => {
       setToken('')
-      await client.invalidateQueries({ queryKey })
+      await Promise.all([
+        client.invalidateQueries({ queryKey }),
+        client.invalidateQueries({ queryKey: registryKey }),
+      ])
       done()
     },
   })
@@ -488,7 +495,10 @@ function SkillForm({ done, assets }: { done: () => void; assets: api.Asset[] }) 
         ? api.createSkillPackage(body, csrfToken)
         : api.createSkill(body, csrfToken),
     onSuccess: async () => {
-      await client.invalidateQueries({ queryKey })
+      await Promise.all([
+        client.invalidateQueries({ queryKey }),
+        client.invalidateQueries({ queryKey: registryKey }),
+      ])
       done()
     },
   })
@@ -607,7 +617,10 @@ function RenewForm({ asset, done }: { asset: api.Asset; done: () => void }) {
     mutationFn: () => api.renewConnection(asset.id, asset.revision, token, csrfToken),
     onSuccess: async () => {
       setToken('')
-      await client.invalidateQueries({ queryKey })
+      await Promise.all([
+        client.invalidateQueries({ queryKey }),
+        client.invalidateQueries({ queryKey: registryKey }),
+      ])
       await client.invalidateQueries({ queryKey: ['capability-selection'] })
       done()
     },

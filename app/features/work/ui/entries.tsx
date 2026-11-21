@@ -121,8 +121,18 @@ function ApprovalCard({
         </p>
       ) : null}
       <dl className="mt-2 grid grid-cols-[5.5rem_1fr] gap-x-3 gap-y-1 text-[13px]">
-        <dt className="text-muted-foreground">{t('approval.command')}</dt>
-        <dd className="font-mono break-all">{approval.command}</dd>
+        <dt className="text-muted-foreground">
+          {t(approval.permissionProfile ? 'approval.permissionProfile' : 'approval.command')}
+        </dt>
+        <dd className="font-mono break-all whitespace-pre-wrap">
+          {approval.permissionProfile
+            ? approval.permissionProfile.map((scope, index) => (
+                <span key={index} className="block">
+                  {t('approval.' + scope.label)} {scope.value}
+                </span>
+              ))
+            : approval.command}
+        </dd>
         {approval.cwd ? (
           <>
             <dt className="text-muted-foreground">{t('approval.where')}</dt>

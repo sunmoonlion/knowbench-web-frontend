@@ -309,6 +309,64 @@ test('live isolated script card approves, downloads, resumes and stops the origi
   await page.reload()
   await open()
   await stop.getByRole('button', { name: 'Stop script' }).click()
-  await expect(stop.getByRole('heading')).toContainText('Provider reported failure', { timeout: 20_000 })
+  await expect(stop.getByRole('heading')).toContainText('Provider reported failure', {
+    timeout: 20_000,
+  })
   await expect(finish.getByRole('link', { name: 'Download answer.txt' })).toBeVisible()
+})
+
+test('registry management follows an installed source to its two frozen versions', async ({
+  context,
+  page,
+}) => {
+  await context.addCookies([
+    {
+      name: 'sunmoonai_knowbench_web_sid',
+      value: 'e2e-session',
+      domain: '127.0.0.1',
+      path: '/',
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ])
+  const id = '088208b5-a2b2-4f7b-a2b8-b5abdedff75d'
+  await page.route('**/api/workbench/registry', (route) =>
+    route.fulfill({
+      json: {
+        installed: [
+          {
+            asset_id: id,
+            name: 'Office mail',
+            kind: 'connection',
+            revision: 1,
+            status: 'active',
+            account_label: 'office@example.test',
+          },
+        ],
+        formal: ['Monthly report', 'Notify auditor'].map((title, i) => ({
+          path: 'formal',
+          title,
+          reference: {
+            method_id: 'b5ae2229-dfbc-46ac-9c30-895e75571c0' + i,
+            version: 1,
+            digest: 'sha256:' + 'a'.repeat(64),
+          },
+          source_asset_id: id,
+          source_revision: 1,
+          source_kind: 'mcp',
+          source_entry: 'send',
+          source_digest: 'sha256:' + 'b'.repeat(64),
+          dependencies: [],
+        })),
+        native: [],
+      },
+    }),
+  )
+  await page.goto('/en/workbench/settings/registry')
+  await expect(page.getByRole('heading', { name: 'Registry', exact: true })).toBeVisible()
+  await expect(page.getByText('Office mail', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Formal Methods' }).click()
+  await page.getByRole('searchbox').fill('auditor')
+  await expect(page.getByRole('heading', { name: /Notify auditor/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Monthly report/ })).toHaveCount(0)
 })

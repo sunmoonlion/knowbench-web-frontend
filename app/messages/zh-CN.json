@@ -471,7 +471,11 @@
       "noteToggle": "附一句话",
       "noteLabel": "给它的话",
       "notePlaceholder": "拒绝时写要它怎么改；停下时写重做这一步的要求",
-      "noteHint": "拒绝并附话 = 它这一轮里照你说的改；停下并附话 = 重做这一步时带上。"
+      "noteHint": "拒绝并附话 = 它这一轮里照你说的改；停下并附话 = 重做这一步时带上。",
+      "read": "允许读取",
+      "write": "允许写入",
+      "network": "允许本轮访问网络",
+      "permissionProfile": "本轮授权范围"
     },
     "changes": {
       "title": "改动",
@@ -1299,14 +1303,16 @@
       "cloud": "模型",
       "computer": "电脑与沙箱",
       "connections": "连接与工具",
-      "skills": "技能"
+      "skills": "技能",
+      "registry": "注册中心"
     },
     "navHint": {
       "preferences": "只存在这个浏览器里",
       "cloud": "跟着账号走",
       "computer": "本地 link、沙箱与令牌",
       "connections": "服务账号与工具接入",
-      "skills": "作业指令与版本"
+      "skills": "作业指令与版本",
+      "registry": "管理自己的安装入口，核对正式方法所引用的来源和版本。"
     },
     "preferences": {
       "title": "个人偏好",
@@ -1668,5 +1674,62 @@
     "expiry": "有效期至：{value}",
     "binding": "已接受计划：{parent} → {child}（{version}）",
     "clear": "清除此委派依据"
+  },
+  "registry": {
+    "title": "注册中心",
+    "lead": "管理自己的安装入口，核对正式方法所引用的来源和版本。",
+    "installed": "原生安装",
+    "formal": "正式方法",
+    "native": "Codex 原生动作",
+    "refresh": "刷新",
+    "search": "按名称、账号或 ID 查找",
+    "entries": "查看安装入口",
+    "emptyEntries": "尚无登记入口",
+    "empty": "没有符合条件的登记",
+    "loading": "正在读取登记…",
+    "derived": "由此安装孵化的方法",
+    "manage": "管理此类安装",
+    "cancel": "取消",
+    "impact": "停用「{name}」后，后续调用须重新核对安装。直接引用它的已登记版本有 {count} 个。",
+    "connection": "连接",
+    "skill": "技能包",
+    "connections": "管理连接",
+    "skills": "安装技能",
+    "source": "孵化来源",
+    "sourceChanged": "当前安装已停用或修订已变化，执行时需重新核验。",
+    "identity": "查看精确版本",
+    "digest": "定义摘要",
+    "sourceDigest": "来源摘要",
+    "revision": "（修订 {n}）",
+    "dependencies": "冻结的子方法",
+    "observe": "观察执行事件",
+    "approval": "接收审批请求",
+    "question": "向用户提问",
+    "actions": {
+      "command": "执行命令",
+      "file_change": "修改文件",
+      "web_search": "搜索网页",
+      "question": "询问用户",
+      "permissions": "申请本轮额外权限"
+    },
+    "activity": "最近记录",
+    "emptyActivity": "暂无调用、审批或原生动作记录。",
+    "trace": "查看记录标识",
+    "session": "会话",
+    "path": {
+      "installed": "安装入口",
+      "formal": "正式方法",
+      "native": "Codex 原生动作",
+      "platform": "平台能力",
+      "runtime": "运行时"
+    },
+    "event": {
+      "call": "受管调用",
+      "approval": "审批决定",
+      "observation": "执行事件"
+    },
+    "lab": "进入 KnowLab 孵化",
+    "shop": "管理 KnowMart 上架与许可",
+    "qualification": "这里显示本人冻结登记的版本。实际使用时还会核对市场资格、当前安装及这次调用的授权。"
   }
 }

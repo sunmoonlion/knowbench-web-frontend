@@ -471,7 +471,11 @@
       "noteToggle": "Add a note",
       "noteLabel": "Note to it",
       "notePlaceholder": "When declining: how it should change. When stopping: what to do differently when redoing this step",
-      "noteHint": "Decline with a note = it changes course in this turn; stop with a note = the note goes into the redo."
+      "noteHint": "Decline with a note = it changes course in this turn; stop with a note = the note goes into the redo.",
+      "read": "Allow reading",
+      "write": "Allow writing",
+      "network": "Allow network access for this turn",
+      "permissionProfile": "Requested scope for this turn"
     },
     "changes": {
       "title": "Changes",
@@ -1299,14 +1303,16 @@
       "cloud": "Models",
       "computer": "Computer & sandbox",
       "connections": "Connections & tools",
-      "skills": "Skills"
+      "skills": "Skills",
+      "registry": "Registry"
     },
     "navHint": {
       "preferences": "Stored in this browser only",
       "cloud": "Follows your account",
       "computer": "Local link, sandbox and token",
       "connections": "Service accounts and tools",
-      "skills": "Instructions and versions"
+      "skills": "Instructions and versions",
+      "registry": "Manage installed entries and inspect the exact versions used by formal methods."
     },
     "preferences": {
       "title": "Preferences",
@@ -1668,5 +1674,62 @@
     "expiry": "Valid until: {value}",
     "binding": "Accepted plan: {parent} → {child} ({version})",
     "clear": "Clear this delegation basis"
+  },
+  "registry": {
+    "title": "Registry",
+    "lead": "Manage installed entries and inspect the exact versions used by formal methods.",
+    "installed": "Installations",
+    "formal": "Formal Methods",
+    "native": "Codex actions",
+    "refresh": "Refresh",
+    "search": "Search by name, account or ID",
+    "entries": "Installation entries",
+    "emptyEntries": "No entries registered",
+    "empty": "No matching registrations",
+    "loading": "Loading registrations…",
+    "derived": "Methods derived from this installation",
+    "manage": "Manage installation",
+    "cancel": "Cancel",
+    "impact": "Disable {name}? Future uses must recheck the installation. {count} registered versions directly reference it.",
+    "connection": "Connection",
+    "skill": "Skill",
+    "connections": "Manage connections",
+    "skills": "Install skills",
+    "source": "Incubation source",
+    "sourceChanged": "This installation is inactive or has changed since incubation.",
+    "identity": "Exact reference",
+    "digest": "Definition digest",
+    "sourceDigest": "Source digest",
+    "revision": "(revision {n})",
+    "dependencies": "Frozen dependencies",
+    "observe": "Observed event",
+    "approval": "Approval request",
+    "question": "User interaction",
+    "actions": {
+      "command": "Run command",
+      "file_change": "Change files",
+      "web_search": "Search the web",
+      "question": "Ask the user",
+      "permissions": "Request turn permissions"
+    },
+    "activity": "Recent activity",
+    "emptyActivity": "No recent calls, approvals or native events.",
+    "trace": "Record identifiers",
+    "session": "Session",
+    "path": {
+      "installed": "Installed entry",
+      "formal": "Formal method",
+      "native": "Native Codex action",
+      "platform": "Platform capability",
+      "runtime": "Runtime"
+    },
+    "event": {
+      "call": "Managed call",
+      "approval": "Approval decision",
+      "observation": "Observed event"
+    },
+    "lab": "Open KnowLab incubation",
+    "shop": "Manage KnowMart listings and licenses",
+    "qualification": "These are your registered versions. Use requires current market eligibility, a matching installation and authorization for the call."
   }
 }

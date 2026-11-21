@@ -2,6 +2,7 @@
 // 时间线不是气泡：重点是「它在我的目录里做了什么」。
 // 一段过程（它说了一句要做什么，接着跑了几条命令）收成一行，点开才看细节；
 // 改文件、等你批准、没有数据这三样一直摆在外面，不收起来。
+import { z } from 'zod'
 import type { ConversationEvent } from '@/contracts/workbench-v2'
 import {
   changeStep,
@@ -16,7 +17,46 @@ import {
   type Item,
 } from '@/lib/workbench/items'
 
+const permissions = z
+  .object({
+    network: z.object({ enabled: z.literal(true) }).optional(),
+    fileSystem: z
+      .object({
+        read: z.array(z.string()).nullish(),
+        write: z.array(z.string()).nullish(),
+        entries: z
+          .array(
+            z
+              .object({
+                access: z.enum(['read', 'write']),
+                path: z.object({ type: z.literal('path'), path: z.string() }).strict(),
+              })
+              .strict(),
+          )
+          .optional(),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict()
+
+function permissionLines(value: unknown) {
+  const parsed = permissions.safeParse(value)
+  if (!parsed.success)
+    return [{ label: 'permissionProfile' as const, value: JSON.stringify(value) }]
+  const files = parsed.data.fileSystem
+  const lines: { label: 'read' | 'write' | 'network'; value: string }[] = []
+  for (const access of ['read', 'write'] as const) {
+    for (const path of files?.[access] ?? []) lines.push({ label: access, value: path })
+  }
+  for (const { access, path } of files?.entries ?? [])
+    lines.push({ label: access, value: path.path })
+  if (parsed.data.network?.enabled) lines.push({ label: 'network', value: '' })
+  return lines
+}
+
 export type Approval = {
+  permissionProfile?: ReturnType<typeof permissionLines>
   connectorCall?: { sessionId: string; callId: string }
   id: string
   token: string
@@ -297,6 +337,9 @@ export function timeline(events: readonly ConversationEvent[]): Timeline {
                 }
               : {}),
             token: text(payload.token),
+            ...(subject.registry_action === 'permissions' && subject.permissions
+              ? { permissionProfile: permissionLines(subject.permissions) }
+              : {}),
             command: text(subject.command) || text(subject.category),
             cwd: text(subject.cwd),
             reason: text(subject.reason),

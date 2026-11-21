@@ -36,6 +36,37 @@ describe('工作页的时间线', () => {
   const all = work()
   const line = timeline(all)
 
+  it('shows the exact turn permission scope in a work approval', () => {
+    const opened = {
+      ...all[0],
+      type: 'interaction/opened',
+      payload: {
+        kind: 'tool_approval',
+        interaction_id: 'pending',
+        subject: {
+          registry_action: 'permissions',
+          permissions: {
+            fileSystem: {
+              read: ['/project/report.csv'],
+              entries: [{ access: 'write', path: { type: 'path', path: '/project/result.txt' } }],
+            },
+            network: { enabled: true },
+          },
+        },
+      },
+    }
+    expect(timeline([opened]).entries[0]).toMatchObject({
+      kind: 'approval',
+      approval: {
+        permissionProfile: [
+          { label: 'read', value: '/project/report.csv' },
+          { label: 'write', value: '/project/result.txt' },
+          { label: 'network', value: '' },
+        ],
+      },
+    })
+  })
+
   it('binds reviewed connector approvals to the session and exact call receipt', () => {
     const callId = '44444444-4444-4444-8444-444444444444'
     const opened = {
