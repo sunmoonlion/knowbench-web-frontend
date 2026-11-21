@@ -365,8 +365,7 @@ test('registry management follows an installed source to its two frozen versions
       },
     }),
   )
-  await page.goto('/en/workbench/settings/registry')
-  await expect(page).toHaveURL(/\/en\/workbench\/settings\/method-skill-center$/)
+  await page.goto('/en/workbench/settings/method-skill-center')
   await expect(
     page.getByRole('heading', { name: 'Method and Skill Management Center', exact: true }),
   ).toBeVisible()

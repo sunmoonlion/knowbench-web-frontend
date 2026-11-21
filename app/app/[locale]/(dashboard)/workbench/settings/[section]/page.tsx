@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 
 import { SettingsScreen } from '@/features/settings'
-import { routes, SETTINGS_SECTIONS, type SettingsSection } from '@/lib/workbench/routes'
+import { SETTINGS_SECTIONS, type SettingsSection } from '@/lib/workbench/routes'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('settings')
@@ -14,10 +14,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function WorkbenchSettingsSectionPage({
   params,
 }: {
-  params: Promise<{ locale: string; section: string }>
+  params: Promise<{ section: string }>
 }) {
-  const { locale, section } = await params
-  if (section === 'registry') redirect(routes.settings(locale, 'method-skill-center'))
+  const { section } = await params
   if (!(SETTINGS_SECTIONS as readonly string[]).includes(section)) notFound()
   return <SettingsScreen section={section as SettingsSection} />
 }
