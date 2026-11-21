@@ -129,12 +129,16 @@ export async function planningDeclaration(
   const result = await sendJson(
     z.object({
       reference: formalMethodReferenceSchema,
+      promise_outputs: z.record(z.string(), z.array(z.string())),
       declaration: z.object({
         title: z.string(),
         purpose: z.string(),
         applies_when: z.array(z.string()),
         excludes: z.array(z.string()),
         promises: z.record(z.string(), z.string()),
+        conditions: z
+          .record(z.string(), z.object({ when: z.string(), input_slots: z.array(z.string()) }))
+          .optional(),
       }),
     }),
     '/api/workbench/method-skill-center/planning-methods/declaration',
@@ -146,5 +150,5 @@ export async function planningDeclaration(
     result.reference.digest !== reference.digest
   )
     throw new Error('Unexpected method version')
-  return result.declaration
+  return { ...result.declaration, outputs: result.promise_outputs }
 }

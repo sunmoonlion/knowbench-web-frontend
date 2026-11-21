@@ -1761,6 +1761,8 @@
     "candidatePurpose": "Purpose",
     "candidateApplies": "Applies when",
     "candidateExcludes": "Excludes",
+    "promiseInputs": "Required inputs",
+    "promiseDeliverables": "Output fields",
     "candidatePromises": "Promised deliverables",
     "planningScope": "Registered method versions available for planning under your current use rights.",
     "previousPage": "Previous page",

@@ -249,7 +249,31 @@ function CandidateDeclaration({
               </>
             )}
             <dt>{t('candidatePromises')}</dt>
-            <dd>{Object.values(query.data.promises).join(' · ')}</dd>
+            <dd>
+              <ul>
+                {Object.entries(query.data.promises).map(([id, text]) => {
+                  const condition = query.data.conditions?.[id]
+                  return (
+                    <li key={id}>
+                      <strong>{text}</strong>
+                      {condition && (
+                        <p>
+                          {t('candidateApplies')} · {condition.when}
+                        </p>
+                      )}
+                      {!!condition?.input_slots.length && (
+                        <p>
+                          {t('promiseInputs')} · {condition.input_slots.join(', ')}
+                        </p>
+                      )}
+                      <p>
+                        {t('promiseDeliverables')} · {query.data.outputs[id]?.join(', ')}
+                      </p>
+                    </li>
+                  )
+                })}
+              </ul>
+            </dd>
           </dl>
         ))}
     </details>

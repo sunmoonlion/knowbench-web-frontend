@@ -411,18 +411,22 @@ test('registry management follows an installed source to its two frozen versions
     return route.fulfill({
       json: {
         reference: ref,
+        promise_outputs: { review: ['differences'] },
         declaration: {
           title: 'Reviewer',
           purpose: 'Audit reports',
           applies_when: ['Monthly filing'],
           excludes: ['Forecasts'],
           promises: { review: 'Checked figures' },
+          conditions: { review: { when: 'Both ledgers supplied', input_slots: ['ledger'] } },
         },
       },
     })
   })
   await page.getByText('View version declaration', { exact: true }).click()
   await expect(page.getByText('Forecasts', { exact: true })).toBeVisible()
+  await expect(page.getByText(/Both ledgers supplied/)).toBeVisible()
+  await expect(page.getByText(/Output fields · differences/)).toBeVisible()
   await page.getByRole('button', { name: 'Browse all available versions' }).click()
   await expect(page.getByLabel('What question are you working on?')).toHaveValue('')
 })

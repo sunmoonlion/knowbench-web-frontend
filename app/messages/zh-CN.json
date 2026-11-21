@@ -1761,6 +1761,8 @@
     "candidatePurpose": "用途",
     "candidateApplies": "适用条件",
     "candidateExcludes": "排除范围",
+    "promiseInputs": "所需输入",
+    "promiseDeliverables": "交付字段",
     "candidatePromises": "承诺交付",
     "planningScope": "按当前账号的正式使用资格列出的已登记方法版本。",
     "previousPage": "上一页",
