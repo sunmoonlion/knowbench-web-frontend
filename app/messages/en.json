@@ -227,7 +227,9 @@
     "prepSaveError": "Unable to save. Check the materials and accounts, or reload the saved revision.",
     "reloadPreparation": "Reload saved revision",
     "pendingExecution": "Save your task inputs and account choices to review the execution steps and their cost.",
-    "choose": "Confirm this version"
+    "choose": "Confirm this version",
+    "sourceRequest": "Open original request",
+    "priorMaterial": "Released prior output {name}"
   },
   "meta": {
     "title": "SunmoonAI Knowbench",
@@ -2018,5 +2020,48 @@
     "loading": "Loading…",
     "empty": "No scripts or instructions registered directly.",
     "revise": "Create new version"
+  },
+  "expertContinuity": {
+    "checkVersions": "Review acquired versions",
+    "noVersions": "No eligible new version is available.",
+    "priorVersion": "Original request v{version}",
+    "adopt": "Start a request with this version",
+    "openVersion": "Open request for v{version}",
+    "unavailable": "The change did not finish. Refresh and check the version and permissions.",
+    "duty": "Recurring duty",
+    "instruction": "Standing instruction",
+    "hours": "Interval (hours)",
+    "field": "Output to release to the next period",
+    "slot": "Material input for the next period (optional)",
+    "terms": "Each period opens a new match for this version with a CNY 2 matching limit. Release each output and confirm each execution separately.",
+    "create": "Save duty",
+    "cadence": "Every {hours} hours",
+    "paused": "Paused",
+    "next": "Next period {when}",
+    "blocked": "Wake deferred · {reason}",
+    "resume": "Resume duty",
+    "pause": "Pause duty",
+    "current": "Open latest request",
+    "released": "Released {name}",
+    "release": "Write {name} to my KnowBase outputs and allow the next period to reference it",
+    "referenceOnly": "Reference only",
+    "convert": "Convert the released output to data in KnowBase, then select that copy when preparing the next execution.",
+    "changes": "Review changes",
+    "before": "Previous",
+    "after": "Candidate",
+    "withdraw": "Withdraw this release",
+    "fields": {
+      "title": "Title",
+      "purpose": "Purpose",
+      "applies_when": "Applicability",
+      "excludes": "Exclusions",
+      "promises": "Promises",
+      "conditions": "Conditions",
+      "steps": "Steps",
+      "inputs": "Inputs",
+      "outputs": "Outputs",
+      "requirements": "Permissions",
+      "approvals": "Approvals"
+    }
   }
 }

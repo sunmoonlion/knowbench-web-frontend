@@ -227,7 +227,9 @@
     "prepSaveError": "保存失败，请核对资料与账号，或重新读取已保存的版本。",
     "reloadPreparation": "重读已保存版本",
     "pendingExecution": "保存本次输入、账号和预算后，可核对实际执行步骤与费用。",
-    "choose": "确认选用此版本"
+    "choose": "确认选用此版本",
+    "sourceRequest": "返回来源委托",
+    "priorMaterial": "上期已放行成稿「{name}」"
   },
   "meta": {
     "title": "SunmoonAI Knowbench",
@@ -2018,5 +2020,48 @@
     "loading": "读取中…",
     "empty": "还没有直接登记的脚本或指令。",
     "revise": "创建新版本"
+  },
+  "expertContinuity": {
+    "checkVersions": "核对已获取的孵化版本",
+    "noVersions": "暂未找到有使用权的新版本。",
+    "priorVersion": "原委托 v{version}",
+    "adopt": "按这个版本另开委托",
+    "openVersion": "打开 v{version} 的委托",
+    "unavailable": "操作未完成，请刷新后核对当前版本和权限。",
+    "duty": "长期职责",
+    "instruction": "长期交代",
+    "hours": "间隔（小时）",
+    "field": "批准后可交给下一期的成稿",
+    "slot": "下一期用于读取成稿的资料输入名（可留空）",
+    "terms": "每次到期将按这个版本新开一次匹配，匹配预算上限为 2 元。每期成稿单独放行，执行仍须确认。",
+    "create": "保存职责",
+    "cadence": "每 {hours} 小时",
+    "paused": "已暂停",
+    "next": "下一期计划时间 {when}",
+    "blocked": "暂缓唤醒 · {reason}",
+    "resume": "恢复职责",
+    "pause": "暂停职责",
+    "current": "查看最近一期委托",
+    "released": "已放行「{name}」",
+    "release": "将「{name}」写入我的 KnowBase 产出区，并允许下一期引用",
+    "referenceOnly": "仅引用成稿",
+    "convert": "请在 KnowBase 将成稿转为数据，再在下一期的执行准备中选取该副本。",
+    "changes": "查看变化",
+    "before": "原版",
+    "after": "候选版本",
+    "withdraw": "撤回本期放行",
+    "fields": {
+      "title": "名称",
+      "purpose": "用途",
+      "applies_when": "适用范围",
+      "excludes": "排除范围",
+      "promises": "承诺",
+      "conditions": "条件",
+      "steps": "步骤",
+      "inputs": "输入",
+      "outputs": "输出",
+      "requirements": "权限",
+      "approvals": "批准"
+    }
   }
 }

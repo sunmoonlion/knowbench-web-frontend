@@ -11,6 +11,7 @@ import { useWorkbench } from '@/lib/workbench/context'
 import { formalMethodReferenceSchema as pin } from '@/lib/workbench/formal-method-reference'
 import { routes } from '@/lib/workbench/routes'
 import { readRound, startRound, selectVersion, endUnmatched } from '../api/formal-expert'
+import { ExpertDuty } from './expert-continuity'
 import { ExpertPreparation } from './formal-expert-preparation'
 import { ChildHandoffs } from './child-handoffs'
 import { PartialDelivery } from './partial-delivery'
@@ -131,6 +132,24 @@ export function FormalExpertIntake({
   const busy = !!task && !round.isError && (!round.data || !terminal.has(round.data.state))
   return (
     <section className="space-y-3" aria-label={t('title')}>
+      {round.data?.followup && (
+        <div>
+          <a
+            className="underline"
+            href={'?formalMatch=' + encodeURIComponent(round.data.followup.origin)}
+          >
+            {t('sourceRequest')}
+          </a>
+          {round.data.followup.released && (
+            <p>
+              {t('priorMaterial', { name: round.data.followup.released.output })} ·{' '}
+              {round.data.followup.released.material.material_id} · v
+              {round.data.followup.released.material.version_no} ·{' '}
+              {round.data.followup.released.material.sha256}
+            </p>
+          )}
+        </div>
+      )}
       {named !== null && (
         <p>
           {reference
@@ -228,6 +247,17 @@ export function FormalExpertIntake({
               question={current}
               result={round.data.feedback}
               reload={() => round.refetch()}
+            />
+          )}
+          {task && round.data.delivery && !round.data.temporary_delivery && (
+            <ExpertDuty
+              key={task}
+              task={task}
+              origin={round.data.followup?.kind === 'duty' ? round.data.followup.origin : task}
+              execution={round.data.execution.task_id}
+              outputs={Object.keys(round.data.delivery)}
+              slots={round.data.duty_material_slots ?? []}
+              question={current}
             />
           )}
           <ChildHandoffs task={round.data.execution.task_id} />

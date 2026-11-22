@@ -579,3 +579,52 @@ it('shows one ask action on a fresh unified entry and preserves the selected leg
   page(<AskExpertScreen project={project} from={null} expert="FIN_REVIEW" />)
   expect(await screen.findByRole('heading', { name: '请专家：财报体检' })).toBeInTheDocument()
 })
+
+it('shows the actual change before the owner starts a separate request for an acquired revision', async () => {
+  const { HandoffVersions } = await import('@/features/expert/ui/expert-continuity')
+  const task = '11111111-1111-4111-8111-111111111111'
+  const next = '22222222-2222-4222-8222-222222222222'
+  const reference = { method_id: task, version: 2, digest: 'sha256:' + 'a'.repeat(64) }
+  const candidate = {
+    reference,
+    declaration: {
+      title: 'Receipt',
+      promises: { receive: 'Review receipts' },
+      applies_when: [],
+      excludes: [],
+    },
+    promise_outputs: {},
+  }
+  let adopted = false
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (path: string, init: RequestInit = {}) => {
+      expect(String(path)).toContain(task + '/handoff/versions')
+      if (init.method === 'PUT') {
+        expect(JSON.parse(String(init.body))).toEqual({ reference, review_digest: 'reviewed' })
+        adopted = true
+        return Response.json({ task_id: next })
+      }
+      return Response.json({
+        previous: null,
+        options: [
+          {
+            candidate,
+            review_digest: 'reviewed',
+            changes: { purpose: { before: 'Old scope', after: 'Revised scope' } },
+          },
+        ],
+        adopted: adopted ? [{ task_id: next, reference }] : [],
+      })
+    }),
+  )
+  page(<HandoffVersions task={task} />)
+  fireEvent.click(screen.getByRole('button', { name: messages.expertContinuity.checkVersions }))
+  fireEvent.click(await screen.findByText(messages.expertContinuity.changes))
+  expect(screen.getByText('Revised scope', { exact: false })).toBeInTheDocument()
+  expect(adopted).toBe(false)
+  fireEvent.click(screen.getByRole('button', { name: messages.expertContinuity.adopt }))
+  await waitFor(() =>
+    expect(screen.getByRole('link')).toHaveAttribute('href', '?formalMatch=' + next),
+  )
+})

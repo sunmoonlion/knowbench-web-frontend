@@ -73,8 +73,21 @@ const reviewed = z.object({
   project_id: z.string(),
   question: z.string(),
   state: z.string(),
+  followup: z
+    .object({
+      kind: z.enum(['duty', 'handoff']),
+      origin: z.uuid(),
+      released: z
+        .object({
+          output: z.string(),
+          material: z.object({ material_id: z.uuid(), version_no: z.number(), sha256: z.string() }),
+        })
+        .optional(),
+    })
+    .optional(),
   superseded_by: z.uuid().optional(),
   feedback: feedback.optional(),
+  duty_material_slots: z.array(z.string()).optional(),
   temporary_delivery: z.boolean().optional(),
   execution_state: z.string().optional(),
   delivery: z.record(z.string(), z.json()).nullable().optional(),
@@ -290,4 +303,53 @@ export const checkPlanningColumn = (
       sheet,
       column,
     },
+  })
+
+const duty = z.object({
+  origin: z.uuid(),
+  current_match: z.uuid(),
+  paused: z.boolean(),
+  next_at: z.string(),
+  problem: z.string().nullable(),
+  config: z.object({
+    reference: pin,
+    instruction: z.string(),
+    interval_hours: z.number(),
+    output: z.string(),
+  }),
+  approved: z.object({ execution: z.uuid() }).nullable(),
+})
+const taskPath = (task: string) => `/api/workbench/find-expert/${seg(task)}`
+export const readDuty = (task: string) => getJson(duty.nullable(), taskPath(task) + '/duty')
+export const changeDuty = (
+  task: string,
+  action: '' | '/state' | '/output' | '/withdrawal',
+  csrfToken: string,
+  body: Record<string, unknown>,
+) => sendJson(duty, taskPath(task) + '/duty' + action, { method: 'PUT', csrfToken, body })
+export const readHandoffVersions = (task: string) =>
+  getJson(
+    z.object({
+      previous: entry.nullable(),
+      options: z.array(
+        z.object({
+          candidate: entry,
+          review_digest: z.string(),
+          changes: z.record(z.string(), z.object({ before: z.json(), after: z.json() })),
+        }),
+      ),
+      adopted: z.array(z.object({ reference: pin, task_id: z.uuid() })),
+    }),
+    taskPath(task) + '/handoff/versions',
+  )
+export const adoptVersion = (
+  task: string,
+  csrfToken: string,
+  reference: z.infer<typeof pin>,
+  review_digest: string,
+) =>
+  sendJson(z.object({ task_id: z.uuid() }), taskPath(task) + '/handoff/versions', {
+    method: 'PUT',
+    csrfToken,
+    body: { reference, review_digest },
   })

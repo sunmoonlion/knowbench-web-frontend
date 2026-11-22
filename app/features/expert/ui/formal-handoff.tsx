@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
+import { HandoffVersions } from './expert-continuity'
 import { Button } from '@/components/ui/button'
 import { CrossAppLink } from '@/components/common/cross-app-link'
 import { useWorkbench } from '@/lib/workbench/context'
@@ -53,6 +54,7 @@ export function FormalHandoff({
         >
           {t('openHandoff')}
         </CrossAppLink>
+        <HandoffVersions task={task} />
       </div>
     )
   if (!open)
