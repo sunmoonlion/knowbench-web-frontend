@@ -221,6 +221,33 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
           formal: {
             review_digest: review,
             selected,
+            scope_preview: selected
+              ? {
+                  steps: [{ id: 'read', depends_on: [], required_when: null, candidate_count: 1 }],
+                  inputs: [
+                    {
+                      name: 'ledger',
+                      description: '待核对台账',
+                      required_by: ['read'],
+                      used_by: ['read'],
+                    },
+                  ],
+                  outputs: [{ name: 'report', description: '对账报告', step: 'read' }],
+                  requirements: [
+                    {
+                      id: 'mail',
+                      capability: 'test-mail',
+                      version: '1',
+                      operations: ['send'],
+                      resource_roles: ['recipient'],
+                      destination: 'https://example.test',
+                      fields: ['report'],
+                      purpose: '发送对账报告',
+                    },
+                  ],
+                  approvals: [{ requirement_id: 'mail', operations: ['send'], when: '发送之前' }],
+                }
+              : null,
             more: true,
             options: refs.map((reference, i) => ({
               reference,
@@ -255,6 +282,7 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
   fireEvent.click(screen.getByRole('button', { name: messages.formalIntake.title }))
   const options = await screen.findAllByRole('button', { name: messages.formalIntake.choose })
   expect(options).toHaveLength(2)
+  expect(screen.queryByText(messages.formalIntake.scopeTitle)).toBeNull()
   expect(requests[0].body).toMatchObject({
     question: '需要差异表',
     budget_limit: '2',
@@ -265,6 +293,10 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
   fireEvent.change(question, { target: { value: '需要差异表' } })
   fireEvent.click(screen.getAllByRole('button', { name: messages.formalIntake.choose })[1])
   await screen.findByText(messages.formalIntake.selected)
+  const scope = screen.getByRole('region', { name: messages.formalIntake.scopeTitle })
+  expect(within(scope).getByText(/待核对台账/)).toBeInTheDocument()
+  expect(within(scope).getByText(/发送之前/)).toBeInTheDocument()
+  expect(within(scope).getByText(messages.formalIntake.pendingExecution)).toBeInTheDocument()
   expect(requests).toHaveLength(2)
   expect(requests[1]).toEqual({
     path: '/api/workbench/find-expert/' + task + '/selection',

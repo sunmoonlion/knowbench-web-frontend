@@ -11,6 +11,7 @@ import { useWorkbench } from '@/lib/workbench/context'
 import { formalMethodReferenceSchema as pin } from '@/lib/workbench/formal-method-reference'
 import { routes } from '@/lib/workbench/routes'
 import { readRound, startRound, selectVersion } from '../api/formal-expert'
+import { ScopePreview } from './formal-expert-scope'
 
 const terminal = new Set(['SUCCEEDED', 'CANCELLED', 'FAILED', 'REJECTED'])
 const pinKey = (p: z.infer<typeof pin>) => [p.method_id, p.version, p.digest].join('/')
@@ -192,8 +193,10 @@ export function FormalExpertIntake({
         !result && <p role="alert">{round.data.error || t('failed')}</p>}
       {result && !round.isError && (
         <>
-          <p>{result.match.explanation}</p>
-          {result.more && <p className="text-muted-foreground text-sm">{t('partial')}</p>}
+          {!result.selected && <p>{result.match.explanation}</p>}
+          {!result.selected && result.more && (
+            <p className="text-muted-foreground text-sm">{t('partial')}</p>
+          )}
           {result.match.clarification && <p>{result.match.clarification}</p>}
           {result.match.picks.map((p) => {
             const e = result.options.find((o) => pinKey(o.reference) === pinKey(p.reference))
@@ -237,6 +240,7 @@ export function FormalExpertIntake({
               </article>
             )
           })}
+          {result.selected && result.scope_preview && <ScopePreview scope={result.scope_preview} />}
           {choice.isError && (
             <p role="alert">
               {t('unavailable')}{' '}

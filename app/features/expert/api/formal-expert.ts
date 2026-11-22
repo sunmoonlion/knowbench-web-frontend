@@ -20,6 +20,35 @@ const entry = z.object({
   }),
   promise_outputs: z.record(z.string(), z.array(z.string())),
 })
+const names = z.array(z.string())
+const scope = z.object({
+  steps: z.array(
+    z.object({
+      id: z.string(),
+      depends_on: names,
+      required_when: z.string().nullable(),
+      candidate_count: z.number().int().positive(),
+    }),
+  ),
+  inputs: z.array(
+    z.object({ name: z.string(), description: z.string(), required_by: names, used_by: names }),
+  ),
+  outputs: z.array(z.object({ name: z.string(), description: z.string(), step: z.string() })),
+  requirements: z.array(
+    z.object({
+      id: z.string(),
+      capability: z.string(),
+      version: z.string(),
+      operations: names,
+      resource_roles: names,
+      destination: z.string(),
+      fields: names,
+      purpose: z.string(),
+    }),
+  ),
+  approvals: z.array(z.object({ requirement_id: z.string(), operations: names, when: z.string() })),
+})
+export type FrozenScope = z.infer<typeof scope>
 const reviewed = z.object({
   task_id: z.uuid(),
   project_id: z.string(),
@@ -33,6 +62,7 @@ const reviewed = z.object({
       review_digest: z.string(),
       more: z.boolean(),
       selected: pin.nullable(),
+      scope_preview: scope.nullable(),
       options: z.array(entry),
       match: z.object({
         explanation: z.string(),
