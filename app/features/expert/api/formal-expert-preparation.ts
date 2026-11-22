@@ -46,7 +46,19 @@ export const savePreparation = (
   },
 ) => sendJson(view, url(task), { method: 'PUT', csrfToken, body })
 
+const methodRef = z.object({ method_id: z.uuid(), version: z.number().int(), digest: z.string() })
 const preview = z.object({
+  scope_hours: z.number().int().positive().optional(),
+  subexperts: z
+    .array(
+      z.object({
+        path: z.array(z.string()),
+        reference: methodRef,
+        title: z.string(),
+        outputs: z.array(z.string()),
+      }),
+    )
+    .optional(),
   revision: z.number().int(),
   task_id: z.uuid(),
   preview_digest: z.string(),
@@ -70,11 +82,7 @@ const preview = z.object({
           purpose: z.string(),
         }),
       ),
-      reference: z.object({
-        method_id: z.uuid(),
-        version: z.number().int(),
-        digest: z.string(),
-      }),
+      reference: methodRef,
       material: material.optional(),
       from_outputs: z.record(
         z.string(),

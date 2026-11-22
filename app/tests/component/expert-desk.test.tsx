@@ -225,6 +225,10 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
           preview_digest: review,
           currency: 'CNY',
           estimated_maximum: '0',
+          scope_hours: 24,
+          subexperts: [
+            { path: ['review'], title: '复核子专家', reference: refs[0], outputs: ['checked'] },
+          ],
           issues: [],
           steps: [
             {
@@ -416,6 +420,10 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
   await screen.findByText(/已保存第 2 版准备清单/)
   fireEvent.click(screen.getByRole('button', { name: messages.formalIntake.checkExecution }))
   await screen.findByText(/递交.*example.test.*report/)
+  fireEvent.click(screen.getByText(messages.formalIntake.nestedExperts))
+  expect(screen.getByText(/最长有效 24 小时/)).toBeVisible()
+  expect(screen.getByText('复核子专家')).toBeVisible()
+  expect(screen.getByText(/交给父级专家的输出.*checked/)).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: messages.formalIntake.confirmExecution }))
   expect(
     await screen.findByRole('link', { name: messages.formalIntake.openExecution }),

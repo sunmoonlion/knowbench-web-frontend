@@ -44,6 +44,23 @@ export function ExecutionPreview({
       {read.isError && <p role="alert">{t('previewFailed')}</p>}
       {result && (
         <>
+          {result.subexperts?.length ? (
+            <details>
+              <summary>{t('nestedExperts')}</summary>
+              {result.scope_hours && <p>{t('nestedScope', { hours: result.scope_hours })}</p>}
+              <ul>
+                {result.subexperts.map((e) => (
+                  <li key={e.path.join('/')}>
+                    <strong>{e.title}</strong> · {e.path.join(' / ')} · v{e.reference.version}
+                    <p className="break-all">
+                      {e.reference.method_id} · {e.reference.digest}
+                    </p>
+                    <p>{t('nestedOutputs', { names: e.outputs.join(', ') })}</p>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
           <ol className="list-decimal pl-5">
             {result.steps.map((s) => (
               <li key={s.path.join('/')}>
