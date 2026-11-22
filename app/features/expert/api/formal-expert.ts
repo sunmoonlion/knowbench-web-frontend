@@ -2,6 +2,9 @@ import { z } from 'zod'
 import { formalMethodReferenceSchema as pin } from '@/lib/workbench/formal-method-reference'
 import { getJson, seg, sendJson } from '@/lib/workbench/http'
 
+export const readExpertEntry = () =>
+  getJson(z.object({ unified: z.boolean() }), '/api/workbench/expert/entry')
+
 const started = z.union([
   z.object({ task_id: z.uuid() }),
   z.object({ empty: z.literal(true), next: z.number().int().positive().nullable() }),
@@ -49,12 +52,30 @@ const scope = z.object({
   approvals: z.array(z.object({ requirement_id: z.string(), operations: names, when: z.string() })),
 })
 export type FrozenScope = z.infer<typeof scope>
+const handoffReceipt = z.object({
+  request_id: z.uuid(),
+  mode: z.enum(['new', 'author_revision', 'user_demand']),
+  review_digest: z.string(),
+})
+const suggestion = z.object({ sketch_digest: z.string(), methods: z.array(pin), outputs: names })
+const feedback = z.object({
+  review_digest: z.string(),
+  handoff: handoffReceipt.nullable().optional(),
+  handoff_gap: z.string().nullable().optional(),
+  handoff_reference: pin.nullable().optional(),
+  suggested_plan: suggestion.nullable().optional(),
+  attached_plan: z.boolean().optional(),
+})
+export type Feedback = z.infer<typeof feedback>
+
 const reviewed = z.object({
   task_id: z.uuid(),
   project_id: z.string(),
   question: z.string(),
   state: z.string(),
   superseded_by: z.uuid().optional(),
+  feedback: feedback.optional(),
+  temporary_delivery: z.boolean().optional(),
   execution_state: z.string().optional(),
   delivery: z.record(z.string(), z.json()).nullable().optional(),
   execution: z.object({ task_id: z.uuid() }).optional(),
@@ -64,6 +85,13 @@ const reviewed = z.object({
     .object({
       review_digest: z.string(),
       more: z.boolean(),
+      source: z.literal('empty_directory').optional(),
+      suggested_plan: suggestion.nullable().optional(),
+      attached_plan: z.boolean().optional(),
+      handoff: handoffReceipt.nullable().optional(),
+      handoff_reference: pin.nullable().optional(),
+      handoff_gap: z.string().nullable().optional(),
+      planning_available: z.boolean().default(false),
       ended: z.boolean().default(false),
       selected: pin.nullable(),
       scope_preview: scope.nullable(),
@@ -104,7 +132,12 @@ export const startRound = (
 ) =>
   sendJson(started, `/api/workbench/projects/${seg(project)}/find-expert`, {
     csrfToken,
-    body: { ...body, budget_limit: '2', match_contract: 'knowbench/expert-match/v5' },
+    body: {
+      ...body,
+      retain_empty: true,
+      budget_limit: '2',
+      match_contract: 'knowbench/expert-match/v5',
+    },
   })
 export const selectVersion = (
   task: string,
@@ -150,4 +183,111 @@ export const endUnmatched = (task: string, csrfToken: string, review_digest: str
     method: 'PUT',
     csrfToken,
     body: { review_digest },
+  })
+
+export const sendHandoff = (
+  task: string,
+  csrfToken: string,
+  review_digest: string,
+  gap: string,
+  reference: z.infer<typeof pin> | null,
+  plan_digest?: string,
+) =>
+  sendJson(handoffReceipt, `/api/workbench/find-expert/${seg(task)}/handoff`, {
+    method: 'PUT',
+    csrfToken,
+    body: { review_digest, gap, reference, plan_digest },
+  })
+export type FormalReview = NonNullable<z.infer<typeof reviewed>['formal']>
+
+const materialPin = z.object({
+  material_id: z.uuid(),
+  version_no: z.number().int().positive(),
+  sha256: z.string(),
+})
+const probeReceipt = z.object({
+  consent: z.string(),
+  result: materialPin.extend({
+    sheet: z.string(),
+    column: z.string(),
+    status: z.enum(['present', 'missing', 'unknown']),
+  }),
+})
+const sketch = z.object({
+  probe: probeReceipt.optional(),
+  runtime: z.object({ patterns: z.record(z.string(), z.boolean()) }).optional(),
+  required_capabilities: z.array(z.string()).optional(),
+  missing: z.array(z.string()).optional(),
+  outcome: z.enum(['idle', 'planning', 'plan', 'adopted', 'clarify', 'gap']),
+  explanation: z.string().optional(),
+  search_goal: z.string().nullable().optional(),
+  remaining_rounds: z.number().int().optional(),
+  planning_task: z.uuid().nullable().optional(),
+  scope: scope.optional(),
+  sketch_digest: z.string().optional(),
+  saved: z.boolean().optional(),
+  partial: z.boolean().optional(),
+})
+const sketchPath = (task: string) => `/api/workbench/find-expert/${seg(task)}/temporary-plan`
+export const readSketch = (task: string) => getJson(sketch, sketchPath(task))
+export const requestSketch = (
+  task: string,
+  csrfToken: string,
+  review_digest: string,
+  clarification: string,
+  previous?: string | null,
+  probe_digest?: string,
+) =>
+  sendJson(sketch, sketchPath(task), {
+    method: 'PUT',
+    csrfToken,
+    body: { review_digest, clarification, previous, probe_digest },
+  })
+export const adoptSketch = (
+  task: string,
+  csrfToken: string,
+  review_digest: string,
+  sketch_digest: string,
+  source_task?: string,
+) =>
+  sendJson(scope, sketchPath(task) + '/adoption', {
+    method: 'PUT',
+    csrfToken,
+    body: { review_digest, sketch_digest, source_task },
+  })
+export const saveSketch = (task: string, csrfToken: string, review_digest: string) =>
+  sendJson(
+    z.object({ source_task: z.uuid(), sketch_digest: z.string() }),
+    sketchPath(task) + '/saved',
+    { method: 'PUT', csrfToken, body: { review_digest } },
+  )
+
+export const listProbeMaterials = (task: string, digest: string) =>
+  getJson(
+    z.object({
+      materials: z.array(materialPin.extend({ name: z.string() })),
+    }),
+    sketchPath(task) + '/materials?review_digest=' + encodeURIComponent(digest),
+  )
+export const checkPlanningColumn = (
+  task: string,
+  csrfToken: string,
+  review_digest: string,
+  planning_task: string,
+  material: z.infer<typeof materialPin>,
+  sheet: string,
+  column: string,
+) =>
+  sendJson(probeReceipt, sketchPath(task) + '/probe', {
+    method: 'PUT',
+    csrfToken,
+    body: {
+      review_digest,
+      planning_task,
+      material_id: material.material_id,
+      version_no: material.version_no,
+      sha256: material.sha256,
+      sheet,
+      column,
+    },
   })

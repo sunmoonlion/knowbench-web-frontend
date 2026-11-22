@@ -6,6 +6,7 @@ export const destinations = defineDestinations({
   // 「请我的分身」：去 knowmart「我的分身」选一位，选定后 knowmart 按登记的回跳地址带回工作台，
   // 链接上只多 knowbot=<分身>@<版本>（SDD 0027 P4）。回来后由后端按会话向 knowmart 核验
   'knowlab.createIdea': { target: 'knowlab', segments: ['applications', 'new'] },
+  'knowlab.application': { target: 'knowlab', segments: ['applications'], params: ['item'] },
   'knowlab.incubation': { target: 'knowlab', segments: ['incubation'] },
   'knowmart.shop': { target: 'knowmart', segments: ['shop'] },
   'knowmart.knowbots': { target: 'knowmart', segments: ['knowbots'] },

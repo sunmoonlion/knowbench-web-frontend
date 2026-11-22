@@ -4,6 +4,8 @@ import { CheckIcon, FolderIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
+import { readExpertEntry } from '../api/formal-expert'
 import { useState, useSyncExternalStore } from 'react'
 
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -65,6 +67,14 @@ export function AskExpertScreen({
     }
   }
   // 固定与动态专家都沿用数据授权、补采和本人确认。
+  const fresh = !findTask && !chosen
+  const entry = useQuery({
+    queryKey: ['expert-entry', projectId],
+    queryFn: readExpertEntry,
+    enabled: fresh,
+    retry: false,
+  })
+  const legacy = !fresh || (!entry.isPending && !entry.data?.unified)
   const needs = useDataNeeds(chosen)
   const checkingNeeds =
     Boolean(chosen?.startsWith('knowbot:')) && (needs.isPending || needs.isError)
@@ -162,105 +172,107 @@ export function AskExpertScreen({
               {pack ? t('titleWith', { name: pack.name }) : t('title')}
             </h1>
 
-            <section>
-              <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                <p className={cn(label, 'mb-0')}>{t('who')}</p>
-                <CrossAppLink
-                  to="knowmart.knowbots"
-                  refValue="expert"
-                  className={buttonVariants({ size: 'sm', variant: 'outline' })}
-                >
-                  {t('summon')}
-                </CrossAppLink>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={startFind.isPending || ask.isPending}
-                  aria-describedby="ask-find-reason"
-                  title={findBlocked ? t(`blocker.${findBlocked}`) : t('findHint')}
-                  onClick={() => void find()}
-                >
-                  {startFind.isPending ? t('finding') : t('find')}
-                </Button>
-                <CrossAppLink
-                  to="knowlab.createIdea"
-                  refValue="expert"
-                  className={buttonVariants({ size: 'sm', variant: 'outline' })}
-                >
-                  {t('createIdea')}
-                </CrossAppLink>
-              </div>
-              <p id="ask-find-reason" role="status" tabIndex={-1} className="mb-2 text-sm">
-                {findBlocked ? t(`blocker.${findBlocked}`) : null}
-                {findBlocked === 'noMachine' || findBlocked === 'offline' ? (
-                  <ConnectComputerLink className="ml-2" />
-                ) : null}
-                {findBlocked === 'noSandbox' ? (
-                  <Link href={routes.settings(locale)} className="ml-2 underline">
-                    {t('toSettings')}
-                  </Link>
-                ) : null}
-              </p>
-              <p className="text-muted-foreground mb-2 text-sm">{t('findHint')}</p>
-              {startFind.isError ? (
-                <p role="alert" className="text-destructive mb-2 text-[13px]">
-                  {t('findFailed')}
-                </p>
-              ) : null}
-              {findTask ? (
-                <div className="mb-3">
-                  <FindExpertPanel
-                    task={findTask}
-                    project={projectId}
-                    onSelect={(selection) => {
-                      setChosen(selection.pack.id)
-                      setSelectedByAI(selection)
-                    }}
-                    expectedQuestion={typed === null ? undefined : typed}
-                    onEdit={(original) => {
-                      setTyped(original)
-                      try {
-                        window.sessionStorage.setItem(QUESTION, original)
-                      } catch {
-                        // The visible input remains usable when browser storage is unavailable.
-                      }
-                      const url = new URL(
-                        routes.askExpert(locale, projectId, from ?? undefined),
-                        window.location.origin,
-                      )
-                      if (chosen) url.searchParams.set('expert', chosen)
-                      router.push(url.pathname + url.search)
-                      document.getElementById('ask-question')?.focus()
-                    }}
-                  />
+            {legacy && (
+              <section>
+                <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                  <p className={cn(label, 'mb-0')}>{t('who')}</p>
+                  <CrossAppLink
+                    to="knowmart.knowbots"
+                    refValue="expert"
+                    className={buttonVariants({ size: 'sm', variant: 'outline' })}
+                  >
+                    {t('summon')}
+                  </CrossAppLink>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={startFind.isPending || ask.isPending}
+                    aria-describedby="ask-find-reason"
+                    title={findBlocked ? t(`blocker.${findBlocked}`) : t('findHint')}
+                    onClick={() => void find()}
+                  >
+                    {startFind.isPending ? t('finding') : t('find')}
+                  </Button>
+                  <CrossAppLink
+                    to="knowlab.createIdea"
+                    refValue="expert"
+                    className={buttonVariants({ size: 'sm', variant: 'outline' })}
+                  >
+                    {t('createIdea')}
+                  </CrossAppLink>
                 </div>
-              ) : null}
-              <ExpertChoices
-                packs={packs.data ?? []}
-                selected={chosen}
-                onSelect={(id) => {
-                  setChosen(id)
-                  setSelectedByAI(null)
-                  if (findTask)
-                    router.replace(routes.askExpert(locale, projectId, from ?? undefined))
-                }}
-                onRemoved={(id) => {
-                  if (chosen === id) {
-                    setChosen(null)
-                    setSelectedByAI(null)
-                    if (findTask || expert === id)
-                      router.replace(routes.askExpert(locale, projectId, from ?? undefined))
-                  }
-                }}
-              />
-              {packs.isPending ? (
-                <p className="text-muted-foreground text-sm">{t('loading')}</p>
-              ) : packs.isError ? (
-                <p role="alert" className="text-destructive text-sm">
-                  {t('packsFailed')}
+                <p id="ask-find-reason" role="status" tabIndex={-1} className="mb-2 text-sm">
+                  {findBlocked ? t(`blocker.${findBlocked}`) : null}
+                  {findBlocked === 'noMachine' || findBlocked === 'offline' ? (
+                    <ConnectComputerLink className="ml-2" />
+                  ) : null}
+                  {findBlocked === 'noSandbox' ? (
+                    <Link href={routes.settings(locale)} className="ml-2 underline">
+                      {t('toSettings')}
+                    </Link>
+                  ) : null}
                 </p>
-              ) : null}
-            </section>
+                <p className="text-muted-foreground mb-2 text-sm">{t('findHint')}</p>
+                {startFind.isError ? (
+                  <p role="alert" className="text-destructive mb-2 text-[13px]">
+                    {t('findFailed')}
+                  </p>
+                ) : null}
+                {findTask ? (
+                  <div className="mb-3">
+                    <FindExpertPanel
+                      task={findTask}
+                      project={projectId}
+                      onSelect={(selection) => {
+                        setChosen(selection.pack.id)
+                        setSelectedByAI(selection)
+                      }}
+                      expectedQuestion={typed === null ? undefined : typed}
+                      onEdit={(original) => {
+                        setTyped(original)
+                        try {
+                          window.sessionStorage.setItem(QUESTION, original)
+                        } catch {
+                          // The visible input remains usable when browser storage is unavailable.
+                        }
+                        const url = new URL(
+                          routes.askExpert(locale, projectId, from ?? undefined),
+                          window.location.origin,
+                        )
+                        if (chosen) url.searchParams.set('expert', chosen)
+                        router.push(url.pathname + url.search)
+                        document.getElementById('ask-question')?.focus()
+                      }}
+                    />
+                  </div>
+                ) : null}
+                <ExpertChoices
+                  packs={packs.data ?? []}
+                  selected={chosen}
+                  onSelect={(id) => {
+                    setChosen(id)
+                    setSelectedByAI(null)
+                    if (findTask)
+                      router.replace(routes.askExpert(locale, projectId, from ?? undefined))
+                  }}
+                  onRemoved={(id) => {
+                    if (chosen === id) {
+                      setChosen(null)
+                      setSelectedByAI(null)
+                      if (findTask || expert === id)
+                        router.replace(routes.askExpert(locale, projectId, from ?? undefined))
+                    }
+                  }}
+                />
+                {packs.isPending ? (
+                  <p className="text-muted-foreground text-sm">{t('loading')}</p>
+                ) : packs.isError ? (
+                  <p role="alert" className="text-destructive text-sm">
+                    {t('packsFailed')}
+                  </p>
+                ) : null}
+              </section>
+            )}
 
             <section>
               <label htmlFor="ask-question" className={cn(label, 'block')}>
@@ -275,6 +287,7 @@ export function AskExpertScreen({
               />
               {!chosen && !findTask && (
                 <FormalExpertIntake
+                  unified={!!entry.data?.unified}
                   key={projectId}
                   from={from}
                   project={projectId}
@@ -343,99 +356,105 @@ export function AskExpertScreen({
             </section>
           </div>
 
-          <aside className="bg-muted/30 h-fit space-y-5 rounded-xl border p-5">
-            {pack ? (
-              <>
-                <section>
-                  <h2 className={label}>{t('will')}</h2>
-                  {needs.data?.contract === 'knowbot-manifest/v3' ? (
-                    <p className="text-muted-foreground text-sm">{t('dynamicPlan')}</p>
-                  ) : null}
-                  <ol className="space-y-2.5">
-                    {pack.steps.map((step) => (
-                      <li key={step.index} className="text-sm">
-                        <p className="font-medium">
-                          {step.index} {step.title}
-                        </p>
-                        <p className="text-[13px]">{step.summary}</p>
-                        <p className="text-muted-foreground text-[13px]">
-                          → {step.after_rejection.text}
-                        </p>
-                      </li>
-                    ))}
-                  </ol>
-                </section>
-                <section className="border-t pt-4">
-                  <h2 className={label}>{t('wont')}</h2>
-                  <p className="text-sm">{pack.does_not_solve}</p>
-                </section>
-                <section className="border-t pt-4">
-                  <h2 className={label}>{t('returns')}</h2>
-                  <p className="text-sm">{pack.output}</p>
-                </section>
-              </>
-            ) : (
-              <p className="text-muted-foreground text-sm">{t('choose')}</p>
-            )}
-          </aside>
+          {legacy && (
+            <aside className="bg-muted/30 h-fit space-y-5 rounded-xl border p-5">
+              {pack ? (
+                <>
+                  <section>
+                    <h2 className={label}>{t('will')}</h2>
+                    {needs.data?.contract === 'knowbot-manifest/v3' ? (
+                      <p className="text-muted-foreground text-sm">{t('dynamicPlan')}</p>
+                    ) : null}
+                    <ol className="space-y-2.5">
+                      {pack.steps.map((step) => (
+                        <li key={step.index} className="text-sm">
+                          <p className="font-medium">
+                            {step.index} {step.title}
+                          </p>
+                          <p className="text-[13px]">{step.summary}</p>
+                          <p className="text-muted-foreground text-[13px]">
+                            → {step.after_rejection.text}
+                          </p>
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+                  <section className="border-t pt-4">
+                    <h2 className={label}>{t('wont')}</h2>
+                    <p className="text-sm">{pack.does_not_solve}</p>
+                  </section>
+                  <section className="border-t pt-4">
+                    <h2 className={label}>{t('returns')}</h2>
+                    <p className="text-sm">{pack.output}</p>
+                  </section>
+                </>
+              ) : (
+                <p className="text-muted-foreground text-sm">{t('choose')}</p>
+              )}
+            </aside>
+          )}
         </div>
       </div>
 
-      <footer className="shrink-0 border-t px-6 py-3">
-        <div className="mx-auto flex w-full max-w-5xl items-end gap-6">
-          <ul className="text-muted-foreground min-w-0 flex-1 space-y-0.5 text-[13px]">
-            <li className="truncate">{t('confirm1', { question: question.trim() || '…' })}</li>
-            <li>{t('confirm2')}</li>
-            <li>{t('confirm3')}</li>
-          </ul>
-          <div className="shrink-0 text-right">
-            {chosen?.startsWith('knowbot:') && needs.isError ? (
-              <p role="alert" className="text-destructive mb-1.5 text-[13px]">
-                {t('scopeLoadFailed')}{' '}
-                <button type="button" className="underline" onClick={() => void needs.refetch()}>
-                  {t('scopeRetry')}
-                </button>
-              </p>
-            ) : null}
-            {ask.isError ? (
-              <p role="alert" className="text-destructive mb-1.5 text-[13px]">
-                {t.has(`problem.${(ask.error as WorkbenchError).code}`)
-                  ? t(`problem.${(ask.error as WorkbenchError).code}`)
-                  : t('problem.other')}
-              </p>
-            ) : null}
-            {pack && project.data?.active_task_id ? (
-              <p role="status" className="mb-2 text-sm">
-                {t('queueHint')}
-                {busyAt ? (
-                  <Link
-                    href={routes.projectConversation(locale, projectId, busyAt)}
-                    className="ml-2 underline"
-                  >
-                    {t('toBusy')}
-                  </Link>
-                ) : null}
-              </p>
-            ) : null}
-            <div className="flex justify-end gap-2">
-              <Link href={back} className={cn(buttonVariants({ variant: 'outline' }))}>
-                {t('cancel')}
-              </Link>
-              <Button
-                disabled={blocker !== null || ask.isPending || startFind.isPending || checkingNeeds}
-                title={blocker ? t(`blocker.${blocker}`) : undefined}
-                onClick={() => void submit()}
-              >
-                {ask.isPending || startFind.isPending
-                  ? t('submitting')
-                  : needs.data?.scope_check_required && !selectedByAI?.match
-                    ? t('checkScope')
-                    : t('submit')}
-              </Button>
+      {legacy && (
+        <footer className="shrink-0 border-t px-6 py-3">
+          <div className="mx-auto flex w-full max-w-5xl items-end gap-6">
+            <ul className="text-muted-foreground min-w-0 flex-1 space-y-0.5 text-[13px]">
+              <li className="truncate">{t('confirm1', { question: question.trim() || '…' })}</li>
+              <li>{t('confirm2')}</li>
+              <li>{t('confirm3')}</li>
+            </ul>
+            <div className="shrink-0 text-right">
+              {chosen?.startsWith('knowbot:') && needs.isError ? (
+                <p role="alert" className="text-destructive mb-1.5 text-[13px]">
+                  {t('scopeLoadFailed')}{' '}
+                  <button type="button" className="underline" onClick={() => void needs.refetch()}>
+                    {t('scopeRetry')}
+                  </button>
+                </p>
+              ) : null}
+              {ask.isError ? (
+                <p role="alert" className="text-destructive mb-1.5 text-[13px]">
+                  {t.has(`problem.${(ask.error as WorkbenchError).code}`)
+                    ? t(`problem.${(ask.error as WorkbenchError).code}`)
+                    : t('problem.other')}
+                </p>
+              ) : null}
+              {pack && project.data?.active_task_id ? (
+                <p role="status" className="mb-2 text-sm">
+                  {t('queueHint')}
+                  {busyAt ? (
+                    <Link
+                      href={routes.projectConversation(locale, projectId, busyAt)}
+                      className="ml-2 underline"
+                    >
+                      {t('toBusy')}
+                    </Link>
+                  ) : null}
+                </p>
+              ) : null}
+              <div className="flex justify-end gap-2">
+                <Link href={back} className={cn(buttonVariants({ variant: 'outline' }))}>
+                  {t('cancel')}
+                </Link>
+                <Button
+                  disabled={
+                    blocker !== null || ask.isPending || startFind.isPending || checkingNeeds
+                  }
+                  title={blocker ? t(`blocker.${blocker}`) : undefined}
+                  onClick={() => void submit()}
+                >
+                  {ask.isPending || startFind.isPending
+                    ? t('submitting')
+                    : needs.data?.scope_check_required && !selectedByAI?.match
+                      ? t('checkScope')
+                      : t('submit')}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   )
 }

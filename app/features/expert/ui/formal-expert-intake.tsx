@@ -14,6 +14,8 @@ import { readRound, startRound, selectVersion, endUnmatched } from '../api/forma
 import { ExpertPreparation } from './formal-expert-preparation'
 import { ChildHandoffs } from './child-handoffs'
 import { PartialDelivery } from './partial-delivery'
+import { TemporaryPlanning } from './temporary-planning'
+import { FormalHandoff } from './formal-handoff'
 import { ScopePreview } from './formal-expert-scope'
 
 const terminal = new Set(['SUCCEEDED', 'CANCELLED', 'FAILED', 'REJECTED'])
@@ -22,18 +24,20 @@ const pinKey = (p: z.infer<typeof pin>) => [p.method_id, p.version, p.digest].jo
 export function FormalExpertIntake({
   project,
   question,
+  unified = false,
   onRestore,
   from,
 }: {
   project: string
   from: string | null
   question: string
+  unified?: boolean
   onRestore?: (value: string) => void
 }) {
   const t = useTranslations('formalIntake')
   const { csrfToken, locale } = useWorkbench()
   const params = useSearchParams()
-  const param = params.get('formalMatch')
+  const param = params.get('formalMatch') ?? params.get('formal_match')
   const named = params.get('formalReference')
   let reference: z.infer<typeof pin> | undefined
   if (named !== null) {
@@ -159,7 +163,7 @@ export function FormalExpertIntake({
           }
         }}
       >
-        {emptyPage?.next ? t('continueSearch') : t('title')}
+        {emptyPage?.next ? t('continueSearch') : t(unified ? 'unifiedTitle' : 'title')}
       </Button>
       <p className="text-muted-foreground text-sm">{t('cost')}</p>
       {emptyPage && <p role="status">{emptyPage.next ? t('emptyWindow') : t('empty')}</p>}
@@ -218,10 +222,19 @@ export function FormalExpertIntake({
           {['FAILED', 'CANCELLED', 'REJECTED'].includes(round.data.execution_state ?? '') && (
             <PartialDelivery task={round.data.execution.task_id} />
           )}
+          {task && round.data.feedback && (
+            <FormalHandoff
+              task={task}
+              question={current}
+              result={round.data.feedback}
+              reload={() => round.refetch()}
+            />
+          )}
           <ChildHandoffs task={round.data.execution.task_id} />
           {round.data.delivery && (
             <section aria-label={t('delivery')}>
               <h3>{t('delivery')}</h3>
+              {round.data.temporary_delivery && <p>{t('temporaryDelivery')}</p>}
               <dl>
                 {Object.entries(round.data.delivery).map(([key, value]) => (
                   <div key={key}>
@@ -238,7 +251,9 @@ export function FormalExpertIntake({
       )}
       {result && !round.isError && (
         <>
-          {!result.selected && <p>{result.match.explanation}</p>}
+          {!result.selected && (
+            <p>{result.source === 'empty_directory' ? t('empty') : result.match.explanation}</p>
+          )}
           {!result.selected && result.more && (
             <p className="text-muted-foreground text-sm">{t('partial')}</p>
           )}
@@ -261,6 +276,29 @@ export function FormalExpertIntake({
               </Button>
             </p>
           )}
+          {task &&
+            result.planning_available &&
+            !result.ended &&
+            result.match.outcome === 'no_match' && (
+              <TemporaryPlanning
+                key={task}
+                task={task}
+                digest={result.review_digest}
+                reload={() => round.refetch()}
+              />
+            )}
+          {task &&
+            (!result.ended || result.handoff) &&
+            (result.match.outcome === 'no_match' || result.selected) && (
+              <FormalHandoff
+                key={task + result.review_digest}
+                task={task}
+                question={current}
+                initialGap={result.match.explanation}
+                result={result}
+                reload={() => round.refetch()}
+              />
+            )}
           {result.match.clarification && <p>{result.match.clarification}</p>}
           {result.match.picks.map((p) => {
             const e = result.options.find((o) => pinKey(o.reference) === pinKey(p.reference))

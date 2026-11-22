@@ -555,3 +555,27 @@ it('未匹配时由用户明确结束，重读回执，改题另开委托', asyn
   expect(starts[1].question).toBe('新的问题')
   expect(starts[1]).not.toHaveProperty('revises')
 })
+
+it('shows one ask action on a fresh unified entry and preserves the selected legacy expert', async () => {
+  const original = vi.mocked(fetch).getMockImplementation()!
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((input: RequestInfo | URL, init?: RequestInit) =>
+      String(input).endsWith('/expert/entry')
+        ? Promise.resolve(Response.json({ unified: true }))
+        : original(input, init),
+    ),
+  )
+  const project = parts('项目页')[4]
+  const view = page(<AskExpertScreen project={project} from={null} expert={null} />)
+  expect(
+    await screen.findByRole('button', { name: messages.formalIntake.unifiedTitle }),
+  ).toBeDisabled()
+  expect(screen.queryByRole('link', { name: messages.askExpert.summon })).toBeNull()
+  expect(screen.queryByRole('button', { name: messages.askExpert.find })).toBeNull()
+  expect(screen.queryByRole('link', { name: messages.askExpert.createIdea })).toBeNull()
+  expect(calls).toHaveLength(0)
+  view.unmount()
+  page(<AskExpertScreen project={project} from={null} expert="FIN_REVIEW" />)
+  expect(await screen.findByRole('heading', { name: '请专家：财报体检' })).toBeInTheDocument()
+})
