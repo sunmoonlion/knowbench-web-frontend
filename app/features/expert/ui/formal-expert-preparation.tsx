@@ -194,6 +194,13 @@ function BindingEditor({
           o.pin.asset_id === current?.asset_id &&
           o.pin.revision === current?.revision &&
           o.pin.policies_digest === current?.policies_digest
+        if (
+          !current &&
+          req.capability === 'knowbase' &&
+          req.operations.length === 1 &&
+          req.operations[0] === 'read_method_input'
+        )
+          return <p key={req.id}>{t('materialReadAccount')}</p>
         if (!options.length && !current)
           return <p key={req.id}>{t('noAccount', { requirement: req.id })}</p>
         return (

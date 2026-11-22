@@ -50,6 +50,12 @@ export function ExecutionPreview({
                 <strong>{s.title}</strong> · {s.path.join(' / ')} · v{s.reference.version}
                 {s.account && <span> · {s.account}</span>}
                 {s.quote && ' · ¥' + s.quote.maximum}
+                {s.material && (
+                  <p className="break-all">
+                    {s.material.material_id} · v{s.material.version_no} · SHA-256{' '}
+                    {s.material.sha256}
+                  </p>
+                )}
                 {s.permissions.map((p, i) => (
                   <p key={i}>
                     {[p.operations.join(', '), p.purpose, p.destination, p.fields.join(', ')]

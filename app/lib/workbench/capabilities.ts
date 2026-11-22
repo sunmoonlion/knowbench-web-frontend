@@ -319,6 +319,10 @@ const hostCallDetail = callDetail
 const formalFunctionCallDetail = callDetail
   .extend({
     execution_kind: z.literal('formal_function'),
+    material_sha256: z
+      .string()
+      .regex(/^[0-9a-f]{64}$/)
+      .optional(),
     source_asset_id: z.null(),
     connection_id: z.null(),
     registered_source: z
@@ -564,6 +568,24 @@ export const decide = (
       ...(rememberRead && { remember_read: true }),
     },
   })
+
+export async function consentMaterialRead(call: CapabilityCall, sha256: string, csrfToken: string) {
+  const path = `${base}/capability-calls/${encodeURIComponent(call.id)}/knowbase-read`
+  const pending = await getJson(
+    z.object({
+      expires_at: z.iso.datetime({ offset: true }),
+      subject_digest: z.string(),
+      material_sha256: z.string(),
+    }),
+    path,
+  )
+  if (pending.subject_digest !== call.digest || pending.material_sha256 !== sha256)
+    throw new Error('Material approval changed')
+  return sendJson(z.object({ grant_id: z.uuid() }), path, {
+    csrfToken,
+    body: { expires_at: pending.expires_at, subject_digest: call.digest, sha256 },
+  })
+}
 
 export const revokeReadApproval = (id: string, csrfToken: string) =>
   sendJson(callSchema, `${base}/capability-calls/${encodeURIComponent(id)}/revoke-read`, {

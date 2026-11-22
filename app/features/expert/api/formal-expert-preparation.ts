@@ -75,6 +75,7 @@ const preview = z.object({
         version: z.number().int(),
         digest: z.string(),
       }),
+      material: material.optional(),
       from_outputs: z.record(
         z.string(),
         z.object({ step: z.array(z.string()), output: z.string() }),

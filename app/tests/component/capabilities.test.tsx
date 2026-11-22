@@ -147,6 +147,49 @@ it('displays and approves a host method call using its exact existing approval',
   })
 })
 
+it.each([true, false])(
+  'requires matching material consent before approving a read (current %s)',
+  async (current) => {
+    const call = callSchema.parse(fixtures.OrdinaryMaterialRead)
+    calls = { calls: [call] }
+    const path = `/api/workbench/capability-calls/${call.id}/knowbase-read`
+    const sha256 = fixtures.OrdinaryMaterialRead.detail.material_sha256
+    const expires_at = '2030-05-01T00:00:00Z'
+    const normal = globalThis.fetch
+    const requests: RequestInit[] = []
+    vi.stubGlobal('fetch', async (url: string, init: RequestInit = {}) => {
+      if (!url.endsWith(path)) return normal(url, init)
+      requests.push(init)
+      return Response.json(
+        init.method === 'POST'
+          ? { grant_id: call.id }
+          : {
+              subject_digest: call.digest,
+              material_sha256: current ? sha256 : 'b'.repeat(64),
+              expires_at,
+            },
+      )
+    })
+    page(<PendingConnectorAction sessionId={selection.session_id} callId={call.id} />)
+    const allow = await screen.findByRole('button', { name: zh.capabilities.allowMaterialRead })
+    expect(screen.getByText('SHA-256 ' + sha256)).toBeVisible()
+    expect(requests).toHaveLength(0)
+    fireEvent.click(allow)
+    if (current) {
+      await waitFor(() => expect(writes.some((w) => w.path.endsWith('/decision'))).toBe(true))
+      expect(JSON.parse(String(requests[1].body))).toEqual({
+        sha256,
+        expires_at,
+        subject_digest: call.digest,
+      })
+    } else {
+      await waitFor(() => expect(requests).toHaveLength(1))
+      await waitFor(() => expect(allow).toBeEnabled())
+      expect(writes).toHaveLength(0)
+    }
+  },
+)
+
 it('shows script artifacts as downloads and can stop a running script', async () => {
   const call = calls.calls[0]
   call.detail.execution_kind = 'skill_script'

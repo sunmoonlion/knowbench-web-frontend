@@ -55,10 +55,14 @@ export function CapabilityActionCard({
   const t = useTranslations('capabilities'),
     { csrfToken, locale } = useWorkbench(),
     client = useQueryClient()
+  const materialHash =
+    call.detail.execution_kind === 'formal_function' ? call.detail.material_sha256 : undefined
   const decision = useMutation({
-    mutationFn: (answer: 'accept' | 'decline' | 'read_scope' | 'revoke_read') => {
+    mutationFn: async (answer: 'accept' | 'decline' | 'read_scope' | 'revoke_read') => {
       if (answer === 'revoke_read')
         return api.revokeReadApproval(call.detail.approval?.origin ?? call.id, csrfToken)
+      if (materialHash && answer === 'accept')
+        await api.consentMaterialRead(call, materialHash, csrfToken)
       return api.decide(
         call,
         answer === 'read_scope' ? 'accept' : answer,
@@ -176,6 +180,7 @@ export function CapabilityActionCard({
             )}
         </div>
       ) : null}
+      {materialHash && <p className="break-all">SHA-256 {materialHash}</p>}
       {call.status === 'awaiting_approval' && <p>{t('actionHint')}</p>}
       <pre className="bg-muted max-h-48 overflow-auto rounded p-2 text-xs whitespace-pre-wrap">
         {JSON.stringify(call.detail.arguments, null, 2)}
@@ -183,9 +188,9 @@ export function CapabilityActionCard({
       {call.status === 'awaiting_approval' ? (
         <div className="flex gap-2">
           <Button disabled={decision.isPending} onClick={() => decision.mutate('accept')}>
-            {t('allowOnce')}
+            {t(materialHash ? 'allowMaterialRead' : 'allowOnce')}
           </Button>
-          {approval?.read_until && (
+          {!materialHash && approval?.read_until && (
             <Button
               variant="outline"
               disabled={decision.isPending || Date.parse(approval.read_until) <= now.getTime()}
