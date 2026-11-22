@@ -1,7 +1,9 @@
 'use client'
 
 import { ChevronRightIcon, LoaderIcon, ShieldAlertIcon } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
+import Link from 'next/link'
+import { routes } from '@/lib/workbench/routes'
 import { useState } from 'react'
 
 import { Markdown } from '@/components/common/markdown'
@@ -346,7 +348,19 @@ export function TimelineEntry({
 }) {
   const t = useTranslations('work')
   const tc = useTranslations('conversation')
+  const locale = useLocale()
   switch (entry.kind) {
+    case 'delegation':
+      return (
+        <Link
+          className="text-sm underline"
+          href={
+            routes.askExpert(locale, entry.project, entry.session) + '&formalMatch=' + entry.match
+          }
+        >
+          {t('handover.openDelegation', { question: entry.question })}
+        </Link>
+      )
     case 'user':
       return (
         <div className="bg-muted rounded-lg px-3 py-2 text-sm whitespace-pre-wrap">

@@ -636,6 +636,7 @@
       "hide": "Hide"
     },
     "handover": {
+      "openDelegation": "Expert task and delivery · {question}",
       "given": "Handed to the expert",
       "returned": "The expert handed back",
       "stage": "Expert step: {title}",

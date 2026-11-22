@@ -128,6 +128,14 @@ export type Entry =
     }
   // 专家开始做哪一步。同一步重做不再摆一次：对话里只看过程，不数第几次（所有者 2026-10-14）
   | { kind: 'stage'; key: string; title: string }
+  | {
+      kind: 'delegation'
+      key: string
+      project: string
+      session: string
+      match: string
+      question: string
+    }
   // 专家这一步交回的原文（给验收看的 JSON）：默认折成一行，写它的一句说明，点开看原文（账 148）
   | { kind: 'returned'; key: string; summary: string | null; raw: string }
   | { kind: 'notice'; key: string; what: 'stopped' | 'failed' }
@@ -254,6 +262,21 @@ export function timeline(events: readonly ConversationEvent[]): Timeline {
       }
     }
     switch (event.type) {
+      case 'expert/delegation': {
+        const project = z.uuid().safeParse(payload.project_id)
+        const match = z.uuid().safeParse(payload.match_task_id)
+        if (project.success && match.success) {
+          entries.push({
+            kind: 'delegation',
+            key: `delegation:${match.data}`,
+            project: project.data,
+            session: event.session_id,
+            match: match.data,
+            question: text(payload.question),
+          })
+        }
+        break
+      }
       case 'turn/requested':
         entries.push({ kind: 'user', key: `user:${event.cursor}`, text: text(payload.text) })
         asked += 1

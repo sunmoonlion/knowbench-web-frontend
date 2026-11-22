@@ -36,6 +36,26 @@ describe('工作页的时间线', () => {
   const all = work()
   const line = timeline(all)
 
+  it('keeps the confirmed expert task attached to its source conversation', () => {
+    const project = '2569f98f-563c-4953-a573-00f98dfdb87c'
+    const match = 'ef8005c8-c14f-4802-9280-cc22556b5888'
+    const event = {
+      ...all[0],
+      type: 'expert/delegation',
+      payload: { project_id: project, match_task_id: match, question: 'receipt' },
+    }
+    expect(timeline([event]).entries).toEqual([
+      {
+        kind: 'delegation',
+        key: `delegation:${match}`,
+        session: event.session_id,
+        project,
+        match,
+        question: 'receipt',
+      },
+    ])
+  })
+
   it('shows the exact turn permission scope in a work approval', () => {
     const opened = {
       ...all[0],
