@@ -350,3 +350,80 @@ it('reopens the two-stage scope and confirms its exact quote without sending an 
   expect(await screen.findByText(t.confirmed)).toBeVisible()
   expect(fetcher).toHaveBeenCalledTimes(2)
 })
+
+it('sends a confirmed single-round review once with the chosen instruction version and opens its project task', async () => {
+  const id = '6f1c2b1e-3c5d-4a7e-9b8f-0d1e2f3a4b5c'
+  const digest = 'sha256:' + 'b'.repeat(64)
+  const scope = {
+    request_id: id,
+    case_id: 'check',
+    repetition: 1,
+    step: 'review',
+    scope_digest: digest,
+    review_digest: digest,
+  }
+  const option = {
+    pin: { credential_id: id, model: 'first', provider: 'one' },
+    family: 'first',
+    destination: 'https://example.test/v1/responses',
+    currency: 'CNY',
+    price_key: 'first',
+    price_as_of: '2026-11-22',
+    quote: { maximum: '0.02' },
+    maximum: '0.02',
+    digest,
+  }
+  const t = zh.reviewRouting
+  let dispatched = 0
+  const fetcher = vi.fn(async (path: string, init: RequestInit) => {
+    if (path.endsWith('/execution')) {
+      expect(init.method).toBe('POST')
+      expect(JSON.parse(String(init.body))).toEqual({
+        ...scope,
+        revision: 3,
+        option_digest: digest,
+        source_id: id,
+        version: 2,
+        digest,
+        session_id: id,
+      })
+      dispatched++
+      return Response.json({ task_id: id, state: 'RECEIVED' })
+    }
+    expect(path.endsWith('/route-preview')).toBe(true)
+    return Response.json({
+      review_digest: digest,
+      artifact: id,
+      version: 1,
+      revision: 3,
+      confirmed: digest,
+      recommended: digest,
+      gap: null,
+      requirement: 'isolated_reviewer',
+      planned_producer: null,
+      handoff: { report: digest },
+      deferred: null,
+      rounds: 1,
+      options: [option],
+      isolated_execution_available: !dispatched,
+      execution: dispatched
+        ? { task_id: id, session_id: id, project_id: id, state: 'RECEIVED' }
+        : {
+            sessions: [{ id, title: 'Review project' }],
+            sources: [{ source_id: id, name: 'Independent assessment', version: 2, digest }],
+          },
+    })
+  })
+  vi.stubGlobal('fetch', fetcher)
+  page(<BranchRouteScreen link={{ run_id: id, ...scope }} />)
+  const start = await screen.findByRole('button', { name: t.startReview })
+  expect(start).toBeDisabled()
+  fireEvent.change(screen.getByLabelText(t.instruction), { target: { value: id + '/2' } })
+  fireEvent.change(screen.getByLabelText(t.session), { target: { value: id } })
+  fireEvent.click(start)
+  expect(await screen.findByRole('link', { name: new RegExp(t.openReview) })).toHaveAttribute(
+    'href',
+    expect.stringContaining(id),
+  )
+  expect(dispatched).toBe(1)
+})

@@ -52,7 +52,24 @@ const routeView = z.object({
   handoff: z.record(z.string(), digest),
   deferred: z.object({ assessment_output: z.string(), assessment_digest: digest }).nullable(),
   rounds: z.number().int(),
-  isolated_execution_available: z.literal(false),
+  isolated_execution_available: z.boolean(),
+  execution: z
+    .union([
+      z.object({ unavailable: z.enum(['routeNotLoaded', 'executorUnavailable']) }),
+      z.object({
+        task_id: z.uuid(),
+        session_id: z.uuid(),
+        project_id: z.uuid(),
+        state: z.string(),
+      }),
+      z.object({
+        sessions: z.array(z.object({ id: z.uuid(), title: z.string().nullable() })),
+        sources: z.array(
+          z.object({ source_id: z.uuid(), version: z.number().int(), digest, name: z.string() }),
+        ),
+      }),
+    ])
+    .nullish(),
   options: z.array(reviewerOption.extend({ digest, maximum: z.string() })),
 })
 export async function branchRoute(
@@ -70,4 +87,28 @@ export async function branchRoute(
   )
   if (response.review_digest !== scope.review_digest) throw new Error('review changed')
   return response
+}
+
+export async function startReview(
+  link: BranchLink,
+  csrfToken: string,
+  selection: {
+    session_id: string
+    source_id: string
+    version: number
+    digest: string
+    revision: number
+    option_digest: string
+  },
+) {
+  const { run_id, ...scope } = link
+  return sendJson(
+    z.object({ task_id: z.uuid(), state: z.string() }),
+    '/api/workbench/reviews/' + encodeURIComponent(run_id) + '/execution',
+    {
+      csrfToken,
+      method: 'POST',
+      body: { ...scope, ...selection },
+    },
+  )
 }

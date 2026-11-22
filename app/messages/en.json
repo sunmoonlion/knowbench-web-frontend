@@ -11,7 +11,7 @@
     "ceiling": "Up to {currency} {amount} for {rounds} round(s), priced on {date}. Rework requires a new confirmation.",
     "confirmed": "Route selection saved",
     "confirm": "Confirm route and handoff scope",
-    "pendingIsolation": "Isolated execution is pending. This saves your selection. No charge has been incurred.",
+    "pendingIsolation": "Single-round execution requires a confirmed connection available to the isolated worker. Two-stage and mandatory cross-family execution are pending.",
     "reload": "Check again",
     "v0_failed": "Deterministic checks failed. Handoff is blocked.",
     "sandbox_unavailable": "No available sandbox.",
@@ -29,7 +29,16 @@
     "connection_unavailable": "No eligible reviewer connection for this account.",
     "price_missing": "No price is available for this model.",
     "family_unverified": "Model family is unverified.",
-    "different_family_unavailable": "No different model family is available."
+    "different_family_unavailable": "No different model family is available.",
+    "openReview": "Open review task and artifacts",
+    "sendScope": "Send the selected instruction and the listed first-round outputs under the confirmed spending limit.",
+    "instruction": "Review instruction version",
+    "session": "Expert project session",
+    "select": "Choose",
+    "startReview": "Start independent review",
+    "missingInputs": "Register a review instruction and prepare an idle expert project session on the current sandbox.",
+    "routeNotLoaded": "The confirmed route differs from the credential, model or endpoint loaded for this worker.",
+    "executorUnavailable": "The dedicated instruction worker or its tariff is unavailable."
   },
   "formalIntake": {
     "named": "This round checks only method {id}, version {version}.",

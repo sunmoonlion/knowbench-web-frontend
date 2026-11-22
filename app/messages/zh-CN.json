@@ -11,7 +11,7 @@
     "ceiling": "本次 {rounds} 轮费用上限 {currency} {amount}，价目日期 {date}。返工需另行确认。",
     "confirmed": "已保存本次路由选择",
     "confirm": "确认本次路由和交接范围",
-    "pendingIsolation": "隔离执行待接入。此处仅保存选择，费用尚未发生。",
+    "pendingIsolation": "单轮复核需先确认当前隔离环境可用的连接。双轮及强制跨家族复核仍待接入。",
     "reload": "重新核对",
     "v0_failed": "确定性检查未通过，无法交接。",
     "sandbox_unavailable": "当前没有可用沙箱。",
@@ -29,7 +29,16 @@
     "connection_unavailable": "当前账号没有满足条件的复核连接。",
     "price_missing": "当前模型缺少报价。",
     "family_unverified": "模型家族尚未核实。",
-    "different_family_unavailable": "当前没有不同家族的可用模型。"
+    "different_family_unavailable": "当前没有不同家族的可用模型。",
+    "openReview": "查看复核委托和产物",
+    "sendScope": "将发送所选复核指令的正文及上列首轮输出，按本次确认的费用上限建立独立委托。",
+    "instruction": "复核指令版本",
+    "session": "项目中的专家会话",
+    "select": "请选择",
+    "startReview": "开始单轮独立复核",
+    "missingInputs": "请先在方法技能管理中心登记复核指令，并在当前沙箱的项目中准备一个空闲专家会话。",
+    "routeNotLoaded": "确认的连接、模型或目的地址与当前执行单元可用的路由不一致。",
+    "executorUnavailable": "专用指令执行单元或其报价当前不可用。"
   },
   "formalIntake": {
     "named": "本轮仅核对指定方法 {id} 的第 {version} 版。",
