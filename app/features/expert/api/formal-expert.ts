@@ -2,7 +2,10 @@ import { z } from 'zod'
 import { formalMethodReferenceSchema as pin } from '@/lib/workbench/formal-method-reference'
 import { getJson, seg, sendJson } from '@/lib/workbench/http'
 
-const started = z.union([z.object({ task_id: z.uuid() }), z.object({ empty: z.literal(true) })])
+const started = z.union([
+  z.object({ task_id: z.uuid() }),
+  z.object({ empty: z.literal(true), next: z.number().int().positive().nullable() }),
+])
 const receipt = z.object({ review_digest: z.string(), reference: pin })
 const entry = z.object({
   reference: pin,
@@ -61,6 +64,7 @@ export const startRound = (
     revises?: string
     reference?: z.infer<typeof pin>
     source_session?: string
+    directory_offset?: number
   },
 ) =>
   sendJson(started, `/api/workbench/projects/${seg(project)}/find-expert`, {

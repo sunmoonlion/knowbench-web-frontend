@@ -271,3 +271,40 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
     body: { reference: refs[1], review_digest: review },
   })
 })
+
+it('空窗口只在用户继续查找时翻页，改题从头查，查尽后撤下继续入口', async () => {
+  const project = '11111111-1111-4111-8111-111111111111'
+  const requests: { question: string; directory_offset?: number }[] = []
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: string, init: RequestInit = {}) => {
+      const path = String(input).split('?')[0]
+      if (init.method === 'POST' && path.endsWith('/find-expert')) {
+        const body = JSON.parse(String(init.body))
+        requests.push(body)
+        return Response.json({ empty: true, next: body.directory_offset ? null : 96 })
+      }
+      return Response.json(sample(path) ?? {})
+    }),
+  )
+  page(<AskExpertScreen project={project} from={null} expert={null} />)
+  const question = screen.getByRole('textbox', { name: messages.askExpert.question })
+  const start = () => screen.getByRole('button', { name: messages.formalIntake.title })
+  fireEvent.change(question, { target: { value: '原题' } })
+  fireEvent.click(start())
+  await screen.findByText(messages.formalIntake.emptyWindow)
+  expect(requests).toHaveLength(1)
+  fireEvent.change(question, { target: { value: '新题' } })
+  expect(screen.queryByText(messages.formalIntake.emptyWindow)).toBeNull()
+  fireEvent.click(start())
+  await screen.findByText(messages.formalIntake.emptyWindow)
+  const next = screen.getByRole('button', { name: messages.formalIntake.continueSearch })
+  fireEvent.click(next)
+  await screen.findByText(messages.formalIntake.empty)
+  expect(screen.queryByRole('button', { name: messages.formalIntake.continueSearch })).toBeNull()
+  expect(requests.map((r) => [r.question, r.directory_offset])).toEqual([
+    ['原题', undefined],
+    ['新题', undefined],
+    ['新题', 96],
+  ])
+})

@@ -40,10 +40,13 @@ export function FormalExpertIntake({
     }
   }
   const [task, setTask] = useState(param)
-  const [empty, setEmpty] = useState('')
+  const [empty, setEmpty] = useState<{ search: string; next: number | null } | null>(null)
   const pending = useRef<{ identity: string; key: string } | null>(null)
   const locked = useRef(false)
   const current = question.trim()
+  const search = JSON.stringify([project, from, task, current, named])
+  const emptyPage = empty?.search === search ? empty : null
+  const offset = emptyPage?.next ?? 0
   const round = useQuery({
     queryKey: ['formal-expert-round', project, task],
     enabled: !!task,
@@ -63,7 +66,7 @@ export function FormalExpertIntake({
   const start = useMutation({
     mutationFn: async () => {
       const storageKey = `workbench.formal-intake.${project}`
-      const identity = JSON.stringify([project, from, task, current, named])
+      const identity = offset ? JSON.stringify([search, offset]) : search
       if (!pending.current || pending.current.identity !== identity) {
         let key = crypto.randomUUID()
         try {
@@ -82,6 +85,7 @@ export function FormalExpertIntake({
       const result = await startRound(project, csrfToken, {
         idempotency_key: pending.current.key,
         question: current,
+        ...(offset ? { directory_offset: offset } : {}),
         ...(reference ? { reference } : {}),
         ...(task ? { revises: task } : {}),
         ...(from ? { source_session: from } : {}),
@@ -91,7 +95,7 @@ export function FormalExpertIntake({
       if (id) url.searchParams.set('formalMatch', id)
       window.history.replaceState(window.history.state, '', url)
       if (id) setTask(id)
-      setEmpty(id ? '' : current)
+      setEmpty('empty' in result ? { search, next: result.next } : null)
       pending.current = null
       try {
         sessionStorage.removeItem(storageKey)
@@ -143,10 +147,10 @@ export function FormalExpertIntake({
           }
         }}
       >
-        {t('title')}
+        {emptyPage?.next ? t('continueSearch') : t('title')}
       </Button>
       <p className="text-muted-foreground text-sm">{t('cost')}</p>
-      {empty === current && !!empty && <p role="status">{t('empty')}</p>}
+      {emptyPage && <p role="status">{emptyPage.next ? t('emptyWindow') : t('empty')}</p>}
       {round.data?.superseded_by && (
         <a
           className="underline"

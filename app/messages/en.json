@@ -7,6 +7,8 @@
     "title": "Match registered experts",
     "cost": "Matching uses your model with a ¥2 cap. Execution scope and cost are confirmed separately.",
     "empty": "No usable expert version was found in the catalog range checked this round.",
+    "continueSearch": "Search the next batch for experts",
+    "emptyWindow": "This batch contained no eligible experts. More versions remain. The model has not been started.",
     "working": "Comparing the question with expert deliverables…",
     "failed": "Matching did not finish. You can retry.",
     "unavailable": "The match or current access could not be verified.",
