@@ -81,8 +81,8 @@ export function FormalHandoff({
           </label>
           {attach && (
             <ul>
-              {proposal.methods.map((m) => (
-                <li key={m.method_id}>
+              {proposal.methods.map((m, step) => (
+                <li key={`${step}:${m.method_id}:${m.version}`}>
                   {m.method_id} · v{m.version}
                 </li>
               ))}

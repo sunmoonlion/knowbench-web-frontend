@@ -130,17 +130,6 @@ function DecisionEditor({
                 value={i.artifact_id}
                 onChange={(e) => patch(n, { artifact_id: e.target.value, quote: '' })}
               >
-                {data.missing_stages.length > 0 && (
-                  <p role="status">
-                    {t('missingStages', {
-                      stages: data.missing_stages
-                        .map((stage) =>
-                          t(stage === 'direct' ? 'independentReport' : 'comparisonReport'),
-                        )
-                        .join(' / '),
-                    })}
-                  </p>
-                )}
                 {data.reports.map((r) => (
                   <option key={r.id} value={r.id}>
                     {t(r.step === 'direct' ? 'independentReport' : 'comparisonReport')}
