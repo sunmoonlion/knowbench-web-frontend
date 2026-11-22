@@ -115,3 +115,28 @@ export const selectVersion = (
     csrfToken,
     body: { reference, review_digest },
   })
+
+const partialOption = z.object({
+  artifact: z.object({ step_id: z.string(), version: z.number(), digest: z.string() }),
+  output_names: z.array(z.string()),
+  applicable_promises: z.array(z.string()),
+})
+const partialResponse = z.object({
+  report: z
+    .object({
+      scope_digest: z.string(),
+      options: z.array(partialOption),
+      missing_steps: z.array(z.string()),
+      promises: z.record(z.string(), z.string()),
+      received: z.array(z.object({ step: z.string(), outputs: z.record(z.string(), z.json()) })),
+    })
+    .nullable(),
+})
+
+const partialPath = (task: string) => `/api/workbench/tasks/${seg(task)}/partial-delivery`
+export const readPartial = (task: string) => getJson(partialResponse, partialPath(task))
+export const receivePartial = (
+  task: string,
+  csrfToken: string,
+  body: { step: string; scope_digest: string },
+) => sendJson(partialResponse, partialPath(task), { method: 'PUT', csrfToken, body })

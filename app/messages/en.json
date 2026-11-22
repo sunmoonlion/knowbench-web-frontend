@@ -130,7 +130,9 @@
     "scriptEnvironment": "The script uses the configured isolated environment. Review the rate and maximum charge in the execution preview.",
     "scriptRate": "¥{rate} per container-second, up to {seconds} seconds.",
     "priceCeiling": "Verified execution cost ceiling: ¥{amount}.",
+    "selectedByInput": "{step} selects {method} v{version} when {input} is “{value}”",
     "previewIssues": {
+      "candidate_unmatched": "No frozen choice matches the input. Edit the routing value and review the steps again.",
       "collaboration": "This graph requires collaboration isolation or handoffs.",
       "material_authority_required": "Material references still require an authorized read binding.",
       "driver_unavailable": "The isolated execution service or adapter required by this step is unavailable.",

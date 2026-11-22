@@ -44,6 +44,17 @@ export function ExecutionPreview({
       {read.isError && <p role="alert">{t('previewFailed')}</p>}
       {result && (
         <>
+          {result.choices?.map((choice) => (
+            <p key={choice.step}>
+              {t('selectedByInput', {
+                step: choice.step,
+                input: choice.input,
+                value: choice.value,
+                method: choice.reference.method_id,
+                version: choice.reference.version,
+              })}
+            </p>
+          ))}
           {result.subexperts?.length ? (
             <details>
               <summary>{t('nestedExperts')}</summary>

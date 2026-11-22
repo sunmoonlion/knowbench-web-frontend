@@ -49,6 +49,11 @@ export const savePreparation = (
 const methodRef = z.object({ method_id: z.uuid(), version: z.number().int(), digest: z.string() })
 const preview = z.object({
   scope_hours: z.number().int().positive().optional(),
+  choices: z
+    .array(
+      z.object({ step: z.string(), input: z.string(), value: z.string(), reference: methodRef }),
+    )
+    .optional(),
   subexperts: z
     .array(
       z.object({
