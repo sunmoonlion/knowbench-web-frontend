@@ -71,6 +71,7 @@ export function useRunActions(task: string) {
       mutationFn: (input: {
         pending: string
         token: string
+        subject_digest?: string
         decision: string
         answer?: Record<string, unknown>
       }) =>
@@ -78,6 +79,7 @@ export function useRunActions(task: string) {
           csrfToken,
           body: {
             token: input.token,
+            ...(input.subject_digest ? { subject_digest: input.subject_digest } : {}),
             decision: input.decision,
             ...(input.answer ? { answer: input.answer } : {}),
           },

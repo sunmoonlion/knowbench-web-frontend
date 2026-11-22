@@ -458,6 +458,7 @@ export const reviewSchema = z
         // 工具级审批与提问卡多带的：哪一步、后面谁依赖、刚拒绝过、问题清单
         subject: z
           .object({
+            digest: z.string().nullable().optional(),
             connector_call_id: uuid.optional(),
             command: z.string().nullable().optional(),
             cwd: z.string().nullable().optional(),
@@ -653,6 +654,7 @@ export const reviewPlaceSchema = z
           .loose(),
         subject: z
           .object({
+            digest: z.string().nullable().optional(),
             connector_call_id: uuid.optional(),
             command: z.string().nullable().optional(),
             cwd: z.string().nullable().optional(),

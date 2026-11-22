@@ -49,6 +49,9 @@ export const savePreparation = (
 const methodRef = z.object({ method_id: z.uuid(), version: z.number().int(), digest: z.string() })
 const preview = z.object({
   scope_hours: z.number().int().positive().optional(),
+  review_budget: z
+    .object({ max_reworks: z.number().int(), maximum_with_reworks: z.string().nullable() })
+    .optional(),
   object_batch: z
     .object({
       maximum: z.number().int(),
@@ -97,6 +100,7 @@ const preview = z.object({
       reference: methodRef,
       material: material.optional(),
       independent_review_of: z.string().optional(),
+      review_phase: z.enum(['blind', 'comparison', 'revision']).optional(),
       from_outputs: z.record(
         z.string(),
         z.object({ step: z.array(z.string()), output: z.string() }),
@@ -109,6 +113,8 @@ const preview = z.object({
           maximum_seconds: z.number().int().positive().optional(),
           provider: z.string().optional(),
           model: z.string().optional(),
+          family: z.string().optional(),
+          credential_id: z.uuid().optional(),
           destination: z.string().optional(),
           fields: z.array(z.string()).optional(),
         })

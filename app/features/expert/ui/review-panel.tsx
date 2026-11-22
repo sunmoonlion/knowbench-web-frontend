@@ -10,7 +10,14 @@ import type { Review } from '@/contracts/workbench-v2'
 
 export type ReviewAnswer = { decision: string; answer?: Record<string, unknown> }
 // 这几种选项可以附一句话：拒绝附话 = 告诉它怎么改；停下 / 重做附话 = 这一步重做时的要求
-const WITH_NOTE = new Set(['decline', 'cancel', 'rework'])
+const WITH_NOTE = new Set([
+  'decline',
+  'cancel',
+  'rework',
+  'accept_delivery',
+  'confirm_route',
+  'stop',
+])
 
 // 审查面：专家停下来问我。为什么停、哪几条没过、每个选项选了会怎样、问题保留到什么时候。
 // 这些话都是后端写的；页面不自己编「选了会怎样」。

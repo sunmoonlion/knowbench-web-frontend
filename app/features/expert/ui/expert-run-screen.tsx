@@ -152,7 +152,13 @@ export function ExpertRunScreen({ task }: { task: string }) {
               failed={act.answer.isError}
               onAnswer={(answer) => {
                 const token = pending ? tokenOf(events, pending) : null
-                if (pending && token) act.answer.mutate({ pending, token, ...answer })
+                if (pending && token)
+                  act.answer.mutate({
+                    pending,
+                    token,
+                    subject_digest: review.data?.subject?.digest ?? undefined,
+                    ...answer,
+                  })
               }}
             />
           ) : null}

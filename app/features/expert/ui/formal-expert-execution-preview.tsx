@@ -94,6 +94,7 @@ export function ExecutionPreview({
             {result.steps.map((s) => (
               <li key={s.path.join('/')}>
                 <strong>{s.title}</strong> · {s.path.join(' / ')} · v{s.reference.version}
+                {s.review_phase && <p>{t(s.review_phase)}</p>}
                 {s.independent_review_of && (
                   <p>{t('independentReviewOf', { step: s.independent_review_of })}</p>
                 )}
@@ -109,7 +110,8 @@ export function ExecutionPreview({
                 )}
                 {s.quote?.provider && (
                   <p>
-                    {s.quote.provider} · {s.quote.model} · {s.quote.destination}
+                    {s.quote.provider} · {s.quote.model} {s.quote.family} · {s.quote.destination}{' '}
+                    {s.quote.credential_id}
                     {s.quote.fields?.length ? ' · ' + s.quote.fields.join(', ') : ''}
                   </p>
                 )}
@@ -139,6 +141,14 @@ export function ExecutionPreview({
               ? t('unknownPrice')
               : t('priceCeiling', { amount: result.estimated_maximum })}
           </p>
+          {result.review_budget && result.review_budget.maximum_with_reworks && (
+            <p>
+              {t('reviewBudget', {
+                count: result.review_budget.max_reworks,
+                amount: result.review_budget.maximum_with_reworks,
+              })}
+            </p>
+          )}
           {result.dispatch_gap && result.dispatch_gap !== 'preview_incomplete' && (
             <p>{t(`previewIssues.${result.dispatch_gap}`)}</p>
           )}

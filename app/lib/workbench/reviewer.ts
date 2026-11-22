@@ -49,6 +49,9 @@ const routeView = z.object({
   gap: z.string().nullable(),
   requirement: z.enum(['isolated_reviewer', 'different_model_family']),
   planned_producer: z.object({ provider: z.string(), model: z.string() }).nullable(),
+  verified_producer: z
+    .object({ provider: z.string(), model: z.string(), family: z.string() })
+    .optional(),
   handoff: z.record(z.string(), digest),
   deferred: z.object({ assessment_output: z.string(), assessment_digest: digest }).nullable(),
   rounds: z.number().int(),

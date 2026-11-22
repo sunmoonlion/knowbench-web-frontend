@@ -61,7 +61,9 @@ export function BranchRouteScreen({ link }: { link: BranchLink }) {
           <p>{t(data.requirement)}</p>
           {data.planned_producer && (
             <p>
-              {t('producer')} · {data.planned_producer.provider} / {data.planned_producer.model}
+              {t(data.verified_producer ? 'verifiedProducer' : 'producer')} ·{' '}
+              {data.planned_producer.provider} / {data.planned_producer.model}{' '}
+              {data.verified_producer?.family}
             </p>
           )}
           {Object.keys(data.handoff).length > 0 && (

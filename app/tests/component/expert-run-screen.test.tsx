@@ -53,6 +53,7 @@ let withoutNow = false
 let supplyingData = false
 let withKnowbase = false
 let methodView: Run | null = null
+let adjudication = false
 let dataPreparation = false
 
 beforeEach(() => {
@@ -61,6 +62,7 @@ beforeEach(() => {
   supplyingData = false
   withKnowbase = false
   methodView = null
+  adjudication = false
   dataPreparation = false
   vi.stubGlobal('EventSource', FakeEventSource)
   vi.stubGlobal(
@@ -104,6 +106,21 @@ beforeEach(() => {
               pending: { ...review.pending, title: '数据准备已暂停' },
             },
           }
+        }
+      }
+      if (adjudication && body && method === 'GET' && path.includes('/interactions/')) {
+        const { interaction } = body as { interaction: Review }
+        body = {
+          interaction: {
+            ...interaction,
+            kind: 'review_adjudication',
+            pending: {
+              ...interaction.pending,
+              title: '委托人裁定',
+              options: [{ id: 'accept_delivery', label: '接收当前版本', consequence: '保留分歧' }],
+            },
+            subject: { ...interaction.subject, digest: 'a'.repeat(64) },
+          },
         }
       }
       if (supplyingData && method === 'GET' && path.endsWith('/steps') && body) {
@@ -299,6 +316,19 @@ describe('专家处理中', () => {
     for (const button of rail.getAllByRole('button'))
       expect(button).toHaveAttribute('title', '还没做')
     expect(calls.some((call) => call.method === 'POST')).toBe(false)
+  })
+
+  it('submits the exact evidence digest when the owner adjudicates the reviewed delivery', async () => {
+    adjudication = true
+    page(conversationOf('专家停下来了：勾稽不平'))
+    const review = within(await screen.findByRole('region', { name: '委托人裁定' }))
+    fireEvent.click(review.getByRole('button', { name: '接收当前版本' }))
+    await waitFor(() =>
+      expect(calls.find((c) => c.path.endsWith('/respond'))?.body).toMatchObject({
+        decision: 'accept_delivery',
+        subject_digest: 'a'.repeat(64),
+      }),
+    )
   })
 
   it('专家停下来问我：哪条没过、每个选项选了会怎样；答复带着凭证', async () => {
