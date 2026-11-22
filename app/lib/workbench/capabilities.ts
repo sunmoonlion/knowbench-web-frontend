@@ -360,6 +360,33 @@ const formalScriptCallDetail = callDetail
       .strict(),
   })
   .strict()
+const directSource = formalFunctionCallDetail.shape.registered_source.extend({
+  kind: z.enum(['registered_script', 'registered_instruction']),
+})
+const directScriptCallDetail = formalScriptCallDetail.extend({
+  source_asset_id: z.null(),
+  registered_source: directSource.extend({ kind: z.literal('registered_script') }),
+})
+const instructionCallDetail = callDetail
+  .extend({
+    execution_kind: z.literal('formal_instruction'),
+    source_asset_id: z.uuid(),
+    connection_id: z.null(),
+    instruction_quote: z
+      .object({
+        provider: z.string(),
+        model: z.string(),
+        destination: z.string(),
+        maximum: z.string(),
+        currency: z.string(),
+      })
+      .strict(),
+  })
+  .strict()
+const directInstructionCallDetail = instructionCallDetail.extend({
+  source_asset_id: z.null(),
+  registered_source: directSource.extend({ kind: z.literal('registered_instruction') }),
+})
 const registryScriptCallDetail = formalScriptCallDetail.extend({
   execution_kind: z.literal('registry_script'),
   source_asset_id: z.null(),
@@ -424,6 +451,9 @@ export const callSchema = z
       modelCallDetail,
       hostCallDetail,
       formalScriptCallDetail,
+      directScriptCallDetail,
+      instructionCallDetail,
+      directInstructionCallDetail,
       formalFunctionCallDetail,
       registryScriptCallDetail,
       modelProbeCallDetail,

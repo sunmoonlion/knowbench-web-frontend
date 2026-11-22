@@ -88,7 +88,18 @@ const preview = z.object({
         z.string(),
         z.object({ step: z.array(z.string()), output: z.string() }),
       ),
-      quote: z.object({ maximum: z.string(), currency: z.literal('CNY') }).nullable(),
+      quote: z
+        .object({
+          maximum: z.string(),
+          currency: z.literal('CNY'),
+          per_container_second: z.string().optional(),
+          maximum_seconds: z.number().int().positive().optional(),
+          provider: z.string().optional(),
+          model: z.string().optional(),
+          destination: z.string().optional(),
+          fields: z.array(z.string()).optional(),
+        })
+        .nullable(),
     }),
   ),
 })

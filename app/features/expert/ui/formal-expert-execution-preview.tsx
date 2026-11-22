@@ -67,6 +67,20 @@ export function ExecutionPreview({
                 <strong>{s.title}</strong> · {s.path.join(' / ')} · v{s.reference.version}
                 {s.account && <span> · {s.account}</span>}
                 {s.quote && ' · ¥' + s.quote.maximum}
+                {s.quote?.per_container_second && s.quote.maximum_seconds && (
+                  <p>
+                    {t('scriptRate', {
+                      rate: s.quote.per_container_second,
+                      seconds: s.quote.maximum_seconds,
+                    })}
+                  </p>
+                )}
+                {s.quote?.provider && (
+                  <p>
+                    {s.quote.provider} · {s.quote.model} · {s.quote.destination}
+                    {s.quote.fields?.length ? ' · ' + s.quote.fields.join(', ') : ''}
+                  </p>
+                )}
                 {s.material && (
                   <p className="break-all">
                     {s.material.material_id} · v{s.material.version_no} · SHA-256{' '}

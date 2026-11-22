@@ -96,9 +96,13 @@ export function CapabilityActionCard({
           : call.detail.tool.name}{' '}
         · {t.has(`state.${call.status}`) ? t(`state.${call.status}`) : call.status}
       </h4>
-      {['formal_mcp', 'formal_method', 'formal_script', 'formal_function'].includes(
-        call.detail.execution_kind ?? '',
-      ) ? (
+      {[
+        'formal_mcp',
+        'formal_method',
+        'formal_script',
+        'formal_function',
+        'formal_instruction',
+      ].includes(call.detail.execution_kind ?? '') ? (
         <p>{t('formalMethodCall')}</p>
       ) : null}
       {call.detail.execution_kind === 'formal_method_model' ? (
@@ -130,6 +134,16 @@ export function CapabilityActionCard({
           {t('purpose')}：{call.detail.purpose}
         </p>
       ) : null}
+      {call.detail.execution_kind === 'formal_instruction' && (
+        <p>{t('instructionQuote', call.detail.instruction_quote)}</p>
+      )}
+      {'registered_source' in call.detail &&
+        call.detail.registered_source.kind.startsWith('registered_') && (
+          <p className="break-all">
+            {call.detail.registered_source.entry} · v{call.detail.registered_source.version} ·{' '}
+            {call.detail.registered_source.digest}
+          </p>
+        )}
       {call.detail.execution_kind === 'formal_script' ? (
         <p>
           {t('scriptQuote', {

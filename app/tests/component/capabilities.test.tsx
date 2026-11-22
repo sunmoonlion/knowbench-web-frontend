@@ -241,6 +241,45 @@ it('shows the approved container rate and root budget ceiling for a formal scrip
   expect(screen.getByText(zh.capabilities.formalMethodCall)).toBeVisible()
 })
 
+it('shows the registered instruction, destination and maximum before approval', async () => {
+  const call = calls.calls[0]
+  const detail: Record<string, unknown> = { ...call.detail }
+  for (const key of ['selection_revision', 'runtime', 'method']) delete detail[key]
+  calls.calls[0] = callSchema.parse({
+    ...call,
+    connection_id: null,
+    source_asset_id: null,
+    detail: {
+      ...detail,
+      source_asset_id: null,
+      connection_id: null,
+      execution_kind: 'formal_instruction',
+      instruction_quote: {
+        provider: 'example',
+        model: 'test-model',
+        currency: 'CNY',
+        maximum: '0.05',
+        destination: 'https://provider.example/responses',
+      },
+      registered_source: {
+        source: call.id,
+        version: '1',
+        kind: 'registered_instruction',
+        entry: 'review.md',
+        asset_id: null,
+        asset_revision: null,
+        digest: 'sha256:' + 'a'.repeat(64),
+        license_basis: 'owner',
+      },
+    },
+  })
+  page(<PendingConnectorAction sessionId={selection.session_id} callId={call.id} />)
+  expect(await screen.findByText(/test-model.*provider.example\/responses.*CNY 0.05/)).toBeVisible()
+  expect(screen.getByText(/review.md.*v1.*sha256/)).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.allowOnce }))
+  await waitFor(() => expect(writes.some((w) => w.path.endsWith('/decision'))).toBe(true))
+})
+
 it('returns a script result with a real artifact download URL', async () => {
   const call = calls.calls[0]
   call.detail.execution_kind = 'skill_script'
