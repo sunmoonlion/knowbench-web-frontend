@@ -26,12 +26,15 @@ export function PartialDelivery({ task }: { task: string }) {
     <section className="space-y-2">
       <h3>{t('partialTitle')}</h3>
       <p>{t('partialMissing', { steps: report.missing_steps.join(', ') })}</p>
-      {report.options.map(({ artifact, output_names, applicable_promises }) => {
+      {report.missing_objects?.length ? (
+        <p>{t('partialObjects', { objects: report.missing_objects.join(', ') })}</p>
+      ) : null}
+      {report.options.map(({ artifact, output_names, applicable_promises, object_id }) => {
         const receipt = report.received.find((r) => r.step === artifact.step_id)
         return (
           <div key={artifact.step_id}>
             <p>
-              {artifact.step_id} · v{artifact.version} · {output_names.join(', ')}
+              {object_id ?? artifact.step_id} · v{artifact.version} · {output_names.join(', ')}
             </p>
             <p>
               {t('partialPromises', {

@@ -49,6 +49,13 @@ export const savePreparation = (
 const methodRef = z.object({ method_id: z.uuid(), version: z.number().int(), digest: z.string() })
 const preview = z.object({
   scope_hours: z.number().int().positive().optional(),
+  object_batch: z
+    .object({
+      maximum: z.number().int(),
+      on_missing: z.enum(['stop', 'request_partial']),
+      members: z.array(z.object({ step: z.string(), object_id: z.string() })),
+    })
+    .optional(),
   choices: z
     .array(
       z.object({ step: z.string(), input: z.string(), value: z.string(), reference: methodRef }),

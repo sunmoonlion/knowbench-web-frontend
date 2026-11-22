@@ -131,7 +131,12 @@
     "scriptRate": "¥{rate} per container-second, up to {seconds} seconds.",
     "priceCeiling": "Verified execution cost ceiling: ¥{amount}.",
     "selectedByInput": "{step} selects {method} v{version} when {input} is “{value}”",
+    "batchScope": "This list contains {count} objects, with a limit of {maximum}.",
+    "batchStop": "Stop delivery if an object is missing.",
+    "batchPartial": "Ask the owner to confirm partial scope if objects are missing.",
+    "partialObjects": "Missing objects: {objects}",
     "previewIssues": {
+      "invalid_object_list": "Provide a bounded list of unique, nonempty object identifiers.",
       "candidate_unmatched": "No frozen choice matches the input. Edit the routing value and review the steps again.",
       "collaboration": "This graph requires collaboration isolation or handoffs.",
       "material_authority_required": "Material references still require an authorized read binding.",

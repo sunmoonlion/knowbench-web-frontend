@@ -117,6 +117,7 @@ export const selectVersion = (
   })
 
 const partialOption = z.object({
+  object_id: z.string().optional(),
   artifact: z.object({ step_id: z.string(), version: z.number(), digest: z.string() }),
   output_names: z.array(z.string()),
   applicable_promises: z.array(z.string()),
@@ -127,6 +128,7 @@ const partialResponse = z.object({
       scope_digest: z.string(),
       options: z.array(partialOption),
       missing_steps: z.array(z.string()),
+      missing_objects: z.array(z.string()).optional(),
       promises: z.record(z.string(), z.string()),
       received: z.array(z.object({ step: z.string(), outputs: z.record(z.string(), z.json()) })),
     })

@@ -131,7 +131,12 @@
     "scriptRate": "按容器实际运行时间计费，每秒 ¥{rate}，最多 {seconds} 秒。",
     "priceCeiling": "已核步骤的执行费用上限为 ¥{amount}。",
     "selectedByInput": "{step} 按 {input} 的值「{value}」选中 {method} v{version}",
+    "batchScope": "本次清单有 {count} 个对象，上限为 {maximum} 个。",
+    "batchStop": "缺项时停止交付。",
+    "batchPartial": "缺项时由委托人确认部分范围。",
+    "partialObjects": "未交付对象：{objects}",
     "previewIssues": {
+      "invalid_object_list": "清单须包含范围内的非空、不重复对象编号。",
       "candidate_unmatched": "输入未命中冻结的选择规则，请更正对应输入后重新预览。",
       "collaboration": "此图要求协作隔离或交接能力。",
       "material_authority_required": "资料仍需绑定到获准的实际读取步骤。",

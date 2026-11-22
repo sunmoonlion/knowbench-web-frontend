@@ -44,6 +44,24 @@ export function ExecutionPreview({
       {read.isError && <p role="alert">{t('previewFailed')}</p>}
       {result && (
         <>
+          {result.object_batch && (
+            <section>
+              <p>
+                {t('batchScope', {
+                  count: result.object_batch.members.length,
+                  maximum: result.object_batch.maximum,
+                })}
+              </p>
+              <p>{t(result.object_batch.on_missing === 'stop' ? 'batchStop' : 'batchPartial')}</p>
+              <ul>
+                {result.object_batch.members.map((m) => (
+                  <li key={m.step}>
+                    {m.object_id} · {m.step}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           {result.choices?.map((choice) => (
             <p key={choice.step}>
               {t('selectedByInput', {
