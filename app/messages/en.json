@@ -2006,6 +2006,8 @@
     "nextPage": "Next page"
   },
   "directRegistry": {
+    "withdraw": "Withdraw source",
+    "withdrawConfirm": "Withdraw all versions of {name}? New runs and pending dispatches will lose access.",
     "scope": "Register a script file or instruction text, then inspect or reference its exact version.",
     "create": "New registration",
     "kind": "Type",

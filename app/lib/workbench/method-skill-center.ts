@@ -93,6 +93,12 @@ export const loadSource = (s: DirectSource) =>
     source.extend({ content: z.string() }),
     `${sourcePath}/${s.source_id}/${s.version}?digest=${encodeURIComponent(s.digest)}`,
   )
+export const withdrawSource = (s: DirectSource, csrfToken: string) =>
+  sendJson(
+    z.object({ withdrawn: z.literal(true) }),
+    `${sourcePath}/${s.source_id}/${s.version}?digest=${encodeURIComponent(s.digest)}`,
+    { method: 'DELETE', csrfToken },
+  )
 export const saveSource = (id: string, version: number, body: SourceInput, csrfToken: string) =>
   sendJson(source, `${sourcePath}/${id}/${version}`, { method: 'PUT', body, csrfToken })
 

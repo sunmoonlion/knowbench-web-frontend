@@ -10,6 +10,7 @@ import {
   listSources,
   loadSource,
   saveSource,
+  withdrawSource,
   methodSkillCenterKey,
   type DirectSource,
   type SourceInput,
@@ -27,6 +28,12 @@ function SourceDetail({
   onEdit: (d: Edit) => void
 }) {
   const t = useTranslations('directRegistry')
+  const { csrfToken } = useWorkbench()
+  const client = useQueryClient()
+  const withdraw = useMutation({
+    mutationFn: () => withdrawSource(source, csrfToken),
+    onSettled: () => client.invalidateQueries({ queryKey: methodSkillCenterKey }),
+  })
   const query = useQuery({
     queryKey: [...sourceKey, source.source_id, source.version, source.digest],
     queryFn: () => loadSource(source),
@@ -57,6 +64,18 @@ function SourceDetail({
           {t('revise')}
         </Button>
       )}
+      {latest && (
+        <Button
+          variant="outline"
+          disabled={withdraw.isPending}
+          onClick={() => {
+            if (window.confirm(t('withdrawConfirm', { name: source.name }))) withdraw.mutate()
+          }}
+        >
+          {t('withdraw')}
+        </Button>
+      )}
+      {withdraw.isError && <RequestFailure error={withdraw.error} />}
     </div>
   )
 }

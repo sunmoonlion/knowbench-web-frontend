@@ -2006,6 +2006,8 @@
     "nextPage": "下一页"
   },
   "directRegistry": {
+    "withdraw": "撤回来源",
+    "withdrawConfirm": "撤回「{name}」的全部版本？新试跑和待派发的调用将无法使用它。",
     "scope": "登记自己的脚本文件或指令正文，按版本查看和引用。",
     "create": "新建登记",
     "kind": "类型",

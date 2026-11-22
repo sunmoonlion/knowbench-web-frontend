@@ -169,3 +169,38 @@ it('shows an empty registry with working installation links', async () => {
     '/zh-CN/workbench/settings/skills',
   )
 })
+
+it('withdraws a direct source from its latest revision after confirmation', async () => {
+  vi.spyOn(registry, 'methodSkillCenterInventory').mockResolvedValue({
+    installed: [],
+    formal: [],
+    native: [],
+  })
+  const row: registry.DirectSource = {
+    source_id: asset_id,
+    version: 2,
+    digest: 'sha256:' + 'b'.repeat(64),
+    kind: 'instruction',
+    name: '回执',
+  }
+  let rows = [row, { ...row, version: 1 }]
+  vi.spyOn(registry, 'listSources').mockImplementation(async () => rows)
+  vi.spyOn(registry, 'loadSource').mockImplementation(async (r) => ({ ...r, content: 'test' }))
+  vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true)
+  const withdraw = vi.spyOn(registry, 'withdrawSource').mockImplementation(async () => {
+    rows = []
+    return { withdrawn: true }
+  })
+  renderPage()
+  fireEvent.click(screen.getByRole('button', { name: zh.methodSkillCenter.sources }))
+  fireEvent.click(await screen.findByRole('button', { name: /回执 · v1/ }))
+  await screen.findByText('test')
+  expect(screen.queryByRole('button', { name: zh.directRegistry.withdraw })).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: /回执 · v2/ }))
+  const button = await screen.findByRole('button', { name: zh.directRegistry.withdraw })
+  fireEvent.click(button)
+  expect(withdraw).not.toHaveBeenCalled()
+  fireEvent.click(button)
+  await screen.findByText(zh.directRegistry.empty)
+  expect(withdraw).toHaveBeenCalledWith(row, 'csrf')
+})
