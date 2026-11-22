@@ -84,6 +84,7 @@ const preview = z.object({
       ),
       reference: methodRef,
       material: material.optional(),
+      independent_review_of: z.string().optional(),
       from_outputs: z.record(
         z.string(),
         z.object({ step: z.array(z.string()), output: z.string() }),

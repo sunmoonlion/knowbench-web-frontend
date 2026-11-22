@@ -65,6 +65,9 @@ export function ExecutionPreview({
             {result.steps.map((s) => (
               <li key={s.path.join('/')}>
                 <strong>{s.title}</strong> · {s.path.join(' / ')} · v{s.reference.version}
+                {s.independent_review_of && (
+                  <p>{t('independentReviewOf', { step: s.independent_review_of })}</p>
+                )}
                 {s.account && <span> · {s.account}</span>}
                 {s.quote && ' · ¥' + s.quote.maximum}
                 {s.quote?.per_container_second && s.quote.maximum_seconds && (

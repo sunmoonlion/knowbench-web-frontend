@@ -248,6 +248,17 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
               from_outputs: {},
               quote: { maximum: '0', currency: 'CNY' },
             },
+            {
+              title: '核对回执',
+              path: ['audit'],
+              kind: 'registered_instruction',
+              reference: refs[0],
+              account: null,
+              permissions: [],
+              independent_review_of: 'send',
+              from_outputs: { receipt: { step: ['send'], output: 'receipt' } },
+              quote: { maximum: '0', currency: 'CNY' },
+            },
           ],
         })
       if (path.endsWith('/execution')) {
@@ -415,6 +426,7 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
   await screen.findByText(/已保存第 1 版准备清单/)
   fireEvent.click(screen.getByRole('button', { name: messages.formalIntake.checkExecution }))
   await screen.findByText(/执行费用上限为 ¥0/)
+  expect(screen.getByText(/独立单轮复核 send/)).toBeVisible()
   expect(screen.queryByRole('button', { name: messages.formalIntake.confirmExecution })).toBeNull()
   fireEvent.change(screen.getByLabelText(/待核对台账 的参考资料/), { target: { value: '' } })
   fireEvent.change(screen.getByLabelText('本次输入：待核对台账'), { target: { value: '新明细' } })

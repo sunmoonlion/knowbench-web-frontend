@@ -118,6 +118,7 @@
     "nestedOutputs": "交给父级专家的输出：{names}",
     "checkExecution": "核对执行步骤与费用",
     "previewFailed": "未能核对这版清单，请重新读取准备清单。",
+    "independentReviewOf": "独立单轮复核 {step}，仅交接下列已验收的命名输出。",
     "fromOutput": "{name} 将取自 {step} 的成果 {output}。",
     "unknownPrice": "仍有步骤无法报价。",
     "scriptEnvironment": "脚本使用已配置的隔离环境。核对步骤时可查看单价和费用上限。",

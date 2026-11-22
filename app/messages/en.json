@@ -118,6 +118,7 @@
     "nestedOutputs": "Outputs returned to the parent expert: {names}",
     "checkExecution": "Review steps and cost",
     "previewFailed": "Could not verify this revision. Reload the preparation.",
+    "independentReviewOf": "Independent single-round review of {step}. Only the named outputs below are shared.",
     "fromOutput": "{name} will use {output} from {step}.",
     "unknownPrice": "Some steps have no verified price.",
     "scriptEnvironment": "The script uses the configured isolated environment. Review the rate and maximum charge in the execution preview.",
