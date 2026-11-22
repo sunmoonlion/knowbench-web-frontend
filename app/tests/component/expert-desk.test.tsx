@@ -199,10 +199,42 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
   const refs = [1, 2].map((version) => ({ method_id: project, version, digest }))
   let selected: (typeof refs)[number] | null = null
   const requests: { path: string; body: unknown }[] = []
+  const material = { material_id: project, version_no: 3, sha256: 'c'.repeat(64) }
+  const account = { asset_id: task, revision: 4, policies_digest: digest }
+  const preparation = {
+    revision: 0,
+    bindings: { materials: {}, accounts: {}, budget: null },
+    account_options: { mail: [{ pin: account, name: '办公室', account_label: '发件账号' }] },
+    materials: [],
+    material_names: {},
+    invalid_materials: [],
+    invalid_accounts: [],
+  }
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
       const path = String(input).split('?')[0]
+      if (path.endsWith('/preparation')) {
+        if (init.method === 'PUT') {
+          requests.push({ path, body: JSON.parse(String(init.body)) })
+          return Response.json({
+            ...preparation,
+            revision: 1,
+            material_names: { [project]: '交易台账' },
+            bindings: {
+              accounts: { mail: account },
+              materials: { ledger: material },
+              budget: { currency: 'CNY', limit: '8.00' },
+            },
+          })
+        }
+        return Response.json({
+          ...preparation,
+          materials: String(input).includes('library=true')
+            ? [{ ...material, name: '交易台账' }]
+            : [],
+        })
+      }
       if (path.endsWith('/find-expert') || path.endsWith('/selection')) {
         const body = JSON.parse(String(init.body))
         requests.push({ path, body })
@@ -301,6 +333,27 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
   expect(requests[1]).toEqual({
     path: '/api/workbench/find-expert/' + task + '/selection',
     body: { reference: refs[1], review_digest: review },
+  })
+  fireEvent.click(screen.getByRole('button', { name: messages.formalIntake.prepare }))
+  const save = await screen.findByRole('button', { name: messages.formalIntake.savePreparation })
+  expect(save).toBeDisabled()
+  fireEvent.click(screen.getByRole('button', { name: messages.formalIntake.browseMaterials }))
+  const choice = await screen.findByRole('option', { name: /交易台账/ })
+  fireEvent.change(screen.getByLabelText(/待核对台账 的参考资料/), {
+    target: { value: choice.getAttribute('value') },
+  })
+  fireEvent.change(screen.getByLabelText(/mail 的执行账号/), { target: { value: task } })
+  fireEvent.change(screen.getByLabelText(messages.formalIntake.rootBudget), {
+    target: { value: '8' },
+  })
+  fireEvent.click(save)
+  await screen.findByText(/已保存第 1 版准备清单/)
+  expect(requests[2].body).toEqual({
+    review_digest: review,
+    expected_revision: 0,
+    materials: { ledger: material },
+    accounts: { mail: account },
+    budget_limit: '8',
   })
 })
 

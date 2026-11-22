@@ -11,6 +11,7 @@ import { useWorkbench } from '@/lib/workbench/context'
 import { formalMethodReferenceSchema as pin } from '@/lib/workbench/formal-method-reference'
 import { routes } from '@/lib/workbench/routes'
 import { readRound, startRound, selectVersion } from '../api/formal-expert'
+import { ExpertPreparation } from './formal-expert-preparation'
 import { ScopePreview } from './formal-expert-scope'
 
 const terminal = new Set(['SUCCEEDED', 'CANCELLED', 'FAILED', 'REJECTED'])
@@ -240,7 +241,17 @@ export function FormalExpertIntake({
               </article>
             )
           })}
-          {result.selected && result.scope_preview && <ScopePreview scope={result.scope_preview} />}
+          {result.selected && result.scope_preview && task && (
+            <>
+              <ScopePreview scope={result.scope_preview} />
+              <ExpertPreparation
+                key={task + result.review_digest}
+                task={task}
+                fingerprint={result.review_digest}
+                scope={result.scope_preview}
+              />
+            </>
+          )}
           {choice.isError && (
             <p role="alert">
               {t('unavailable')}{' '}
