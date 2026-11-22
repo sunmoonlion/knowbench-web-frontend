@@ -59,7 +59,9 @@ export function FormalExpertIntake({
       return data
     },
     refetchInterval: (q) =>
-      q.state.error || terminal.has(q.state.data?.state ?? '') ? false : 2000,
+      q.state.error || terminal.has(q.state.data?.execution_state ?? q.state.data?.state ?? '')
+        ? false
+        : 2000,
   })
   const original = round.data?.question
   useEffect(() => {
@@ -134,6 +136,7 @@ export function FormalExpertIntake({
           start.isPending ||
           busy ||
           !!result ||
+          (!!round.data?.execution && same) ||
           !!round.data?.superseded_by ||
           (!!task && !round.data)
         }
@@ -190,8 +193,38 @@ export function FormalExpertIntake({
       {same &&
         round.data &&
         terminal.has(round.data.state) &&
+        !round.data.execution &&
         !round.data.superseded_by &&
         !result && <p role="alert">{round.data.error || t('failed')}</p>}
+      {same && round.data?.execution && round.data.session_id && (
+        <div>
+          <a
+            className="underline"
+            href={routes.projectConversation(locale, project, round.data.session_id)}
+          >
+            {t('openExecution')}
+          </a>
+          {round.data.execution_state &&
+            ['FAILED', 'CANCELLED', 'REJECTED'].includes(round.data.execution_state) && (
+              <p>{t('noFinalOutput')}</p>
+            )}
+          {round.data.delivery && (
+            <section aria-label={t('delivery')}>
+              <h3>{t('delivery')}</h3>
+              <dl>
+                {Object.entries(round.data.delivery).map(([key, value]) => (
+                  <div key={key}>
+                    <dt>{key}</dt>
+                    <dd className="break-words whitespace-pre-wrap">
+                      {typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+        </div>
+      )}
       {result && !round.isError && (
         <>
           {!result.selected && <p>{result.match.explanation}</p>}
@@ -247,6 +280,7 @@ export function FormalExpertIntake({
               <ExpertPreparation
                 key={task + result.review_digest}
                 task={task}
+                onConfirmed={() => void round.refetch()}
                 fingerprint={result.review_digest}
                 scope={result.scope_preview}
               />

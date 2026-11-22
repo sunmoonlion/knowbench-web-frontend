@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useWorkbench } from '@/lib/workbench/context'
+import { ExecutionPreview } from './formal-expert-execution-preview'
 import type { FrozenScope } from '../api/formal-expert'
 import {
   readPreparation,
@@ -10,7 +11,7 @@ import {
   type Preparation,
 } from '../api/formal-expert-preparation'
 
-type Props = { task: string; fingerprint: string; scope: FrozenScope }
+type Props = { onConfirmed: () => void; task: string; fingerprint: string; scope: FrozenScope }
 
 export function ExpertPreparation(props: Props) {
   const t = useTranslations('formalIntake')
@@ -41,6 +42,7 @@ export function ExpertPreparation(props: Props) {
 }
 
 function BindingEditor({
+  onConfirmed,
   task,
   fingerprint,
   scope,
@@ -50,6 +52,27 @@ function BindingEditor({
   const t = useTranslations('formalIntake')
   const { csrfToken } = useWorkbench()
   const [view, setView] = useState(initial)
+  const [edited, setEdited] = useState(false)
+  const [texts, setTexts] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      Object.entries(initial.bindings.values).map(([k, v]) => [
+        k,
+        typeof v === 'string' && initial.input_types[k] === 'string' ? v : JSON.stringify(v),
+      ]),
+    ),
+  )
+  const values: Preparation['bindings']['values'] = Object.create(null)
+  const invalidValues = new Set<string>()
+  for (const [key, text] of Object.entries(texts)) {
+    if (view.input_types[key] === 'string') values[key] = text
+    else {
+      try {
+        values[key] = JSON.parse(text)
+      } catch {
+        invalidValues.add(key)
+      }
+    }
+  }
   const [materials, setMaterials] = useState(initial.bindings.materials)
   const [accounts, setAccounts] = useState(initial.bindings.accounts)
   const [budget, setBudget] = useState(initial.bindings.budget?.limit ?? '')
@@ -60,11 +83,15 @@ function BindingEditor({
       savePreparation(task, csrfToken, {
         review_digest: fingerprint,
         expected_revision: view.revision,
+        values,
         materials,
         accounts,
         budget_limit: uncapped ? null : budget,
       }),
-    onSuccess: setView,
+    onSuccess: (data) => {
+      setView(data)
+      setEdited(false)
+    },
     retry: false,
   })
   const budgetValid =
@@ -72,8 +99,42 @@ function BindingEditor({
     (/^\d{1,6}(\.\d{1,2})?$/.test(budget) && Number(budget) > 0 && Number(budget) <= 100000)
   const accountOptions = view.account_options
   return (
-    <fieldset className="space-y-3 rounded-lg border p-3" disabled={save.isPending}>
+    <fieldset
+      className="space-y-3 rounded-lg border p-3"
+      disabled={save.isPending}
+      onChange={() => setEdited(true)}
+    >
       <legend>{t('prepare')}</legend>
+      {scope.inputs.map((slot) => (
+        <div key={slot.name}>
+          <label className="block">
+            {t('inputValue', { slot: slot.description || slot.name })}
+            <input
+              type="text"
+              value={Object.hasOwn(texts, slot.name) ? texts[slot.name] : ''}
+              onChange={(e) => setTexts({ ...texts, [slot.name]: e.target.value })}
+              aria-invalid={invalidValues.has(slot.name)}
+            />
+          </label>
+          {view.input_types[slot.name] !== 'string' && (
+            <small>{t('valueFormat', { type: view.input_types[slot.name] })}</small>
+          )}
+          {Object.hasOwn(texts, slot.name) && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const next = { ...texts }
+                delete next[slot.name]
+                setTexts(next)
+                setEdited(true)
+              }}
+            >
+              {t('omitValue')}
+            </Button>
+          )}
+        </div>
+      ))}
       {scope.inputs.length > 0 && (
         <>
           <Button
@@ -185,11 +246,23 @@ function BindingEditor({
           })}
         </p>
       )}
-      <Button type="button" disabled={!budgetValid} onClick={() => save.mutate()}>
+      <Button
+        type="button"
+        disabled={!budgetValid || invalidValues.size > 0}
+        onClick={() => save.mutate()}
+      >
         {t('savePreparation')}
       </Button>
       {view.revision > 0 && (
         <p role="status">{t('savedPreparation', { revision: view.revision })}</p>
+      )}
+      {!edited && view.revision > 0 && (
+        <ExecutionPreview
+          onConfirmed={onConfirmed}
+          key={view.revision}
+          task={task}
+          revision={view.revision}
+        />
       )}
       {save.isError && (
         <p role="alert">

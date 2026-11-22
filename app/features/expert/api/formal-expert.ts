@@ -55,6 +55,9 @@ const reviewed = z.object({
   question: z.string(),
   state: z.string(),
   superseded_by: z.uuid().optional(),
+  execution_state: z.string().optional(),
+  delivery: z.record(z.string(), z.json()).nullable().optional(),
+  execution: z.object({ task_id: z.uuid() }).optional(),
   session_id: z.uuid().optional(),
   error: z.string().optional(),
   formal: z

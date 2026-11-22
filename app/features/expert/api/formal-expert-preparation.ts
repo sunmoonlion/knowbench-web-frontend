@@ -12,8 +12,10 @@ const account = z.object({
   policies_digest: z.string(),
 })
 const view = z.object({
+  input_types: z.record(z.string(), z.string()),
   revision: z.number().int(),
   bindings: z.object({
+    values: z.record(z.string(), z.json()),
     materials: z.record(z.string(), material),
     accounts: z.record(z.string(), account),
     budget: z.object({ currency: z.literal('CNY'), limit: z.string().nullable() }).nullable(),
@@ -37,8 +39,61 @@ export const savePreparation = (
   body: {
     review_digest: string
     expected_revision: number
+    values: Preparation['bindings']['values']
     materials: Preparation['bindings']['materials']
     accounts: Preparation['bindings']['accounts']
     budget_limit: string | null
   },
 ) => sendJson(view, url(task), { method: 'PUT', csrfToken, body })
+
+const preview = z.object({
+  revision: z.number().int(),
+  task_id: z.uuid(),
+  preview_digest: z.string(),
+  currency: z.literal('CNY'),
+  dispatch_gap: z.string().nullable(),
+  estimated_maximum: z.string().nullable(),
+  issues: z.array(
+    z.object({ code: z.string(), path: z.array(z.string()), slot: z.string().nullable() }),
+  ),
+  steps: z.array(
+    z.object({
+      path: z.array(z.string()),
+      kind: z.string(),
+      title: z.string(),
+      account: z.string().nullable(),
+      permissions: z.array(
+        z.object({
+          operations: z.array(z.string()),
+          destination: z.string(),
+          fields: z.array(z.string()),
+          purpose: z.string(),
+        }),
+      ),
+      reference: z.object({
+        method_id: z.uuid(),
+        version: z.number().int(),
+        digest: z.string(),
+      }),
+      from_outputs: z.record(
+        z.string(),
+        z.object({ step: z.array(z.string()), output: z.string() }),
+      ),
+      quote: z.object({ maximum: z.string(), currency: z.literal('CNY') }).nullable(),
+    }),
+  ),
+})
+export const readExecutionPreview = (task: string, revision: number) =>
+  getJson(preview, `/api/workbench/find-expert/${seg(task)}/execution-preview?revision=${revision}`)
+
+export const submitExecution = (
+  task: string,
+  revision: number,
+  preview_digest: string,
+  csrfToken: string,
+) =>
+  sendJson(z.object({ task_id: z.uuid() }), `/api/workbench/find-expert/${seg(task)}/execution`, {
+    method: 'PUT',
+    csrfToken,
+    body: { revision, preview_digest },
+  })

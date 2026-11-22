@@ -201,9 +201,12 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
   const requests: { path: string; body: unknown }[] = []
   const material = { material_id: project, version_no: 3, sha256: 'c'.repeat(64) }
   const account = { asset_id: task, revision: 4, policies_digest: digest }
+  let executed = false
+  let revision = 0
   const preparation = {
     revision: 0,
-    bindings: { materials: {}, accounts: {}, budget: null },
+    bindings: { values: {}, materials: {}, accounts: {}, budget: null },
+    input_types: { ledger: 'string' },
     account_options: { mail: [{ pin: account, name: '办公室', account_label: '发件账号' }] },
     materials: [],
     material_names: {},
@@ -214,16 +217,51 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
       const path = String(input).split('?')[0]
+      if (path.endsWith('/execution-preview'))
+        return Response.json({
+          revision,
+          task_id: task,
+          dispatch_gap: revision === 1 ? 'material_authority_required' : null,
+          preview_digest: review,
+          currency: 'CNY',
+          estimated_maximum: '0',
+          issues: [],
+          steps: [
+            {
+              title: '发送结果',
+              path: ['send'],
+              kind: 'mcp',
+              reference: refs[1],
+              account: '发件账号',
+              permissions: [
+                {
+                  operations: ['send'],
+                  destination: 'https://example.test',
+                  fields: ['report'],
+                  purpose: '递交',
+                },
+              ],
+              from_outputs: {},
+              quote: { maximum: '0', currency: 'CNY' },
+            },
+          ],
+        })
+      if (path.endsWith('/execution')) {
+        executed = true
+        requests.push({ path, body: JSON.parse(String(init.body)) })
+        return Response.json({ task_id: project })
+      }
       if (path.endsWith('/preparation')) {
         if (init.method === 'PUT') {
           requests.push({ path, body: JSON.parse(String(init.body)) })
           return Response.json({
             ...preparation,
-            revision: 1,
+            revision: ++revision,
             material_names: { [project]: '交易台账' },
             bindings: {
+              values: JSON.parse(String(init.body)).values,
               accounts: { mail: account },
-              materials: { ledger: material },
+              materials: JSON.parse(String(init.body)).materials,
               budget: { currency: 'CNY', limit: '8.00' },
             },
           })
@@ -245,6 +283,17 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
         return Response.json({ task_id: task })
       }
       if (path.endsWith('/find-expert/' + task)) {
+        if (executed)
+          return Response.json({
+            task_id: task,
+            project_id: project,
+            question: '需要差异表',
+            state: 'SUCCEEDED',
+            session_id: task,
+            execution: { task_id: project },
+            execution_state: 'SUCCEEDED',
+            delivery: { receipt: '已接收报告' },
+          })
         return Response.json({
           task_id: task,
           project_id: project,
@@ -346,15 +395,35 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
   fireEvent.change(screen.getByLabelText(messages.formalIntake.rootBudget), {
     target: { value: '8' },
   })
+  fireEvent.change(screen.getByLabelText('本次输入：待核对台账'), { target: { value: '当期明细' } })
   fireEvent.click(save)
   await screen.findByText(/已保存第 1 版准备清单/)
+  fireEvent.click(screen.getByRole('button', { name: messages.formalIntake.checkExecution }))
+  await screen.findByText(/执行费用上限为 ¥0/)
+  expect(screen.queryByRole('button', { name: messages.formalIntake.confirmExecution })).toBeNull()
+  fireEvent.change(screen.getByLabelText(/待核对台账 的参考资料/), { target: { value: '' } })
+  fireEvent.change(screen.getByLabelText('本次输入：待核对台账'), { target: { value: '新明细' } })
+  expect(screen.queryByText(/执行费用上限为 ¥0/)).toBeNull()
   expect(requests[2].body).toEqual({
     review_digest: review,
     expected_revision: 0,
+    values: { ledger: '当期明细' },
     materials: { ledger: material },
     accounts: { mail: account },
     budget_limit: '8',
   })
+  fireEvent.click(save)
+  await screen.findByText(/已保存第 2 版准备清单/)
+  fireEvent.click(screen.getByRole('button', { name: messages.formalIntake.checkExecution }))
+  await screen.findByText(/递交.*example.test.*report/)
+  fireEvent.click(screen.getByRole('button', { name: messages.formalIntake.confirmExecution }))
+  expect(
+    await screen.findByRole('link', { name: messages.formalIntake.openExecution }),
+  ).toHaveAttribute('href', `/zh-CN/workbench/projects/${project}/c/${task}`)
+  expect(screen.getByText('已接收报告')).toBeInTheDocument()
+  expect(requests.filter((r) => r.path.endsWith('/execution')).map((r) => r.body)).toEqual([
+    { revision: 2, preview_digest: review },
+  ])
 })
 
 it('空窗口只在用户继续查找时翻页，改题从头查，查尽后撤下继续入口', async () => {
