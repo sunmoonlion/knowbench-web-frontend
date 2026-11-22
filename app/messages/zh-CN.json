@@ -56,6 +56,7 @@
     "previewFailed": "未能核对这版清单，请重新读取准备清单。",
     "fromOutput": "{name} 将取自 {step} 的成果 {output}。",
     "unknownPrice": "仍有步骤无法报价。",
+    "scriptEnvironment": "脚本使用已配置的隔离环境。核对步骤时可查看单价和费用上限。",
     "scriptRate": "按容器实际运行时间计费，每秒 ¥{rate}，最多 {seconds} 秒。",
     "priceCeiling": "已核步骤的执行费用上限为 ¥{amount}。",
     "previewIssues": {

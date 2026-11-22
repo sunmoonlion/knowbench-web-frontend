@@ -201,6 +201,13 @@ function BindingEditor({
           req.operations[0] === 'read_method_input'
         )
           return <p key={req.id}>{t('materialReadAccount')}</p>
+        if (
+          !current &&
+          req.capability === 'isolated-script' &&
+          req.operations.length === 1 &&
+          req.operations[0] === 'execute'
+        )
+          return <p key={req.id}>{t('scriptEnvironment')}</p>
         if (!options.length && !current)
           return <p key={req.id}>{t('noAccount', { requirement: req.id })}</p>
         return (

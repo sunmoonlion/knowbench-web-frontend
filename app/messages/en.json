@@ -56,6 +56,7 @@
     "previewFailed": "Could not verify this revision. Reload the preparation.",
     "fromOutput": "{name} will use {output} from {step}.",
     "unknownPrice": "Some steps have no verified price.",
+    "scriptEnvironment": "The script uses the configured isolated environment. Review the rate and maximum charge in the execution preview.",
     "scriptRate": "¥{rate} per container-second, up to {seconds} seconds.",
     "priceCeiling": "Verified execution cost ceiling: ¥{amount}.",
     "previewIssues": {

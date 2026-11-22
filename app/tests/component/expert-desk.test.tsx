@@ -329,6 +329,16 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
                       fields: ['report'],
                       purpose: '发送对账报告',
                     },
+                    {
+                      id: 'calculate',
+                      capability: 'isolated-script',
+                      version: '1',
+                      operations: ['execute'],
+                      resource_roles: [],
+                      destination: 'https://worker.example.test',
+                      fields: ['report'],
+                      purpose: '计算',
+                    },
                   ],
                   approvals: [{ requirement_id: 'mail', operations: ['send'], when: '发送之前' }],
                 }
@@ -395,6 +405,7 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
   fireEvent.change(screen.getByLabelText(/待核对台账 的参考资料/), {
     target: { value: choice.getAttribute('value') },
   })
+  expect(screen.getByText(messages.formalIntake.scriptEnvironment)).toBeVisible()
   fireEvent.change(screen.getByLabelText(/mail 的执行账号/), { target: { value: task } })
   fireEvent.change(screen.getByLabelText(messages.formalIntake.rootBudget), {
     target: { value: '8' },
