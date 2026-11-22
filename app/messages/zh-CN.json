@@ -11,7 +11,7 @@
     "ceiling": "本次 {rounds} 轮费用上限 {currency} {amount}，价目日期 {date}。返工需另行确认。",
     "confirmed": "已保存本次路由选择",
     "confirm": "确认本次路由和交接范围",
-    "pendingIsolation": "单轮复核需先确认当前隔离环境可用的连接。双轮及强制跨家族复核仍待接入。",
+    "pendingIsolation": "请先确认当前执行环境可用的连接。强制跨模型家族复核仍待接入。",
     "reload": "重新核对",
     "v0_failed": "确定性检查未通过，无法交接。",
     "sandbox_unavailable": "当前没有可用沙箱。",
@@ -38,7 +38,10 @@
     "startReview": "开始单轮独立复核",
     "missingInputs": "请先在方法技能管理中心登记复核指令，并在当前沙箱的项目中准备一个空闲专家会话。",
     "routeNotLoaded": "确认的连接、模型或目的地址与当前执行单元可用的路由不一致。",
-    "executorUnavailable": "专用指令执行单元或其报价当前不可用。"
+    "executorUnavailable": "专用指令执行单元或其报价当前不可用。",
+    "startComparison": "开始严格双轮复核",
+    "sendBothRounds": "首轮只发送登记的复核指令和上列输出。首轮发现封存后，第二轮向已确认的连接发送复核指令、首轮输出、封存的发现和指定的作者自评。两轮分别计费，共用上列总额；未解决的分歧由委托人裁定。",
+    "sealedFindings": "首轮独立发现已封存，第 {version} 版"
   },
   "formalIntake": {
     "named": "本轮仅核对指定方法 {id} 的第 {version} 版。",

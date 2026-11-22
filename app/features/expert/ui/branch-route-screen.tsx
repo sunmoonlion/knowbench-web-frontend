@@ -129,6 +129,12 @@ export function BranchRouteScreen({ link }: { link: BranchLink }) {
               )}
             </>
           )}
+          {execution && 'task_id' in execution && execution.sealed_findings && (
+            <p className="break-all">
+              {t('sealedFindings', { version: execution.sealed_findings.version })} ·{' '}
+              {execution.sealed_findings.digest}
+            </p>
+          )}
           {execution && 'task_id' in execution ? (
             <Link
               className="underline"
@@ -138,7 +144,7 @@ export function BranchRouteScreen({ link }: { link: BranchLink }) {
             </Link>
           ) : execution && 'sessions' in execution && choice && choice.digest === data.confirmed ? (
             <section className="space-y-2">
-              <p>{t('sendScope')}</p>
+              <p>{t(data.rounds === 2 ? 'sendBothRounds' : 'sendScope')}</p>
               {execution.sources.length && execution.sessions.length ? (
                 <>
                   <label>
@@ -181,7 +187,7 @@ export function BranchRouteScreen({ link }: { link: BranchLink }) {
                         })
                     }}
                   >
-                    {t('startReview')}
+                    {t(data.rounds === 2 ? 'startComparison' : 'startReview')}
                   </Button>
                 </>
               ) : (

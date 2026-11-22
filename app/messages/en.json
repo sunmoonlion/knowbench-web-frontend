@@ -11,7 +11,7 @@
     "ceiling": "Up to {currency} {amount} for {rounds} round(s), priced on {date}. Rework requires a new confirmation.",
     "confirmed": "Route selection saved",
     "confirm": "Confirm route and handoff scope",
-    "pendingIsolation": "Single-round execution requires a confirmed connection available to the isolated worker. Two-stage and mandatory cross-family execution are pending.",
+    "pendingIsolation": "Confirm a connection available to this worker. Mandatory cross-family execution is pending.",
     "reload": "Check again",
     "v0_failed": "Deterministic checks failed. Handoff is blocked.",
     "sandbox_unavailable": "No available sandbox.",
@@ -38,7 +38,10 @@
     "startReview": "Start independent review",
     "missingInputs": "Register a review instruction and prepare an idle expert project session on the current sandbox.",
     "routeNotLoaded": "The confirmed route differs from the credential, model or endpoint loaded for this worker.",
-    "executorUnavailable": "The dedicated instruction worker or its tariff is unavailable."
+    "executorUnavailable": "The dedicated instruction worker or its tariff is unavailable.",
+    "startComparison": "Start two-stage review",
+    "sendBothRounds": "The first round sends the registered instruction and listed outputs. Once its findings are sealed, the comparison sends the instruction, approved outputs, sealed findings and designated author assessment to the confirmed destination. Each round is metered under the combined ceiling. The task owner resolves outstanding disagreements.",
+    "sealedFindings": "Independent findings sealed, version {version}"
   },
   "formalIntake": {
     "named": "This round checks only method {id}, version {version}.",

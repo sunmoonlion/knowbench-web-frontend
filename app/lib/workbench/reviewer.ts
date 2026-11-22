@@ -57,6 +57,13 @@ const routeView = z.object({
     .union([
       z.object({ unavailable: z.enum(['routeNotLoaded', 'executorUnavailable']) }),
       z.object({
+        sealed_findings: z
+          .object({
+            id: z.uuid(),
+            version: z.number().int().positive(),
+            digest: z.string().regex(/^[0-9a-f]{64}$/),
+          })
+          .nullish(),
         task_id: z.uuid(),
         session_id: z.uuid(),
         project_id: z.uuid(),
