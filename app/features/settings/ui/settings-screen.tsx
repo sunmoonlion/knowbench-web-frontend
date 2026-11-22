@@ -2,6 +2,7 @@
 
 // 设置导航在桌面左列、窄屏上方；连接与技能和既有设置共用同一布局。
 // 「模型」的路由名仍是 cloud；沙箱从「模型」挪到「电脑与沙箱」。
+import { ReviewerPreference } from './reviewer-preference'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
@@ -86,6 +87,7 @@ function CloudSection({ csrfToken }: { csrfToken: string }) {
         <p className="text-muted-foreground mt-1 text-sm">{t('lead')}</p>
       </header>
       <KeysSection csrfToken={csrfToken} />
+      <ReviewerPreference csrfToken={csrfToken} />
       {prefs.data ? (
         <ThreadSection
           key={`${prefs.data.model ?? ''}|${prefs.data.approval_policy}`}

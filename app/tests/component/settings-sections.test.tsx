@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { BranchRouteScreen } from '@/features/expert'
 import { SettingsScreen } from '@/features/settings'
 import { Sidebar } from '@/features/shell/ui/sidebar'
 import { PREFERENCES_KEY } from '@/lib/preferences-boot'
@@ -289,4 +290,63 @@ describe('设置分三类（0021）', () => {
     const cloudPuts = puts.length
     expect(cloudPuts).toBe(0)
   })
+})
+
+it('reopens the two-stage scope and confirms its exact quote without sending an inference request', async () => {
+  const id = '6f1c2b1e-3c5d-4a7e-9b8f-0d1e2f3a4b5c'
+  const digest = 'sha256:' + 'a'.repeat(64)
+  const link = {
+    run_id: id,
+    request_id: id,
+    case_id: 'sample',
+    repetition: 1,
+    step: 'verify',
+    scope_digest: digest,
+    review_digest: digest,
+  }
+  const t = zh.reviewRouting
+  const scope = {
+    review_digest: digest,
+    artifact: id,
+    version: 3,
+    requirement: 'different_model_family',
+    planned_producer: { provider: 'one', model: 'first' },
+    handoff: { result: digest },
+    deferred: { assessment_output: 'notes', assessment_digest: digest },
+    rounds: 2,
+    isolated_execution_available: false,
+    options: [
+      {
+        pin: { provider: 'one', model: 'second', credential_id: id },
+        family: 'second',
+        destination: 'https://example.test/v1/responses',
+        price_key: 'second',
+        price_as_of: '2026-11-22',
+        currency: 'CNY',
+        quote: { maximum: '0.02' },
+        maximum: '0.04',
+        digest,
+      },
+    ],
+    recommended: digest,
+    gap: null,
+  }
+  const fetcher = vi.fn(async (path: string, init: RequestInit) => {
+    const save = init.method === 'PUT'
+    expect(path).toBe('/api/workbench/reviews/' + id + (save ? '/route' : '/route-preview'))
+    const { run_id, ...selector } = link
+    expect(run_id).toBe(id)
+    expect(JSON.parse(String(init.body))).toEqual({
+      ...selector,
+      ...(save && { previous_revision: 0, option_digest: digest }),
+    })
+    return Response.json({ ...scope, confirmed: save ? digest : null, revision: save ? 1 : 0 })
+  })
+  vi.stubGlobal('fetch', fetcher)
+  page(<BranchRouteScreen link={link} />)
+  expect(await screen.findByText(/CNY 0.04/)).toBeVisible()
+  expect(screen.getByText(/首轮发现封存后才允许交接.*notes/)).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: t.confirm }))
+  expect(await screen.findByText(t.confirmed)).toBeVisible()
+  expect(fetcher).toHaveBeenCalledTimes(2)
 })
