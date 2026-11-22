@@ -65,6 +65,9 @@
     "sealedFindings": "首轮独立发现已封存，第 {version} 版"
   },
   "formalIntake": {
+    "end": "结束本次委托",
+    "ended": "本次委托已结束。匹配记录可在这里查看。",
+    "endFailed": "未能确认结束，请重读本次委托后重试。",
     "partialTitle": "接收部分成果",
     "handoffTitle": "子委托交接",
     "handoffInput": "已核输入摘要",

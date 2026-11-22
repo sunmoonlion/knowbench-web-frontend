@@ -64,10 +64,12 @@ const reviewed = z.object({
     .object({
       review_digest: z.string(),
       more: z.boolean(),
+      ended: z.boolean().default(false),
       selected: pin.nullable(),
       scope_preview: scope.nullable(),
       options: z.array(entry),
       match: z.object({
+        outcome: z.enum(['candidates', 'clarify', 'no_match']).optional(),
         explanation: z.string(),
         clarification: z.string().nullable(),
         requirements: z.array(z.object({ id: z.string(), statement: z.string() })),
@@ -142,3 +144,10 @@ export const receivePartial = (
   csrfToken: string,
   body: { step: string; scope_digest: string },
 ) => sendJson(partialResponse, partialPath(task), { method: 'PUT', csrfToken, body })
+
+export const endUnmatched = (task: string, csrfToken: string, review_digest: string) =>
+  sendJson(z.object({ review_digest: z.string() }), `/api/workbench/find-expert/${seg(task)}/end`, {
+    method: 'PUT',
+    csrfToken,
+    body: { review_digest },
+  })

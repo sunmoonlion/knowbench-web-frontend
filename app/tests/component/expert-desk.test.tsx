@@ -493,3 +493,65 @@ it('空窗口只在用户继续查找时翻页，改题从头查，查尽后撤�
     ['新题', 96],
   ])
 })
+
+it('未匹配时由用户明确结束，重读回执，改题另开委托', async () => {
+  const project = '11111111-1111-4111-8111-111111111111'
+  const task = '33333333-3333-4333-8333-333333333333'
+  const fingerprint = 'sha256:' + 'a'.repeat(64)
+  const starts: Record<string, unknown>[] = []
+  const decisions: unknown[] = []
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: string, init: RequestInit = {}) => {
+      const path = String(input).split('?')[0]
+      if (init.method === 'POST' && path.endsWith('/find-expert')) {
+        starts.push(JSON.parse(String(init.body)))
+        return Response.json({ task_id: task })
+      }
+      if (init.method === 'PUT' && path.endsWith('/end')) {
+        const body = JSON.parse(String(init.body))
+        decisions.push(body)
+        return Response.json(body)
+      }
+      if (path.endsWith('/find-expert/' + task))
+        return Response.json({
+          task_id: task,
+          project_id: project,
+          question: '核对交易',
+          state: 'SUCCEEDED',
+          formal: {
+            selected: null,
+            scope_preview: null,
+            review_digest: fingerprint,
+            options: [],
+            more: false,
+            ended: decisions.length > 0,
+            match: {
+              outcome: 'no_match',
+              picks: [],
+              requirements: [],
+              clarification: null,
+              explanation: '已查专家无法核对交易',
+            },
+          },
+        })
+      return Response.json(sample(path) ?? {})
+    }),
+  )
+  page(<AskExpertScreen project={project} from={null} expert={null} />)
+  const question = screen.getByRole('textbox', { name: messages.askExpert.question })
+  const start = () => screen.getByRole('button', { name: messages.formalIntake.title })
+  fireEvent.change(question, { target: { value: '核对交易' } })
+  fireEvent.click(start())
+  const finish = await screen.findByRole('button', { name: messages.formalIntake.end })
+  expect(decisions).toHaveLength(0)
+  fireEvent.click(finish)
+  await screen.findByText(messages.formalIntake.ended)
+  expect(screen.queryByRole('button', { name: messages.formalIntake.end })).toBeNull()
+  expect(decisions).toEqual([{ review_digest: fingerprint }])
+  fireEvent.change(question, { target: { value: '新的问题' } })
+  fireEvent.click(start())
+  await waitFor(() => expect(starts).toHaveLength(2))
+  expect(starts[1].question).toBe('新的问题')
+  expect(starts[1]).not.toHaveProperty('revises')
+})

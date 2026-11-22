@@ -65,6 +65,9 @@
     "sealedFindings": "Independent findings sealed, version {version}"
   },
   "formalIntake": {
+    "end": "End this request",
+    "ended": "This request has ended. Its matching record is available here.",
+    "endFailed": "Could not confirm closure. Reload the request and try again.",
     "partialTitle": "Receive a partial delivery",
     "handoffTitle": "Child handoffs",
     "handoffInput": "Verified input digest",

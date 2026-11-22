@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { useWorkbench } from '@/lib/workbench/context'
 import { formalMethodReferenceSchema as pin } from '@/lib/workbench/formal-method-reference'
 import { routes } from '@/lib/workbench/routes'
-import { readRound, startRound, selectVersion } from '../api/formal-expert'
+import { readRound, startRound, selectVersion, endUnmatched } from '../api/formal-expert'
 import { ExpertPreparation } from './formal-expert-preparation'
 import { ChildHandoffs } from './child-handoffs'
 import { PartialDelivery } from './partial-delivery'
@@ -93,7 +93,7 @@ export function FormalExpertIntake({
         question: current,
         ...(offset ? { directory_offset: offset } : {}),
         ...(reference ? { reference } : {}),
-        ...(task ? { revises: task } : {}),
+        ...(task && !round.data?.formal?.ended ? { revises: task } : {}),
         ...(from ? { source_session: from } : {}),
       })
       const id = 'task_id' in result ? result.task_id : null
@@ -114,6 +114,11 @@ export function FormalExpertIntake({
   const choice = useMutation({
     mutationFn: (reference: z.infer<typeof pin>) =>
       selectVersion(task!, csrfToken, reference, round.data!.formal!.review_digest),
+    onSuccess: () => round.refetch(),
+    retry: false,
+  })
+  const end = useMutation({
+    mutationFn: (digest: string) => endUnmatched(task!, csrfToken, digest),
     onSuccess: () => round.refetch(),
     retry: false,
   })
@@ -236,6 +241,25 @@ export function FormalExpertIntake({
           {!result.selected && <p>{result.match.explanation}</p>}
           {!result.selected && result.more && (
             <p className="text-muted-foreground text-sm">{t('partial')}</p>
+          )}
+          {result.ended ? (
+            <p role="status">{t('ended')}</p>
+          ) : result.match.outcome === 'no_match' ? (
+            <Button
+              variant="outline"
+              disabled={end.isPending || round.isFetching}
+              onClick={() => end.mutate(result.review_digest)}
+            >
+              {t('end')}
+            </Button>
+          ) : null}
+          {end.isError && !result.ended && (
+            <p role="alert">
+              {t('endFailed')}{' '}
+              <Button variant="outline" onClick={() => void round.refetch()}>
+                {t('retry')}
+              </Button>
+            </p>
           )}
           {result.match.clarification && <p>{result.match.clarification}</p>}
           {result.match.picks.map((p) => {
