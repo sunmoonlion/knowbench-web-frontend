@@ -311,7 +311,7 @@ const modelCallDetail = callDetail
   .strict()
 const hostCallDetail = callDetail
   .extend({
-    execution_kind: z.enum(['formal_mcp', 'formal_method']),
+    execution_kind: z.enum(['formal_mcp', 'formal_a2a', 'formal_method']),
     source_asset_id: z.uuid(),
     connection_id: z.uuid(),
   })

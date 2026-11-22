@@ -98,6 +98,7 @@ export function CapabilityActionCard({
       </h4>
       {[
         'formal_mcp',
+        'formal_a2a',
         'formal_method',
         'formal_script',
         'formal_function',

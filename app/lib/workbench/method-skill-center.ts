@@ -15,6 +15,7 @@ const method = z.object({
   method_kind: z.enum(['tool', 'expert']),
   runner_route: z.enum([
     'formal_mcp',
+    'formal_a2a',
     'formal_script',
     'formal_function',
     'formal_instruction',
