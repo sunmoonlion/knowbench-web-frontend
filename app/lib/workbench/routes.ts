@@ -27,6 +27,8 @@ export const routes = {
     at(locale, 'projects', project, 'c', conversation),
   askExpert: (locale: string, project: string, from?: string) =>
     `${at(locale, 'projects', project, 'expert', 'new')}${from ? `?from=${encodeURIComponent(from)}` : ''}`,
+  reviewDecisions: (locale: string, task: string) =>
+    at(locale, 'review') + '?task=' + encodeURIComponent(task),
   expert: (locale: string) => at(locale, 'expert'),
   machines: (locale: string) => at(locale, 'machines'),
   settings: (locale: string, section: SettingsSection = 'cloud') => at(locale, 'settings', section),

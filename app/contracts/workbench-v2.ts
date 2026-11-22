@@ -615,6 +615,7 @@ export const projectDetailSchema = z
         .object({
           id: uuid,
           session_id: uuid,
+          has_review_report: z.boolean().optional(),
           expert: z.string(),
           state: z.string(),
           state_word: z.string().nullable(),

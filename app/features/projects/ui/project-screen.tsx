@@ -42,6 +42,7 @@ export function ProjectScreen({ project: id }: { project: string }) {
   // 委托看列表还是看板（请专家方案设计第 4.8 节）
   const [view, setView] = useState<'list' | 'board'>('list')
   const tb = useTranslations('projects.board')
+  const tr = useTranslations('reviewRouting')
 
   if (!detail.data) {
     return (
@@ -226,13 +227,21 @@ export function ProjectScreen({ project: id }: { project: string }) {
                       )
                       const cell = 'flex items-center gap-3 px-4 py-2.5 text-sm'
                       return (
-                        <li key={task.id}>
+                        <li key={task.id} className="flex items-center">
                           <Link
                             href={routes.projectConversation(locale, id, task.session_id)}
-                            className={cn(cell, 'hover:bg-muted/60')}
+                            className={cn(cell, 'hover:bg-muted/60 min-w-0 flex-1')}
                           >
                             {row}
                           </Link>
+                          {task.has_review_report && (
+                            <Link
+                              className="px-3 text-sm underline"
+                              href={routes.reviewDecisions(locale, task.id)}
+                            >
+                              {tr('openReports')}
+                            </Link>
+                          )}
                         </li>
                       )
                     })}

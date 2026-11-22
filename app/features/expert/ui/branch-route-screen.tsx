@@ -8,6 +8,8 @@ import { useWorkbench } from '@/lib/workbench/context'
 import { routes } from '@/lib/workbench/routes'
 import { branchRoute, startReview, type BranchLink } from '@/lib/workbench/reviewer'
 
+import { ReviewDecisions } from './review-decisions'
+
 export function BranchRouteScreen({ link }: { link: BranchLink }) {
   const t = useTranslations('reviewRouting')
   const { csrfToken } = useWorkbench()
@@ -203,6 +205,11 @@ export function BranchRouteScreen({ link }: { link: BranchLink }) {
               )}
             </p>
           )}
+          {execution &&
+            'task_id' in execution &&
+            ['SUCCEEDED', 'FAILED', 'CANCELLED', 'REJECTED'].includes(execution.state) && (
+              <ReviewDecisions key={execution.task_id} task={execution.task_id} />
+            )}
           {execute.isError && <p role="alert">{t('refresh')}</p>}
         </>
       )}
