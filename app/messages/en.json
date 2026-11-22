@@ -64,6 +64,12 @@
     "sealedFindings": "Independent findings sealed, version {version}"
   },
   "formalIntake": {
+    "partialTitle": "Receive a partial delivery",
+    "partialMissing": "Missing steps: {steps}",
+    "partialPromises": "Promises in scope: {promises}",
+    "partialNone": "Branch outputs only",
+    "partialReceive": "Receive only the outputs of {step}",
+    "partialUnavailable": "Could not verify the partial delivery. Review its scope again.",
     "named": "This round checks only method {id}, version {version}.",
     "invalidPin": "The specified version is incomplete. Select it again in the method and skill center.",
     "latest": "Open the latest revision",

@@ -64,6 +64,12 @@
     "sealedFindings": "首轮独立发现已封存，第 {version} 版"
   },
   "formalIntake": {
+    "partialTitle": "接收部分成果",
+    "partialMissing": "未交付的步骤：{steps}",
+    "partialPromises": "该成果适用的承诺：{promises}",
+    "partialNone": "仅交付步骤产物",
+    "partialReceive": "仅接收 {step} 的成果",
+    "partialUnavailable": "部分交付范围读取或确认失败，请重新核对。",
     "named": "本轮仅核对指定方法 {id} 的第 {version} 版。",
     "invalidPin": "指定的方法版本不完整，请从方法技能管理中心重新选择。",
     "latest": "打开最新问题修订",

@@ -12,6 +12,7 @@ import { formalMethodReferenceSchema as pin } from '@/lib/workbench/formal-metho
 import { routes } from '@/lib/workbench/routes'
 import { readRound, startRound, selectVersion } from '../api/formal-expert'
 import { ExpertPreparation } from './formal-expert-preparation'
+import { PartialDelivery } from './partial-delivery'
 import { ScopePreview } from './formal-expert-scope'
 
 const terminal = new Set(['SUCCEEDED', 'CANCELLED', 'FAILED', 'REJECTED'])
@@ -208,6 +209,9 @@ export function FormalExpertIntake({
             ['FAILED', 'CANCELLED', 'REJECTED'].includes(round.data.execution_state) && (
               <p>{t('noFinalOutput')}</p>
             )}
+          {['FAILED', 'CANCELLED', 'REJECTED'].includes(round.data.execution_state ?? '') && (
+            <PartialDelivery task={round.data.execution.task_id} />
+          )}
           {round.data.delivery && (
             <section aria-label={t('delivery')}>
               <h3>{t('delivery')}</h3>
