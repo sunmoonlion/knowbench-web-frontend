@@ -226,7 +226,34 @@ const probeReceipt = z.object({
     status: z.enum(['present', 'missing', 'unknown']),
   }),
 })
+const sketchStep = z.object({
+  id: z.string(),
+  method: z.string(),
+  task: z.string(),
+  inputs: z.record(
+    z.string(),
+    z.object({
+      source: z.string(),
+      name: z.string().optional(),
+      step: z.string().optional(),
+      output: z.string().optional(),
+    }),
+  ),
+  cases: z.record(z.string(), z.string()),
+  route_input: z.string().nullable(),
+  reviews: z.array(z.string()),
+})
 const sketch = z.object({
+  selection: z
+    .object({
+      steps: z.array(sketchStep),
+      object_batch: z.object({ max_objects: z.number() }).nullable(),
+    })
+    .optional(),
+  aliases: z.record(z.string(), pin).optional(),
+  method_titles: z.record(z.string(), z.string()).optional(),
+  patterns: z.array(z.enum(['P1', 'P2', 'P3', 'P4', 'P5'])).optional(),
+  routing_alternatives: z.array(z.string()).optional(),
   probe: probeReceipt.optional(),
   runtime: z.object({ patterns: z.record(z.string(), z.boolean()) }).optional(),
   required_capabilities: z.array(z.string()).optional(),
@@ -241,6 +268,13 @@ const sketch = z.object({
   saved: z.boolean().optional(),
   partial: z.boolean().optional(),
 })
+export type TemporarySketch = z.infer<typeof sketch>
+export type PlanReview = {
+  confirmed: true
+  routing_required: boolean
+  cases: Record<string, string[]>
+  step_text: Record<string, string>
+}
 const sketchPath = (task: string) => `/api/workbench/find-expert/${seg(task)}/temporary-plan`
 export const readSketch = (task: string) => getJson(sketch, sketchPath(task))
 export const requestSketch = (
@@ -262,11 +296,12 @@ export const adoptSketch = (
   review_digest: string,
   sketch_digest: string,
   source_task?: string,
+  review?: PlanReview,
 ) =>
   sendJson(scope, sketchPath(task) + '/adoption', {
     method: 'PUT',
     csrfToken,
-    body: { review_digest, sketch_digest, source_task },
+    body: { review_digest, sketch_digest, source_task, review },
   })
 export const saveSketch = (task: string, csrfToken: string, review_digest: string) =>
   sendJson(

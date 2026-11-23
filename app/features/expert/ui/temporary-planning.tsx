@@ -4,9 +4,11 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { useWorkbench } from '@/lib/workbench/context'
+import { TemporaryPlanReview } from './temporary-plan-review'
 import { ScopePreview } from './formal-expert-scope'
 import { ExpertPreparation } from './formal-expert-preparation'
 import {
+  type PlanReview,
   readSketch,
   adoptSketch,
   requestSketch,
@@ -73,13 +75,14 @@ export function TemporaryPlanning({
   const sourcePreview = useMutation({ mutationFn: () => readSketch(source.trim()), retry: false })
   const current = reuse ? sourcePreview.data : plan.data
   const accept = useMutation({
-    mutationFn: () =>
+    mutationFn: (review?: PlanReview) =>
       adoptSketch(
         task,
         csrfToken,
         digest,
         current!.sketch_digest!,
         reuse ? source.trim() : undefined,
+        review,
       ),
     onSuccess: async () => {
       setReuse(false)
@@ -133,7 +136,13 @@ export function TemporaryPlanning({
       {plan.data?.outcome === 'planning' && <p role="status">{t('planning')}</p>}
       {['clarify', 'gap'].includes(plan.data?.outcome ?? '') && (
         <>
-          <p>{plan.data?.explanation || t('missingPlan')}</p>
+          <p>
+            {plan.data?.explanation &&
+            /^selection_[a-z_]+$/.test(plan.data.explanation) &&
+            t.has('graphErrors.' + plan.data.explanation)
+              ? t('graphErrors.' + plan.data.explanation)
+              : plan.data?.explanation || t('missingPlan')}
+          </p>
           {plan.data?.outcome === 'clarify' && !plan.data.probe && (
             <div className="space-y-2">
               <Button variant="outline" onClick={() => materials.mutate()}>
@@ -180,31 +189,31 @@ export function TemporaryPlanning({
             </p>
           )}
           {plan.data?.search_goal && <p>{plan.data.search_goal}</p>}
-          {plan.data?.planning_task &&
-            plan.data.outcome === 'clarify' &&
-            plan.data.remaining_rounds !== 0 && (
-              <>
-                <label>
-                  {t('clarifyPlan')}
-                  <textarea
-                    value={details}
-                    maxLength={1500}
-                    onChange={(e) => setDetails(e.target.value)}
-                  />
-                </label>
-                <Button
-                  disabled={
-                    (!details.trim() && !plan.data?.probe && !plan.data?.search_goal) ||
-                    query.isPending
-                  }
-                  onClick={() => query.mutate()}
-                >
-                  {t('replan')}
-                </Button>
-              </>
-            )}
         </>
       )}
+      {plan.data?.planning_task &&
+        ['plan', 'gap', 'clarify'].includes(plan.data.outcome) &&
+        !reuse &&
+        (plan.data.remaining_rounds ?? 0) > 0 && (
+          <>
+            <label>
+              {t('clarifyPlan')}
+              <textarea
+                value={details}
+                maxLength={1500}
+                onChange={(e) => setDetails(e.target.value)}
+              />
+            </label>
+            <Button
+              disabled={
+                (!details.trim() && !plan.data?.probe && !plan.data?.search_goal) || query.isPending
+              }
+              onClick={() => query.mutate()}
+            >
+              {t('replan')}
+            </Button>
+          </>
+        )}
       {current?.runtime && (
         <details>
           <summary>{t('runtimePatterns')}</summary>
@@ -224,8 +233,17 @@ export function TemporaryPlanning({
       {current?.scope && <ScopePreview scope={current.scope} />}
       {current?.explanation && current.outcome === 'plan' && <p>{current.explanation}</p>}
       {current?.partial && <p>{t('partial')}</p>}
-      {!adopted && current?.sketch_digest && (!reuse || current.saved) && (
-        <Button disabled={accept.isPending} onClick={() => accept.mutate()}>
+      {current?.selection && current.sketch_digest && (
+        <TemporaryPlanReview
+          key={[task, reuse ? source : '', current.sketch_digest, current.outcome].join('/')}
+          sketch={current}
+          readOnly={adopted || (reuse && !current.saved)}
+          pending={accept.isPending}
+          onAdopt={(review) => accept.mutate(review)}
+        />
+      )}
+      {!current?.selection && !adopted && current?.sketch_digest && (!reuse || current.saved) && (
+        <Button disabled={accept.isPending} onClick={() => accept.mutate(undefined)}>
           {t('adoptSketch')}
         </Button>
       )}
