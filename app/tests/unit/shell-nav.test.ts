@@ -85,6 +85,10 @@ describe('侧栏', () => {
     expect(modeOf('/zh-CN/workbench', '')).toBe('chat')
     expect(modeOf('/zh-CN/workbench', 'mode=work')).toBe('work')
     expect(modeOf(`/zh-CN/workbench/chat/${C1}`, 'mode=work')).toBe('chat')
+    for (const kind of ['work', 'expert'] as const) {
+      const running = conversation(C1, { kind, wheel: 'runtime', active_task_id: C2 })
+      expect(modeOf(`/zh-CN/workbench/projects/${P1}/c/${C1}`, '', running)).toBe(kind)
+    }
     expect(modeOf('/zh-CN/workbench/expert', '')).toBe('expert')
     expect(modeOf(`/zh-CN/workbench/projects/${P1}/tasks/${C1}`, '')).toBe('expert')
     expect(
@@ -115,7 +119,7 @@ describe('侧栏', () => {
           title: '乙',
           kind: 'work',
           project_id: P1,
-          wheel: 'advisor',
+          wheel: 'runtime',
           last_active_at: '2026-10-03T00:00:00Z',
         }),
       ],

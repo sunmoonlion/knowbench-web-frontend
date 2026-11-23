@@ -20,7 +20,7 @@ export const conversationSchema = z
     environment_id: uuid.nullable(),
     project_root: z.string().nullable(),
     thread_id: z.string().nullable(),
-    wheel: z.enum(['user', 'advisor']),
+    wheel: z.enum(['user', 'runtime']),
     active_task_id: uuid.nullable(),
     created_at: z.string(),
     last_active_at: z.string().nullable(),

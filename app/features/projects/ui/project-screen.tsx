@@ -167,7 +167,7 @@ export function ProjectScreen({ project: id }: { project: string }) {
                           </span>
                           {each.active_task_id ? (
                             <span className="shrink-0 text-[13px] text-amber-600">
-                              {t('expertWorking')}
+                              {t('taskRunning')}
                             </span>
                           ) : null}
                           <span className="text-muted-foreground w-36 shrink-0 text-right text-[13px]">

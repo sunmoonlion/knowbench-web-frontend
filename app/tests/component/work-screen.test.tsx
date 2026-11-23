@@ -146,13 +146,13 @@ describe('工作页', () => {
     expect((sent.body as { token: string }).token.length).toBeGreaterThan(16)
   })
 
-  it('专家正在处理：输入框禁用并写明原因；专家交回的原样不显示', async () => {
+  it('任务进行中：输入框禁用并写明原因；专家交回的原样不显示', async () => {
     page(idOf('专家处理中'))
     expect(await screen.findByText('交给了专家')).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('专家正在处理'))
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('任务进行中'))
     const box = screen.getByRole('textbox', { name: '对它说' })
     expect(box).toBeDisabled()
-    expect(box).toHaveAttribute('placeholder', '专家正在处理，你可以看进度、答复待办或取消。')
+    expect(box).toHaveAttribute('placeholder', '任务进行中，你可以看进度、答复待办或取消。')
     expect(document.body.textContent).not.toContain('SELECT')
   })
 })

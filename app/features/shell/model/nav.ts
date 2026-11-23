@@ -9,8 +9,6 @@ export function modeOf(pathname: string, search: string, conversation?: Conversa
     return 'expert'
   }
   if (rest.startsWith('/chat/')) return 'chat'
-  // 专家正拿着这段对话：现在看的是专家
-  if (conversation?.wheel === 'advisor') return 'expert'
   if (conversation) return conversation.kind
   const asked = new URLSearchParams(search).get('mode')
   return asked === 'work' || asked === 'expert' ? asked : 'chat'
@@ -51,7 +49,7 @@ export type RecentItem = {
   id: string
   title: string | null
   kind: Conversation['kind']
-  busy: boolean // 专家正在这段对话里做事
+  busy: boolean // 这段对话有任务在运行
   project: string | null
   href: string | null
 }
@@ -75,7 +73,7 @@ export function recent(
         id: conversation.id,
         title: conversation.title,
         kind: conversation.kind,
-        busy: conversation.wheel === 'advisor',
+        busy: conversation.wheel === 'runtime',
         project: conversation.project_id ? (names.get(conversation.project_id) ?? null) : null,
         href: isBuilt(conversation.project_id === null ? 'chat' : 'projectConversation')
           ? conversationRoute(locale, conversation)
@@ -94,7 +92,7 @@ export type TreeConversation = {
 }
 export type TreeProject = {
   project: Project
-  busy: boolean // 专家正在这个项目的某段对话里做事
+  busy: boolean // 这个项目有任务在运行
   conversations: TreeConversation[]
 }
 export type TreeWorkspace = { key: string; root: string; online: boolean; projects: TreeProject[] }
@@ -122,7 +120,7 @@ export function computerTree(
       id: conversation.id,
       title: conversation.title,
       kind: conversation.kind,
-      busy: conversation.wheel === 'advisor',
+      busy: conversation.wheel === 'runtime',
       href: conversationRoute(locale, conversation),
     })
     byProject.set(conversation.project_id, list)
@@ -156,7 +154,7 @@ export function looseChats(conversations: Conversation[], locale: string): TreeC
       id: conversation.id,
       title: conversation.title,
       kind: conversation.kind,
-      busy: conversation.wheel === 'advisor',
+      busy: conversation.wheel === 'runtime',
       href: conversationRoute(locale, conversation),
     }))
 }

@@ -67,7 +67,7 @@ export type Approval = {
   decision: string | null
   // 后端给的按钮；没有就用默认的两个
   options: { id: string; label: string }[]
-  // 顾问驾驶时：属于哪一步、之后哪些步骤依赖它、同一步里是不是刚拒绝过
+  // 任务运行时驾驶时：属于哪一步、之后哪些步骤依赖它、同一步里是不是刚拒绝过
   step: { index: number; title: string } | null
   dependents: { step_id: string; title: string }[]
   afterDecline: boolean
@@ -102,7 +102,7 @@ export type Entry =
   | { kind: 'change'; key: string; step: ChangeStep }
   | { kind: 'approval'; key: string; approval: Approval }
   | { kind: 'question'; key: string; question: Question }
-  // 策略替用户答的：放行折叠一行，拒绝说明「顾问想做 X，按专家包规则拒绝了」
+  // 策略替用户答的：放行折叠一行，拒绝说明「任务运行时想做 X，按专家包规则拒绝了」
   | { kind: 'policy'; key: string; decision: 'accept' | 'decline'; command: string; source: string }
   // 本机上限（approval.md 第三条路）：请求越出了你电脑上的默认上限，你在电脑上当面允许或没允许。
   // 云端没有人能替你答；这里只是把那次决定摆出来

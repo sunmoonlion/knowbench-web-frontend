@@ -456,7 +456,7 @@
     "recent": "Recent",
     "noRecent": "No conversations yet",
     "untitled": "Untitled conversation",
-    "busy": "The expert is working",
+    "busy": "Task in progress",
     "notBuilt": "This page is still being built",
     "foot": {
       "pending": "Waiting for me",
@@ -490,7 +490,7 @@
       "confirm": "Remove",
       "cancel": "Cancel",
       "note": "Removed from here only; the folder on your computer stays",
-      "busy": "Not removed: an expert is still working in this conversation. Wait for it to finish or stop it first.",
+      "busy": "A task is running in this conversation. Wait for it to finish or stop it before removing the conversation.",
       "failed": "Not removed. Please try again."
     },
     "linkCheck": {
@@ -675,7 +675,7 @@
     "problem": {
       "backend_unavailable": "Cannot reach the service. Try again later.",
       "preview_no_sample": "The preview is read-only.",
-      "wheel_held_by_other": "The expert is working in this conversation; you cannot send now.",
+      "wheel_held_by_other": "A task is running in this conversation. You can send a message when it finishes.",
       "other": "It did not work. Please try again."
     },
     "askExpert": "Ask an expert",
@@ -701,9 +701,9 @@
       "cancelFailed": "The cancellation request failed. Please try again."
     },
     "band": {
-      "expert": "The expert is working"
+      "running": "Task in progress"
     },
-    "expertBusy": "The expert is working. You can watch progress, answer what is waiting, or cancel.",
+    "taskBusy": "A task is running. You can watch progress, answer what is waiting, or cancel.",
     "phase": {
       "commands": "{count} command(s)",
       "data": "queried data {count} time(s)",
@@ -779,7 +779,7 @@
     },
     "policy": {
       "allowed": "Allowed by rule: {command}",
-      "denied": "The advisor wanted to {command}; declined by the expert pack's rules"
+      "denied": "The expert pack’s rules blocked the requested command: {command}"
     },
     "local": {
       "approved": "You allowed this once on your computer: {scope}. The same directory and scope will not ask again for up to 30 minutes. Digest {digest}",
@@ -1149,13 +1149,13 @@
       "noQuestion": "Write what should be solved first.",
       "noSandbox": "No sandbox available yet: register a model key and start the sandbox first.",
       "offline": "The local link on your computer is not connected; the expert needs to work on it.",
-      "busy": "The expert is still working on something in this project.",
+      "busy": "A task is still running in this project.",
       "noMachine": "No computer registered. Connect one before starting Work or Expert."
     },
     "toBusy": "Take a look",
     "toSettings": "Go to settings",
     "problem": {
-      "project_busy": "The expert is still working on something in this project.",
+      "project_busy": "A task is still running in this project.",
       "environment_offline": "The local link on your computer is not connected; the expert needs to work on it.",
       "project_required": "This conversation is not in a project yet.",
       "preview_no_sample": "The preview is read-only.",
@@ -1371,7 +1371,7 @@
       "conversations": "Conversations",
       "empty": "Nothing in this project yet. Start with the three buttons above.",
       "noConversations": "No conversations yet.",
-      "expertWorking": "The expert is working",
+      "taskRunning": "Task in progress",
       "untitled": "Untitled conversation",
       "kind": {
         "chat": "Chat",

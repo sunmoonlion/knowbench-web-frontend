@@ -225,14 +225,14 @@ describe('工作页的时间线', () => {
     const said = (text: string) =>
       at('item/completed', { item: { type: 'agentMessage', id: `m${cursor}`, text } })
     const line = timeline([
-      at('wheel/handover', {}),
+      at('wheel/handover', { from: 'user', to: 'advisor' }),
       at('step/started', { step_id: 'writeup', title: '成稿', rework: 0 }),
       said('先把两份文件写进去。'),
       at('turn/completed', { turn: { status: 'interrupted' } }),
       at('step/started', { step_id: 'writeup', title: '成稿', rework: 1 }),
       said('```json\n{"answer": "x"}\n```'),
       at('turn/completed', { turn: { status: 'completed' } }),
-      at('wheel/return', { final_state: 'SUCCEEDED' }),
+      at('wheel/return', { from: 'runtime', to: 'user', final_state: 'SUCCEEDED' }),
     ])
     expect(line.entries.map((entry) => entry.kind)).toEqual([
       'handover',

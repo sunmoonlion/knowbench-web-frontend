@@ -456,7 +456,7 @@
     "recent": "最近",
     "noRecent": "还没有对话",
     "untitled": "未命名的对话",
-    "busy": "专家正在处理",
+    "busy": "任务进行中",
     "notBuilt": "这一页还在做",
     "foot": {
       "pending": "待我决定",
@@ -490,7 +490,7 @@
       "confirm": "确定删除",
       "cancel": "取消",
       "note": "只从这里移除，电脑上的文件夹不动",
-      "busy": "没有删掉：专家正在这段对话里干活，等它做完或先停下再删。",
+      "busy": "这段对话有任务在运行，等任务结束或先停下再删。",
       "failed": "没有删掉，请再试一次。"
     },
     "linkCheck": {
@@ -675,7 +675,7 @@
     "problem": {
       "backend_unavailable": "连不上服务，请稍后再试。",
       "preview_no_sample": "预览里只能看，不能发。",
-      "wheel_held_by_other": "专家正在处理这段对话，现在不能发。",
+      "wheel_held_by_other": "这段对话有任务在运行，结束后可以发消息。",
       "other": "没有做成，请再试一次。"
     },
     "askExpert": "请专家",
@@ -701,9 +701,9 @@
       "cancelFailed": "取消请求未成功，请重试。"
     },
     "band": {
-      "expert": "专家正在处理"
+      "running": "任务进行中"
     },
-    "expertBusy": "专家正在处理，你可以看进度、答复待办或取消。",
+    "taskBusy": "任务进行中，你可以看进度、答复待办或取消。",
     "phase": {
       "commands": "{count} 条命令",
       "data": "查了 {count} 次数据",
@@ -779,7 +779,7 @@
     },
     "policy": {
       "allowed": "按规则放行：{command}",
-      "denied": "顾问想做 {command}，按专家包规则拒绝了"
+      "denied": "任务请求执行 {command}，专家包规则已拒绝"
     },
     "local": {
       "approved": "你在电脑上允许了一次：{scope}。同一目录、同样范围的请求在最长 30 分钟内不再问。摘要 {digest}",
@@ -1149,13 +1149,13 @@
       "noQuestion": "先写清楚要解决什么问题。",
       "noSandbox": "还没有可用的沙箱：先登记模型的 key、拉起沙箱。",
       "offline": "你电脑上的本地 link 没连着，专家要在那台电脑上干活。",
-      "busy": "这个项目里有一件事专家还在做。",
+      "busy": "这个项目有任务在运行。",
       "noMachine": "还没有登记电脑。先接入电脑，再开始工作或请专家。"
     },
     "toBusy": "去看看",
     "toSettings": "去设置",
     "problem": {
-      "project_busy": "这个项目里有一件事专家还在做。",
+      "project_busy": "这个项目有任务在运行。",
       "environment_offline": "你电脑上的本地 link 没连着，专家要在那台电脑上干活。",
       "project_required": "这段对话还没有放进项目。",
       "preview_no_sample": "预览里只能看，不能交出。",
@@ -1371,7 +1371,7 @@
       "conversations": "对话",
       "empty": "这个项目里还什么都没有。用上面三个按钮开始。",
       "noConversations": "还没有对话。",
-      "expertWorking": "专家正在处理",
+      "taskRunning": "任务进行中",
       "untitled": "未命名的对话",
       "kind": {
         "chat": "聊天",

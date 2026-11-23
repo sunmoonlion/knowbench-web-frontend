@@ -64,7 +64,7 @@ export function WorkScreen({
     ? (projects.data ?? []).find((each) => each.id === session.project_id)
     : undefined
   const directory = project?.directory ?? session?.project_root ?? null
-  const expert = session?.wheel === 'advisor'
+  const runtimeDriving = session?.wheel === 'runtime'
   const failed = [act.say, act.stop, act.rename, act.answer].find((each) => each.isError)?.error
   const problem = failed
     ? act.answer.isError
@@ -87,10 +87,10 @@ export function WorkScreen({
           </span>
         ) : null}
         <div className="flex-1" />
-        {/* 顶栏只放慢变的状态：专家拿着方向盘（决定你能不能打字）、连接断了 */}
-        {expert ? (
+        {/* 顶栏只放慢变的状态：任务占用会话（决定你能不能打字）、连接断了 */}
+        {runtimeDriving ? (
           <span role="status" className="shrink-0 text-[13px] font-medium">
-            {t('band.expert')}
+            {t('band.running')}
           </span>
         ) : null}
         {state === 'offline' ? (
@@ -187,14 +187,14 @@ export function WorkScreen({
             onSend={(text) => act.say.mutateAsync(text)}
             onStop={() => act.stop.mutate()}
             placeholder={t('placeholder')}
-            disabledReason={expert ? t('expertBusy') : null}
+            disabledReason={runtimeDriving ? t('taskBusy') : null}
             footer={cost}
           >
             <Button
               variant="outline"
               size="sm"
               disabled={
-                line.live !== null || expert || !session?.project_id || !isBuilt('askExpert')
+                line.live !== null || runtimeDriving || !session?.project_id || !isBuilt('askExpert')
               }
               title={isBuilt('askExpert') ? undefined : tc('notBuilt')}
               onClick={() =>
