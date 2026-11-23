@@ -99,6 +99,8 @@
     "replan": "Plan again with this information (up to CNY 2)",
     "planLabels": "Step {index}: enter every routing label required by the question, one per line",
     "graphErrors": {
+      "selection_repair_failed": "The revised proposal still fails the planning checks. This round has ended.",
+      "selection_planning_timeout": "The planning round reached its time limit before a correction could start.",
       "selection_patterns": "The steps and patterns disagree. Independent review already includes its internal join. Request a revision.",
       "selection_route": "Check the required labels at each conditional step and revise the proposal.",
       "selection_candidate": "A method or installation has changed or is unavailable. Request a fresh proposal.",

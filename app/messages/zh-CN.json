@@ -99,6 +99,8 @@
     "replan": "按补充内容再拟一轮（最多 ¥2）",
     "planLabels": "第 {index} 步：根据本题填写所有分派标识，每行一个",
     "graphErrors": {
+      "selection_repair_failed": "自动纠正一次后，草图仍未通过核验，本轮已结束。",
+      "selection_planning_timeout": "本轮规划时间已用完，未发起自动纠正。",
       "selection_patterns": "步骤和模板对不上。独立复核本身包含汇合，请补充要求后重拟。",
       "selection_route": "请对照每一步的分派条件，补齐所有必需分支后重拟。",
       "selection_candidate": "有方法已撤回、换版或失去使用资格，请重新推荐。",
