@@ -29,7 +29,6 @@ it('requires an independent routing decision, each label and confirmation of the
             ],
           },
           method_titles: { a: '费用核对', b: '税务核对' },
-          patterns: ['P5'],
         }}
       />
     </NextIntlClientProvider>,

@@ -240,7 +240,6 @@ const sketch = z.object({
     .optional(),
   aliases: z.record(z.string(), pin).optional(),
   method_titles: z.record(z.string(), z.string()).optional(),
-  patterns: z.array(z.enum(['P1', 'P2', 'P3', 'P4', 'P5'])).optional(),
   routing_alternatives: z.array(z.string()).optional(),
   probe: probeReceipt.optional(),
   runtime: z.object({ patterns: z.record(z.string(), z.boolean()) }).optional(),

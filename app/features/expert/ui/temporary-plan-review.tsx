@@ -4,14 +4,6 @@ import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import type { PlanReview, TemporarySketch } from '../api/formal-expert'
 
-const features = {
-  P1: 'sequence',
-  P2: 'join',
-  P3: 'independent_review',
-  P4: 'object_batch',
-  P5: 'conditional',
-}
-
 export function TemporaryPlanReview({
   sketch,
   readOnly,
@@ -56,9 +48,6 @@ export function TemporaryPlanReview({
   return (
     <section className="space-y-3" aria-label={t('planSteps')}>
       <h3>{t('planSteps')}</h3>
-      {sketch.patterns?.length ? (
-        <p>{sketch.patterns.map((p) => t('patterns.' + features[p])).join(' · ')}</p>
-      ) : null}
       {sketch.selection?.object_batch && (
         <p>{t('planBatch', { count: sketch.selection.object_batch.max_objects })}</p>
       )}

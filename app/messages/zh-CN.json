@@ -99,11 +99,11 @@
     "unavailablePattern": "未启用",
     "missingCapability": "缺少必需能力：{names}",
     "patterns": {
-      "sequence": "P1 按顺序交接产物",
-      "join": "P2 汇合固定分支",
-      "independent_review": "P3 隔离后独立复核",
-      "object_batch": "P4 按确认的对象清单展开",
-      "conditional": "P5 按输入规则选路"
+      "sequence": "按顺序交接产物",
+      "join": "汇合固定分支",
+      "independent_review": "隔离后独立复核",
+      "object_batch": "按确认的对象清单展开",
+      "conditional": "按输入规则选路"
     },
     "attachPlan": "附上已保存计划的方法版本和输出名称",
     "chooseProbe": "选择用于核对表头的资料",

@@ -99,11 +99,11 @@
     "unavailablePattern": "Unavailable",
     "missingCapability": "Required capabilities unavailable: {names}",
     "patterns": {
-      "sequence": "P1 Ordered handoff",
-      "join": "P2 Join fixed branches",
-      "independent_review": "P3 Independent review",
-      "object_batch": "P4 Process an object list",
-      "conditional": "P5 Route by input"
+      "sequence": "Ordered handoff",
+      "join": "Join fixed branches",
+      "independent_review": "Independent review",
+      "object_batch": "Process an object list",
+      "conditional": "Route by input"
     },
     "attachPlan": "Include this saved plan’s method versions and output names",
     "chooseProbe": "Choose material for a header check",
