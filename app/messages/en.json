@@ -65,6 +65,24 @@
     "sealedFindings": "Independent findings sealed, version {version}"
   },
   "formalIntake": {
+    "treeTitle": "Goal decomposition",
+    "focus": "Revise this part",
+    "whole": "Whole request",
+    "newTool": "Draft a tool for this gap",
+    "nodeState": {
+      "pending": "Pending",
+      "hit": "Method found",
+      "split": "Decomposed",
+      "gap": "Missing capability",
+      "clarify": "Needs clarification"
+    },
+    "operator": {
+      "leaf": "Direct method",
+      "sequence": "Sequence",
+      "parallel_join": "Parallel join",
+      "branch": "Conditional branch",
+      "bounded_loop": "Bounded iteration"
+    },
     "temporaryDelivery": "Temporary plan delivery. These fields come from the accepted artifacts of this execution. The original task records step checks and calls. Overall business conclusions await review.",
     "unifiedTitle": "Ask an expert",
     "runtimePatterns": "Runner capabilities",

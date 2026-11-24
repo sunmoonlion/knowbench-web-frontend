@@ -29,6 +29,7 @@ export function TemporaryPlanning({
   const t = useTranslations('formalIntake')
   const { csrfToken } = useWorkbench()
   const [details, setDetails] = useState('')
+  const [focus, setFocus] = useState('')
   const [materialId, setMaterialId] = useState('')
   const [sheet, setSheet] = useState('')
   const [column, setColumn] = useState('')
@@ -65,7 +66,7 @@ export function TemporaryPlanning({
         task,
         csrfToken,
         digest,
-        details,
+        focus && details.trim() ? `[${focus}] ${details}` : details,
         plan.data?.planning_task,
         plan.data?.probe?.consent,
       ),
@@ -133,6 +134,20 @@ export function TemporaryPlanning({
           </Button>
         </div>
       )}
+      {current?.selection?.tree && (
+        <section>
+          <h3>{t('treeTitle')}</h3>
+          <ul>
+            {current.selection.tree.nodes.map((n) => (
+              <li key={n.id} style={{ marginInlineStart: (n.id.split('_').length - 1) * 16 }}>
+                {n.goal} · {t('nodeState.' + n.status)}
+                {n.operator && ' · ' + t('operator.' + n.operator)}
+                {n.reason && <p>{n.reason}</p>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {plan.data?.outcome === 'planning' && <p role="status">{t('planning')}</p>}
       {['clarify', 'gap'].includes(plan.data?.outcome ?? '') && (
         <>
@@ -196,11 +211,24 @@ export function TemporaryPlanning({
         !reuse &&
         (plan.data.remaining_rounds ?? 0) > 0 && (
           <>
+            {plan.data.selection?.tree && (
+              <label>
+                {t('focus')}{' '}
+                <select value={focus} onChange={(e) => setFocus(e.target.value)}>
+                  <option value="">{t('whole')}</option>
+                  {plan.data.selection.tree.nodes.map((n) => (
+                    <option key={n.id} value={n.id}>
+                      {n.goal}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label>
               {t('clarifyPlan')}
               <textarea
                 value={details}
-                maxLength={1500}
+                maxLength={focus ? 1497 - focus.length : 1500}
                 onChange={(e) => setDetails(e.target.value)}
               />
             </label>

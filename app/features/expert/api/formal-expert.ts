@@ -246,6 +246,22 @@ const sketchStep = z.object({
 const sketch = z.object({
   selection: z
     .object({
+      tree: z
+        .object({
+          nodes: z.array(
+            z.object({
+              id: z.string(),
+              parent: z.string().nullable(),
+              goal: z.string(),
+              reason: z.string(),
+              status: z.enum(['pending', 'hit', 'split', 'gap', 'clarify']),
+              operator: z
+                .enum(['leaf', 'sequence', 'parallel_join', 'branch', 'bounded_loop'])
+                .nullable(),
+            }),
+          ),
+        })
+        .nullish(),
       steps: z.array(sketchStep),
       object_batch: z.object({ max_objects: z.number() }).nullable(),
     })

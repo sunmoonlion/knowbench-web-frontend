@@ -65,6 +65,24 @@
     "sealedFindings": "首轮独立发现已封存，第 {version} 版"
   },
   "formalIntake": {
+    "treeTitle": "规划分解",
+    "focus": "本轮重拟范围",
+    "whole": "完整问题",
+    "newTool": "用这个缺口起草工具方法",
+    "nodeState": {
+      "pending": "待规划",
+      "hit": "已有方法",
+      "split": "分解",
+      "gap": "缺能力",
+      "clarify": "待澄清"
+    },
+    "operator": {
+      "leaf": "直接选用",
+      "sequence": "串行",
+      "parallel_join": "多路汇总",
+      "branch": "条件分派",
+      "bounded_loop": "有界迭代"
+    },
     "temporaryDelivery": "临时组合交付。下列字段来自本次执行的已验收产物。各步校验与调用见原委托，整体业务口径和结论待复核。",
     "unifiedTitle": "请专家",
     "runtimePatterns": "当前运行器可用的编排方式",
