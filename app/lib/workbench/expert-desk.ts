@@ -9,9 +9,10 @@ import { useWorkbench } from '@/lib/workbench/context'
 import { getJson, seg, sendJson } from '@/lib/workbench/http'
 import { workbenchKeys } from '@/lib/workbench/queries'
 
-export function usePacks() {
+export function usePacks(enabled = true) {
   return useQuery({
     queryKey: ['workbench', 'expert', 'packs'],
+    enabled,
     queryFn: async () => (await getJson(packsSchema, '/api/workbench/packs')).packs,
   })
 }

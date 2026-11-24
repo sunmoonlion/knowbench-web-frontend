@@ -155,29 +155,16 @@ describe('请专家：数据按问题定', () => {
     expect(editUrl.searchParams.has('match')).toBe(false)
     expect(editUrl.searchParams.get('expert')).toBe(KNOWBOT)
     expect(calls).toHaveLength(0)
-    fireEvent.click(screen.getByRole('button', { name: 'ai去knowmart请回专家' }))
-    await waitFor(() => expect(calls).toHaveLength(1))
-    expect(calls[0].path).toBe(`/api/workbench/projects/${project}/find-expert`)
-    expect(calls[0].body.question).toBe(revised)
-    expect(calls[0].body).not.toHaveProperty('match')
-    expect(calls[0].body).not.toHaveProperty('plan')
+    // A named expert continues through the project confirmation page on this URL.
   })
 
-  it('未填问题也能从并列入口到 knowlab 提交创意，不创建申请或收费任务', async () => {
-    window.sessionStorage.removeItem('workbench.question')
+  it('空问题只有请专家入口，不创建申请或收费任务', async () => {
+    window.sessionStorage.clear()
     page(<AskExpertScreen project={project} from={null} expert={null} />)
-    const link = await screen.findByRole('link', { name: '去knowlab提交创意' })
-    expect(link).toHaveAttribute(
-      'href',
-      'https://knowlab.example.test/zh-CN/applications/new?from=knowbench&ref=expert',
-    )
-    expect(link).toHaveAttribute('target', '_blank')
-    expect(screen.getByRole('link', { name: '自己去knowmart请专家' }).parentElement).toBe(
-      link.parentElement,
-    )
-    expect(screen.getByRole('button', { name: 'ai去knowmart请回专家' }).parentElement).toBe(
-      link.parentElement,
-    )
+    expect(await screen.findByRole('button', { name: '请专家' })).toBeDisabled()
+    expect(screen.queryByRole('link', { name: '去knowlab提交创意' })).toBeNull()
+    expect(screen.queryByRole('link', { name: '自己去knowmart请专家' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'ai去knowmart请回专家' })).toBeNull()
     expect(calls).toHaveLength(0)
   })
 
@@ -200,26 +187,8 @@ describe('请专家：数据按问题定', () => {
         return original(input, init)
       }),
     )
-    page(<AskExpertScreen project={project} from={null} expert={KNOWBOT} />)
-    await screen.findByText(messages.askExpert.queueHint)
-    fireEvent.click(screen.getByRole('button', { name: 'ai去knowmart请回专家' }))
-    await waitFor(() => expect(calls).toHaveLength(1))
-    expect(calls[0].path).toBe(`/api/workbench/projects/${project}/find-expert`)
-  })
-
-  it('问题为空时AI入口可点，聚焦问题而不发起付费查找；填写后再次点击才查找', async () => {
-    window.sessionStorage.clear()
     page(<AskExpertScreen project={project} from={null} expert={null} />)
-    await screen.findByText('先写清楚要解决什么问题。')
-    const find = screen.getByRole('button', { name: 'ai去knowmart请回专家' })
-    expect(find).toBeEnabled()
-    fireEvent.click(find)
-    const input = screen.getByRole('textbox', { name: '要解决什么问题' })
-    expect(input).toHaveFocus()
-    expect(calls).toHaveLength(0)
-    fireEvent.change(input, { target: { value: '分析贵州茅台营收' } })
-    expect(calls).toHaveLength(0)
-    fireEvent.click(find)
+    fireEvent.click(screen.getByRole('button', { name: '请专家' }))
     await waitFor(() => expect(calls).toHaveLength(1))
     expect(calls[0].path).toBe(`/api/workbench/projects/${project}/find-expert`)
   })
@@ -236,18 +205,20 @@ describe('请专家：数据按问题定', () => {
     expect(calls[0].body).not.toHaveProperty('data')
   })
 
-  it('「ai去knowmart请回专家」不用先选专家：带着问题开一轮找专家', async () => {
+  it('按原问题发起一次正式匹配并写入可恢复的委托地址', async () => {
     page(<AskExpertScreen project={project} from={null} expert={null} />)
-    const find = await screen.findByRole('button', { name: 'ai去knowmart请回专家' })
-    await waitFor(() => expect(find).toBeEnabled())
+    const find = await screen.findByRole('button', { name: '请专家' })
     fireEvent.click(find)
     await waitFor(() => expect(calls).toHaveLength(1))
     expect(calls[0].path).toBe(`/api/workbench/projects/${project}/find-expert`)
-    expect(calls[0].body).toMatchObject({ question: '看看这家公司这几年的年报' })
-    expect(calls[0].body.match_contract).toBe('knowbench/expert-match/v4')
+    expect(calls[0].body).toMatchObject({
+      question: '看看这家公司这几年的年报',
+      match_contract: 'knowbench/expert-match/v5',
+      retain_empty: true,
+    })
     await waitFor(() =>
-      expect(push).toHaveBeenCalledWith(
-        expect.stringContaining('?match=11111111-1111-4111-8111-111111111111'),
+      expect(new URL(window.location.href).searchParams.get('formalMatch')).toBe(
+        '11111111-1111-4111-8111-111111111111',
       ),
     )
   })

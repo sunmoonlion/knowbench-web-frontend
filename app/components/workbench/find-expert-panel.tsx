@@ -15,11 +15,7 @@ import {
   type MatchSelection,
 } from '@/contracts/workbench-v2'
 import { useWorkbench } from '@/lib/workbench/context'
-import {
-  useCancelFind,
-  useDirectAnswer,
-  useFindResult,
-} from '@/lib/workbench/find-expert'
+import { useCancelFind, useDirectAnswer, useFindResult } from '@/lib/workbench/find-expert'
 import { usePinKnowbot } from '@/lib/workbench/knowbots'
 import { routes } from '@/lib/workbench/routes'
 import { cn } from '@/lib/utils'
@@ -60,9 +56,16 @@ export function FindExpertPanel({
       (expectedQuestion !== undefined && data.question !== expectedQuestion.trim()))
   )
     return (
-      <p role="status" className="text-sm">
-        {t('questionChanged')}
-      </p>
+      <div className="space-y-2">
+        <p role="status" className="text-sm">
+          {t('questionChanged')}
+        </p>
+        {onEdit && data.project_id === project && expectedQuestion?.trim() && (
+          <Button size="sm" variant="outline" onClick={() => onEdit(expectedQuestion)}>
+            {t('editQuestion')}
+          </Button>
+        )}
+      </div>
     )
   if (found.isError)
     return (
@@ -112,6 +115,11 @@ export function FindExpertPanel({
             {t(cancel.isPending || cancel.isSuccess ? 'cancelling' : 'cancel')}
           </Button>
         ) : null}
+        {message === 'ended' && data && onEdit && (
+          <Button size="sm" variant="outline" onClick={() => onEdit(data.question)}>
+            {t('editQuestion')}
+          </Button>
+        )}
         {cancel.isError ? <p role="alert">{t('cancelFailed')}</p> : null}
         {data ? (
           <Link href={routes.project(locale, project)} className="underline underline-offset-3">

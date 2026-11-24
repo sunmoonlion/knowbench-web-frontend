@@ -551,7 +551,7 @@
       },
       "expert": {
         "name": "专家",
-        "what": "按固定的方法一步一步做，每一步都验收，成稿写进项目文件。慢一些，贵一些。",
+        "what": "写下问题，先匹配能承接的专家。匹配后的方案由你确认。",
         "placeholder": "要专家解决什么问题",
         "send": "交给专家"
       }
@@ -591,11 +591,6 @@
       "who": "请哪一位",
       "loading": "加载中…",
       "preparing": "筹备中",
-      "summon": "自己去knowmart请专家",
-      "selection": "如何选择专家",
-      "find": "ai去knowmart请回专家",
-      "findHint": "按你填写的问题查找，本轮模型费用最多 2 元。选中后高亮显示，提交问题才开始分析。",
-      "findFailed": "没有开始找，请重试。同一请求不会重复建委托。",
       "remove": "删除",
       "removeNamed": "删除 {name}",
       "removeFailed": "没有删除成功，请重试。"
@@ -1132,10 +1127,9 @@
     "pickBody": "专家接手的是整个项目：项目里的文件和对话。",
     "noMachine": "还没有登记电脑。先接入电脑，再开始工作或请专家。",
     "preparing": "筹备中",
-    "summonKnowbot": "自己去knowmart请专家"
+    "summonKnowbot": "浏览专家市场"
   },
   "askExpert": {
-    "prepareFormal": "进入正式专家匹配",
     "title": "请专家",
     "titleWith": "请专家：{name}",
     "who": "请哪一位",
@@ -1191,16 +1185,11 @@
       "lead": "不用先选数据。请专家后，专家先按你的问题列出要哪些数据，你在委托页确认（能换、能改、能去掉、能加）后，已有资料直接使用，需要补取的项目按清单处理。",
       "bound": "专家还自带 {count} 份资料（作者挑选的）。"
     },
-    "find": "ai去knowmart请回专家",
-    "finding": "正在开始…",
-    "findHint": "按你填写的问题查找，本轮模型费用最多 2 元。选中后高亮显示，提交问题才开始分析。",
     "findFailed": "没有开始找，请再试一次。",
     "checkScope": "核对范围并选中",
     "scopeLoadFailed": "暂时无法读取这位专家的能力范围，请重新读取后再请。",
     "scopeRetry": "重新读取",
-    "summon": "自己去knowmart请专家",
-    "queueHint": "专家已选好；提交后将排队，前一项委托结束后开始执行。",
-    "createIdea": "去knowlab提交创意"
+    "queueHint": "专家已选好；提交后将排队，前一项委托结束后开始执行。"
   },
   "findExpert": {
     "loading": "正在读取这次查找的状态…",
@@ -1210,11 +1199,11 @@
     "statusUnknown": "暂时无法确认查找进度，请打开项目查看任务状态。",
     "viewTasks": "查看项目任务",
     "running": "你的模型正在按各位专家自己写的范围替你找…",
-    "ended": "这一轮没有找完。可以重新点击「ai去knowmart请回专家」，或点击「自己去knowmart请专家」。",
+    "ended": "这轮查找已结束。可以带回原问题，重新发起委托。",
     "failed": "取不到找专家的结果，请刷新再试。",
     "readAgain": "重新读取结果",
     "clarifiedQuestion": "补充后的完整问题",
-    "clarificationHint": "保留你要问的内容，补清上面的疑问。带回后可继续修改，再点「ai去knowmart请回专家」开始新一轮（最多 2 元）；旧记录保留，带回本身不收费。",
+    "clarificationHint": "把补充后的问题带回提问框，确认后再提交。原记录保留。",
     "useClarification": "带回提问框",
     "summoning": "找到了：{name}，正在选中…",
     "summonFailed": "暂时未能选中这位专家，请重试。",

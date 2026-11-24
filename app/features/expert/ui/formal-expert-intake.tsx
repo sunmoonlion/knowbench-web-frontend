@@ -3,14 +3,15 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { z } from 'zod'
 
+import { FormalExpertStart } from '@/components/workbench/formal-expert-start'
 import { Button } from '@/components/ui/button'
 import { useWorkbench } from '@/lib/workbench/context'
 import { formalMethodReferenceSchema as pin } from '@/lib/workbench/formal-method-reference'
 import { routes } from '@/lib/workbench/routes'
-import { readRound, startRound, selectVersion, endUnmatched } from '../api/formal-expert'
+import { readRound, selectVersion, endUnmatched } from '../api/formal-expert'
 import { ExpertDuty } from './expert-continuity'
 import { ExpertPreparation } from './formal-expert-preparation'
 import { ChildHandoffs } from './child-handoffs'
@@ -25,37 +26,22 @@ const pinKey = (p: z.infer<typeof pin>) => [p.method_id, p.version, p.digest].jo
 export function FormalExpertIntake({
   project,
   question,
-  unified = false,
+  blocked = false,
   onRestore,
   from,
 }: {
   project: string
   from: string | null
   question: string
-  unified?: boolean
+  blocked?: boolean
   onRestore?: (value: string) => void
 }) {
   const t = useTranslations('formalIntake')
   const { csrfToken, locale } = useWorkbench()
   const params = useSearchParams()
   const param = params.get('formalMatch') ?? params.get('formal_match')
-  const named = params.get('formalReference')
-  let reference: z.infer<typeof pin> | undefined
-  if (named !== null) {
-    try {
-      reference = pin.parse(JSON.parse(named))
-    } catch {
-      /* report an invalid pin before matching */
-    }
-  }
   const [task, setTask] = useState(param)
-  const [empty, setEmpty] = useState<{ search: string; next: number | null } | null>(null)
-  const pending = useRef<{ identity: string; key: string } | null>(null)
-  const locked = useRef(false)
   const current = question.trim()
-  const search = JSON.stringify([project, from, task, current, named])
-  const emptyPage = empty?.search === search ? empty : null
-  const offset = emptyPage?.next ?? 0
   const round = useQuery({
     queryKey: ['formal-expert-round', project, task],
     enabled: !!task,
@@ -74,48 +60,6 @@ export function FormalExpertIntake({
   useEffect(() => {
     if (original && onRestore) onRestore(original)
   }, [original, onRestore])
-  const start = useMutation({
-    mutationFn: async () => {
-      const storageKey = `workbench.formal-intake.${project}`
-      const identity = offset ? JSON.stringify([search, offset]) : search
-      if (!pending.current || pending.current.identity !== identity) {
-        let key = crypto.randomUUID()
-        try {
-          const old = JSON.parse(sessionStorage.getItem(storageKey) ?? 'null')
-          if (old?.identity === identity && z.uuid().safeParse(old.key).success) key = old.key
-        } catch {
-          /* retry still works within this page */
-        }
-        pending.current = { identity, key }
-      }
-      try {
-        sessionStorage.setItem(storageKey, JSON.stringify(pending.current))
-      } catch {
-        /* optional */
-      }
-      const result = await startRound(project, csrfToken, {
-        idempotency_key: pending.current.key,
-        question: current,
-        ...(offset ? { directory_offset: offset } : {}),
-        ...(reference ? { reference } : {}),
-        ...(task && !round.data?.formal?.ended ? { revises: task } : {}),
-        ...(from ? { source_session: from } : {}),
-      })
-      const id = 'task_id' in result ? result.task_id : null
-      const url = new URL(window.location.href)
-      if (id) url.searchParams.set('formalMatch', id)
-      window.history.replaceState(window.history.state, '', url)
-      if (id) setTask(id)
-      setEmpty('empty' in result ? { search, next: result.next } : null)
-      pending.current = null
-      try {
-        sessionStorage.removeItem(storageKey)
-      } catch {
-        /* optional */
-      }
-    },
-    retry: false,
-  })
   const choice = useMutation({
     mutationFn: (reference: z.infer<typeof pin>) =>
       selectVersion(task!, csrfToken, reference, round.data!.formal!.review_digest),
@@ -150,42 +94,27 @@ export function FormalExpertIntake({
           )}
         </div>
       )}
-      {named !== null && (
-        <p>
-          {reference
-            ? t('named', { id: reference.method_id, version: reference.version })
-            : t('invalidPin')}
-        </p>
-      )}
-      <Button
-        type="button"
-        disabled={
-          (named !== null && !reference) ||
-          !current ||
-          current.length > 2000 ||
-          start.isPending ||
+      <FormalExpertStart
+        project={project}
+        from={from}
+        task={task}
+        ended={round.data?.formal?.ended}
+        question={current}
+        blocked={
+          blocked ||
           busy ||
           !!result ||
           (!!round.data?.execution && same) ||
           !!round.data?.superseded_by ||
           (!!task && !round.data)
         }
-        onClick={async () => {
-          if (locked.current) return
-          locked.current = true
-          try {
-            await start.mutateAsync()
-          } catch {
-            /* shown below */
-          } finally {
-            locked.current = false
-          }
+        onStarted={(id) => {
+          setTask(id)
+          const url = new URL(window.location.href)
+          url.searchParams.set('formalMatch', id)
+          window.history.replaceState(window.history.state, '', url)
         }}
-      >
-        {emptyPage?.next ? t('continueSearch') : t(unified ? 'unifiedTitle' : 'title')}
-      </Button>
-      <p className="text-muted-foreground text-sm">{t('cost')}</p>
-      {emptyPage && <p role="status">{emptyPage.next ? t('emptyWindow') : t('empty')}</p>}
+      />
       {round.data?.superseded_by && (
         <a
           className="underline"
@@ -211,7 +140,6 @@ export function FormalExpertIntake({
           )}
         </p>
       )}
-      {start.isError && <p role="alert">{t('failed')}</p>}
       {round.isError && (
         <p role="alert">
           {t('unavailable')}{' '}

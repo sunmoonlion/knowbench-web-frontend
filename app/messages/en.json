@@ -551,7 +551,7 @@
       },
       "expert": {
         "name": "Expert",
-        "what": "Follows a fixed method step by step, checks every step, and writes the deliverable into the project files. Slower and costlier.",
+        "what": "Describe your question to find an expert. You review the proposal before work starts.",
         "placeholder": "What should the expert solve",
         "send": "Hand to the expert"
       }
@@ -591,11 +591,6 @@
       "who": "Which expert",
       "loading": "Loading…",
       "preparing": "Coming soon",
-      "summon": "Invite an expert from knowmart yourself",
-      "selection": "Expert selection",
-      "find": "Let AI bring back an expert from knowmart",
-      "findHint": "Find an expert for your question, with model costs capped at CNY 2 per search. The selected expert is highlighted; analysis starts only when you submit.",
-      "findFailed": "Matching did not start. Retry safely without creating a duplicate task.",
       "remove": "Remove",
       "removeNamed": "Remove {name}",
       "removeFailed": "Could not remove this expert. Please retry."
@@ -1132,10 +1127,9 @@
     "pickBody": "The expert takes over the whole project: its files and conversations.",
     "noMachine": "No computer registered. Connect one before starting Work or Expert.",
     "preparing": "Coming soon",
-    "summonKnowbot": "Invite an expert from knowmart yourself"
+    "summonKnowbot": "Browse the expert marketplace"
   },
   "askExpert": {
-    "prepareFormal": "Review formal expert matching",
     "title": "Ask an expert",
     "titleWith": "Ask an expert: {name}",
     "who": "Which expert",
@@ -1191,21 +1185,16 @@
       "lead": "No need to choose data now. After you ask, the expert first lists the data your question needs. Confirm it on the request page (switch, change, drop or add); available materials are used directly and items that need fetching are handled as listed.",
       "bound": "It also brings {count} item(s) of its own, chosen by its author."
     },
-    "find": "Let AI bring back an expert from knowmart",
-    "finding": "Starting…",
-    "findHint": "Find an expert for your question, with model costs capped at CNY 2 per search. The selected expert is highlighted; analysis starts only when you submit.",
     "findFailed": "Could not start looking. Please try again.",
     "checkScope": "Check scope and select",
     "scopeLoadFailed": "Unable to read this expert’s scope. Reload before requesting.",
     "scopeRetry": "Reload",
-    "summon": "Invite an expert from knowmart yourself",
-    "queueHint": "Expert selected. Submit to queue execution after the current task.",
-    "createIdea": "Submit an idea in knowlab"
+    "queueHint": "Expert selected. Submit to queue execution after the current task."
   },
   "findExpert": {
     "readAgain": "Reload result",
     "clarifiedQuestion": "Complete clarified question",
-    "clarificationHint": "Keep your request and clarify the points above. Review it in the question entry, then choose “Let AI bring back an expert from knowmart” to start a new search (up to CNY 2). Previous records remain. Copying the question back does not incur a charge.",
+    "clarificationHint": "Bring your revised question back to the form and review it before submitting. The previous record is kept.",
     "useClarification": "Use in question entry",
     "loading": "Reading the status of this search…",
     "queued": "Lookup submitted. It only queues behind other lookups in this project, not analysis tasks.",
@@ -1214,7 +1203,7 @@
     "statusUnknown": "The search progress is currently unclear. Open the project to check its tasks.",
     "viewTasks": "View project tasks",
     "running": "Your model is looking through what each expert says it handles…",
-    "ended": "This search did not finish. Try “Let AI bring back an expert from knowmart” again, or choose “Invite an expert from knowmart yourself”.",
+    "ended": "This search has ended. You can return to your question and start a new request.",
     "failed": "Could not load the result. Refresh and try again.",
     "summoning": "Found {name}. Selecting…",
     "summonFailed": "Could not select this expert. Please retry.",

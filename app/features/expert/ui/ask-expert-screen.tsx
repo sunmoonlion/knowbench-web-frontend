@@ -4,14 +4,11 @@ import { CheckIcon, FolderIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import { readExpertEntry } from '../api/formal-expert'
 import { useState, useSyncExternalStore } from 'react'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ExpertChoices } from '@/components/workbench/expert-choices'
-import { CrossAppLink } from '@/components/common/cross-app-link'
 import type { ChosenExpert } from '@/components/workbench/find-expert-panel'
 import { ConnectComputerLink } from '@/components/workbench/connect-computer'
 import { useWorkbench } from '@/lib/workbench/context'
@@ -46,7 +43,6 @@ export function AskExpertScreen({
   const t = useTranslations('askExpert')
   const router = useRouter()
   const { locale } = useWorkbench()
-  const packs = usePacks()
   const project = useProjectDetail(projectId)
   const sandboxes = useSandboxes()
   const machines = useMachines()
@@ -67,14 +63,8 @@ export function AskExpertScreen({
     }
   }
   // 固定与动态专家都沿用数据授权、补采和本人确认。
-  const fresh = !findTask && !chosen
-  const entry = useQuery({
-    queryKey: ['expert-entry', projectId],
-    queryFn: readExpertEntry,
-    enabled: fresh,
-    retry: false,
-  })
-  const legacy = !fresh || (!entry.isPending && !entry.data?.unified)
+  const legacy = !!findTask || !!chosen
+  const packs = usePacks(legacy)
   const needs = useDataNeeds(chosen)
   const checkingNeeds =
     Boolean(chosen?.startsWith('knowbot:')) && (needs.isPending || needs.isError)
@@ -141,7 +131,7 @@ export function AskExpertScreen({
   }
 
   // 让你的模型按专家自己写的范围替你找（请专家方案设计第 4.9 节）
-  async function find(selected?: string) {
+  async function find(selected: string) {
     if (startFind.isPending || ask.isPending) return
     if (findBlocked !== null) {
       document
@@ -149,7 +139,6 @@ export function AskExpertScreen({
         ?.focus()
       return
     }
-    setChosen(null)
     setSelectedByAI(null)
     try {
       await startFind.find({
@@ -166,7 +155,12 @@ export function AskExpertScreen({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto grid w-full max-w-5xl gap-8 px-6 py-8 lg:grid-cols-2">
+        <div
+          className={cn(
+            'mx-auto grid w-full gap-8 px-6 py-8',
+            legacy ? 'max-w-5xl lg:grid-cols-2' : 'max-w-3xl',
+          )}
+        >
           <div className="space-y-6">
             <h1 className="text-xl font-semibold tracking-tight">
               {pack ? t('titleWith', { name: pack.name }) : t('title')}
@@ -174,45 +168,7 @@ export function AskExpertScreen({
 
             {legacy && (
               <section>
-                <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                  <p className={cn(label, 'mb-0')}>{t('who')}</p>
-                  <CrossAppLink
-                    to="knowmart.knowbots"
-                    refValue="expert"
-                    className={buttonVariants({ size: 'sm', variant: 'outline' })}
-                  >
-                    {t('summon')}
-                  </CrossAppLink>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={startFind.isPending || ask.isPending}
-                    aria-describedby="ask-find-reason"
-                    title={findBlocked ? t(`blocker.${findBlocked}`) : t('findHint')}
-                    onClick={() => void find()}
-                  >
-                    {startFind.isPending ? t('finding') : t('find')}
-                  </Button>
-                  <CrossAppLink
-                    to="knowlab.createIdea"
-                    refValue="expert"
-                    className={buttonVariants({ size: 'sm', variant: 'outline' })}
-                  >
-                    {t('createIdea')}
-                  </CrossAppLink>
-                </div>
-                <p id="ask-find-reason" role="status" tabIndex={-1} className="mb-2 text-sm">
-                  {findBlocked ? t(`blocker.${findBlocked}`) : null}
-                  {findBlocked === 'noMachine' || findBlocked === 'offline' ? (
-                    <ConnectComputerLink className="ml-2" />
-                  ) : null}
-                  {findBlocked === 'noSandbox' ? (
-                    <Link href={routes.settings(locale)} className="ml-2 underline">
-                      {t('toSettings')}
-                    </Link>
-                  ) : null}
-                </p>
-                <p className="text-muted-foreground mb-2 text-sm">{t('findHint')}</p>
+                <p className={label}>{t('who')}</p>
                 {startFind.isError ? (
                   <p role="alert" className="text-destructive mb-2 text-[13px]">
                     {t('findFailed')}
@@ -285,9 +241,20 @@ export function AskExpertScreen({
                 onChange={(event) => setTyped(event.target.value)}
                 className="min-h-24"
               />
+              <p id="ask-find-reason" role="status" tabIndex={-1} className="mb-2 text-sm">
+                {findBlocked ? t(`blocker.${findBlocked}`) : null}
+                {findBlocked === 'noMachine' || findBlocked === 'offline' ? (
+                  <ConnectComputerLink className="ml-2" />
+                ) : null}
+                {findBlocked === 'noSandbox' ? (
+                  <Link href={routes.settings(locale)} className="ml-2 underline">
+                    {t('toSettings')}
+                  </Link>
+                ) : null}
+              </p>
               {!chosen && !findTask && (
                 <FormalExpertIntake
-                  unified={!!entry.data?.unified}
+                  blocked={findBlocked !== null}
                   key={projectId}
                   from={from}
                   project={projectId}

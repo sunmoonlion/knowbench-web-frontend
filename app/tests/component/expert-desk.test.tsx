@@ -112,11 +112,9 @@ describe('专家首页', () => {
 describe('请专家', () => {
   const project = parts('项目页')[4]
 
-  it('没选专家时交不出去；选了一位，右边写出它会怎么做', async () => {
-    page(<AskExpertScreen project={project} from={null} expert={null} />)
-    expect(await screen.findByText('先在左边选一位专家。')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '交给专家' })).toBeDisabled()
-    fireEvent.click(await screen.findByRole('button', { name: '财报体检' }))
+  it('从市场指定专家后可核对做法并换一位', async () => {
+    page(<AskExpertScreen project={project} from={null} expert="FIN_REVIEW" />)
+    await screen.findByText('3 勾稽')
     expect(screen.getByRole('heading', { name: '请专家：财报体检' })).toBeInTheDocument()
     // 每一步：名字、一句白话、不过时怎么办。没有方法的原文
     expect(screen.getByText('3 勾稽')).toBeInTheDocument()
@@ -385,7 +383,7 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
   page(<AskExpertScreen project={project} from={null} expert={null} />)
   const question = screen.getByRole('textbox', { name: messages.askExpert.question })
   fireEvent.change(question, { target: { value: '需要差异表' } })
-  fireEvent.click(screen.getByRole('button', { name: messages.formalIntake.title }))
+  fireEvent.click(screen.getByRole('button', { name: messages.formalIntake.unifiedTitle }))
   const options = await screen.findAllByRole('button', { name: messages.formalIntake.choose })
   expect(options).toHaveLength(2)
   expect(screen.queryByText(messages.formalIntake.scopeTitle)).toBeNull()
@@ -474,7 +472,7 @@ it('空窗口只在用户继续查找时翻页，改题从头查，查尽后撤�
   )
   page(<AskExpertScreen project={project} from={null} expert={null} />)
   const question = screen.getByRole('textbox', { name: messages.askExpert.question })
-  const start = () => screen.getByRole('button', { name: messages.formalIntake.title })
+  const start = () => screen.getByRole('button', { name: messages.formalIntake.unifiedTitle })
   fireEvent.change(question, { target: { value: '原题' } })
   fireEvent.click(start())
   await screen.findByText(messages.formalIntake.emptyWindow)
@@ -540,7 +538,7 @@ it('未匹配时由用户明确结束，重读回执，改题另开委托', asyn
   )
   page(<AskExpertScreen project={project} from={null} expert={null} />)
   const question = screen.getByRole('textbox', { name: messages.askExpert.question })
-  const start = () => screen.getByRole('button', { name: messages.formalIntake.title })
+  const start = () => screen.getByRole('button', { name: messages.formalIntake.unifiedTitle })
   fireEvent.change(question, { target: { value: '核对交易' } })
   fireEvent.click(start())
   const finish = await screen.findByRole('button', { name: messages.formalIntake.end })
@@ -557,23 +555,14 @@ it('未匹配时由用户明确结束，重读回执，改题另开委托', asyn
 })
 
 it('shows one ask action on a fresh unified entry and preserves the selected legacy expert', async () => {
-  const original = vi.mocked(fetch).getMockImplementation()!
-  vi.stubGlobal(
-    'fetch',
-    vi.fn((input: RequestInfo | URL, init?: RequestInit) =>
-      String(input).endsWith('/expert/entry')
-        ? Promise.resolve(Response.json({ unified: true }))
-        : original(input, init),
-    ),
-  )
   const project = parts('项目页')[4]
   const view = page(<AskExpertScreen project={project} from={null} expert={null} />)
   expect(
     await screen.findByRole('button', { name: messages.formalIntake.unifiedTitle }),
   ).toBeDisabled()
-  expect(screen.queryByRole('link', { name: messages.askExpert.summon })).toBeNull()
-  expect(screen.queryByRole('button', { name: messages.askExpert.find })).toBeNull()
-  expect(screen.queryByRole('link', { name: messages.askExpert.createIdea })).toBeNull()
+  expect(screen.queryByRole('link', { name: '自己去knowmart请专家' })).toBeNull()
+  expect(screen.queryByRole('button', { name: 'ai去knowmart请回专家' })).toBeNull()
+  expect(screen.queryByRole('link', { name: '去knowlab提交创意' })).toBeNull()
   expect(calls).toHaveLength(0)
   view.unmount()
   page(<AskExpertScreen project={project} from={null} expert="FIN_REVIEW" />)

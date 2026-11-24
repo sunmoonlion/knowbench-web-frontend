@@ -115,24 +115,13 @@ const checkLink = (locale: 'zh-CN' | 'en' = 'zh-CN') => {
 }
 
 describe('电脑接入入口', () => {
-  it('AI入口缺电脑时可点击并说明原因，不创建查找或委托', async () => {
-    navigation.query = 'mode=expert'
-    page(<HomeScreen />)
-    await screen.findByText(zh.home.blocker.noMachine)
-    const find = screen.getByRole('button', { name: zh.home.expert.find })
-    expect(find).toBeEnabled()
-    fireEvent.click(find)
-    expect(document.getElementById('home-find-reason')).toHaveFocus()
-    expect(find).toHaveAccessibleDescription(expect.stringContaining(zh.home.blocker.noMachine))
-    expect(calls.every((c) => c.method === 'GET')).toBe(true)
-  })
-
-  it('AI入口缺项目时打开项目选择，不创建查找或委托', async () => {
+  it('缺电脑或项目时不能提交，用户可选择项目', async () => {
     environment = 'full'
     navigation.query = 'mode=expert'
     page(<HomeScreen />)
     await screen.findByText(zh.home.blocker.needProject)
-    fireEvent.click(screen.getByRole('button', { name: zh.home.expert.find }))
+    expect(screen.getByRole('button', { name: '请专家' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: zh.home.project.choose }))
     expect(await screen.findByRole('dialog')).toBeVisible()
     expect(calls.every((c) => c.method === 'GET')).toBe(true)
   })
@@ -190,10 +179,9 @@ describe('电脑接入入口', () => {
     checkLink()
     expect(calls.every((c) => c.method === 'GET')).toBe(true)
   })
-  it('主页「专家」里，「请哪一位」旁边就有「请我的分身」，去 knowmart 选（所有者 2026-10-18）', async () => {
-    navigation.query = 'mode=expert'
-    page(<HomeScreen />)
-    const link = await screen.findByRole('link', { name: zh.home.expert.summon })
+  it('独立专家目录仍可浏览市场', async () => {
+    page(<ExpertHomeScreen />)
+    const link = await screen.findByRole('link', { name: zh.expertHome.summonKnowbot })
     expect(link.getAttribute('href')).toBe(
       'https://knowmart.example.test/zh-CN/knowbots?from=knowbench&ref=expert',
     )
@@ -206,7 +194,7 @@ describe('电脑接入入口', () => {
     p.rerender(<AskExpertScreen project="fixture-project" from={null} expert={null} />)
     await screen.findByText(zh.askExpert.blocker.noMachine)
     checkLink()
-    expect(screen.getByRole('button', { name: '交给专家' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '请专家' })).toBeDisabled()
   })
 
   it('商城回跳在同一首页更新专家参数时选好专家，保留问题并允许再次手选', async () => {
@@ -255,120 +243,104 @@ describe('电脑接入入口', () => {
     )
     expect(calls.every((c) => c.method === 'GET')).toBe(true)
   })
-  it.each(['submit', 'remove'])('首页AI按钮直接查找，选中后由用户%s', async (action) => {
+  it.each([false, true])('点名旧专家时依其范围核验要求处理 (%s)', async (requiresScope) => {
     const project = fixture('full', '/api/workbench/projects').projects[0]
     const task = '11111111-1111-4111-8111-111111111111'
-    const bot = '55555555-5555-4555-8555-555555555555'
-    const pack = {
-      id: `knowbot:${bot}@3`,
-      name: '财务分析与预测第3版',
-      tagline: '财报分析',
-      solves: '',
-      does_not_solve: '',
-      input: '',
-      output: '',
-      uses_our_data: false,
-      source: 'knowbot',
-      steps: [],
-    }
-    let pinned = false
-    const mutations: { path: string; method: string; body: Record<string, unknown> }[] = []
-    const base = globalThis.fetch
+    const id = 'knowbot:55555555-5555-4555-8555-555555555555@3'
+    const posted: string[] = []
+    const base = fetch
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: string, init: RequestInit = {}) => {
         const path = String(input).split('?')[0]
-        if (init.method && init.method !== 'GET') {
-          mutations.push({ path, method: init.method, body: JSON.parse(String(init.body ?? '{}')) })
-          if (path.endsWith('/find-expert'))
-            return Response.json({ task_id: task, session_id: task })
-          if (path.endsWith('/pin')) {
-            pinned = true
-            return Response.json({ pack })
-          }
-          if (init.method === 'DELETE') {
-            pinned = false
-            return Response.json({})
-          }
-          if (path.endsWith('/delegations'))
-            return Response.json({ task_id: task, session_id: task })
-          throw new Error(`unexpected mutation ${path}`)
+        if (init.method === 'POST') {
+          posted.push(path)
+          expect(JSON.parse(String(init.body))).toMatchObject({ expert: id, question: '核对年报' })
+          return Response.json({ task_id: task, session_id: task })
         }
-        if (path === '/api/workbench/packs') return Response.json({ packs: pinned ? [pack] : [] })
         if (path.endsWith('/data-needs'))
           return Response.json({
             contract: 'knowbot-manifest/v3',
             bound: 0,
-            scope_check_required: true,
+            scope_check_required: requiresScope,
           })
-        if (path === `/api/workbench/find-expert/${task}`)
+        if (path === '/api/workbench/packs')
           return Response.json({
-            contract: 'knowbench/expert-match/v2',
-            task_id: task,
-            project_id: project.id,
-            question: '分析贵州茅台',
-            state: 'SUCCEEDED',
-            outcome: 'summon',
-            picks: [
-              {
-                knowbot_id: bot,
-                version: '3',
-                name: pack.name,
-                tagline: pack.tagline,
-                free: true,
-                price: null,
-                reason: '适合财报分析',
-              },
-            ],
-            match_task_id: task,
-            match_artifact_version: 1,
-            question_revision: 1,
+            packs: [{ ...fixture('full', path).packs[0], id, source: 'knowbot' }],
           })
         const body = fixture('full', path)
         return body ? Response.json(body) : base(input, init)
       }),
     )
-    navigation.query = `mode=expert&project=${project.id}`
+    navigation.query = new URLSearchParams({
+      mode: 'expert',
+      project: project.id,
+      expert: id,
+    }).toString()
     page(<HomeScreen />)
-    const finder = screen.getByRole('button', { name: zh.home.expert.find })
-    await screen.findByText(zh.askExpert.blocker.noQuestion)
-    expect(finder).toBeEnabled()
-    fireEvent.click(finder)
-    expect(screen.getByRole('textbox')).toHaveFocus()
-    expect(mutations).toHaveLength(0)
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: '分析贵州茅台' } })
-    await waitFor(() => expect(finder).toBeEnabled())
-    fireEvent.click(finder)
-    const selected = await screen.findByRole('button', { name: pack.name })
-    await waitFor(() => expect(selected).toHaveAttribute('aria-pressed', 'true'))
-    expect(mutations.map((c) => c.path)).toEqual([
-      `/api/workbench/projects/${project.id}/find-expert`,
-      '/api/workbench/knowbots/pin',
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '核对年报' } })
+    const submit = screen.getByRole('button', { name: '请专家' })
+    await waitFor(() => expect(submit).toBeEnabled())
+    fireEvent.click(submit)
+    await waitFor(() => expect(navigation.push).toHaveBeenCalledTimes(1))
+    expect(posted).toEqual([
+      `/api/workbench/projects/${project.id}/${requiresScope ? 'find-expert' : 'delegations'}`,
     ])
-    expect(navigation.push).not.toHaveBeenCalled()
-    if (action === 'submit') {
-      const send = screen.getByRole('button', { name: zh.home.mode.expert.send })
-      await waitFor(() => expect(send).toBeEnabled())
-      fireEvent.click(send)
-      await waitFor(() => expect(navigation.push).toHaveBeenCalledTimes(1))
-      expect(mutations[2].path).toBe(`/api/workbench/projects/${project.id}/delegations`)
-      expect(mutations[2].body.match).toMatchObject({
-        match_task_id: task,
-        knowbot_id: bot,
-        version: '3',
-      })
-    } else {
-      fireEvent.click(screen.getByRole('button', { name: `删除 ${pack.name}` }))
-      await waitFor(() => expect(screen.queryByRole('button', { name: pack.name })).toBeNull())
-      expect(mutations[2]).toMatchObject({
-        method: 'DELETE',
-        path: `/api/workbench/packs/${encodeURIComponent(pack.id)}`,
-      })
-      const prepare = screen.getByRole('button', { name: zh.askExpert.prepareFormal })
-      fireEvent.click(prepare)
-      expect(navigation.push).toHaveBeenCalledWith(expect.stringContaining(project.id))
-      expect(mutations).toHaveLength(3)
+    expect(navigation.push.mock.calls[0][0]).toContain(
+      requiresScope ? `match=${task}` : `/c/${task}`,
+    )
+  })
+
+  it.each(['click', 'enter'])('首页用 %s 提交一次正式匹配，直接打开原委托', async (action) => {
+    const project = fixture('full', '/api/workbench/projects').projects[0]
+    const task = '11111111-1111-4111-8111-111111111111'
+    const reference = { method_id: task, version: 2, digest: 'sha256:' + 'a'.repeat(64) }
+    const mutations: { path: string; body: Record<string, unknown> }[] = []
+    const base = globalThis.fetch
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init: RequestInit = {}) => {
+        const path = String(input).split('?')[0]
+        if (init.method === 'POST') {
+          mutations.push({ path, body: JSON.parse(String(init.body)) })
+          return Response.json({ task_id: task })
+        }
+        const body = fixture('full', path)
+        return body ? Response.json(body) : base(input, init)
+      }),
+    )
+    const params = new URLSearchParams({ mode: 'expert', project: project.id })
+    if (action === 'enter') params.set('formalReference', JSON.stringify(reference))
+    navigation.query = params.toString()
+    page(<HomeScreen />)
+    await screen.findByRole('button', { name: project.title })
+    expect(screen.queryByRole('link', { name: '自己去knowmart请专家' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'ai去knowmart请回专家' })).toBeNull()
+    expect(screen.queryByRole('link', { name: '去knowlab提交创意' })).toBeNull()
+    const submit = screen.getByRole('button', { name: '请专家' })
+    expect(submit).toBeDisabled()
+    const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: '分析现金差额' } })
+    expect(mutations).toHaveLength(0)
+    if (action === 'enter') fireEvent.keyDown(input, { key: 'Enter' })
+    else {
+      fireEvent.click(submit)
+      fireEvent.click(submit)
     }
+    await waitFor(() => expect(navigation.push).toHaveBeenCalledTimes(1))
+    expect(mutations).toHaveLength(1)
+    expect(mutations[0]).toMatchObject({
+      path: `/api/workbench/projects/${project.id}/find-expert`,
+      body: {
+        question: '分析现金差额',
+        match_contract: 'knowbench/expert-match/v5',
+        retain_empty: true,
+      },
+    })
+    if (action === 'enter') expect(mutations[0].body.reference).toEqual(reference)
+    const url = new URL(navigation.push.mock.calls[0][0], 'https://example.test')
+    expect(url.pathname).toBe(`/zh-CN/workbench/projects/${project.id}/expert/new`)
+    expect(url.searchParams.get('formalMatch')).toBe(task)
   })
 
   it('侧栏状态是可见链接，聊天导航明确指向聊天入口', async () => {
