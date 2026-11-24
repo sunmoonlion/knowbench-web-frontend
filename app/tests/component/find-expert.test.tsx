@@ -66,6 +66,11 @@ beforeEach(() => {
           headers: { 'Content-Type': 'application/json' },
         })
       if (method === 'GET') {
+        if (path === '/api/web/v1/cross-app/links')
+          return json({
+            app: 'knowbench',
+            targets: { knowlab: { web_base_url: 'https://knowlab.example.test' } },
+          })
         if (path === `/api/workbench/find-expert/${TASK}`) return json(result)
         return json({ code: 'not_found' }, 404)
       }
@@ -423,7 +428,10 @@ describe('ai去knowmart请回专家', () => {
     page(<FindExpertPanel task={TASK} project={PROJECT} onSelect={selected} />)
     expect(await screen.findByTestId('find-recommend')).toHaveTextContent('孵化一个专家')
     expect(screen.queryByRole('button', { name: '孵化一个专家' })).toBeNull()
-    expect(screen.queryByRole('link', { name: /knowlab/ })).toBeNull()
+    expect(await screen.findByRole('link', { name: '孵化一个专家' })).toHaveAttribute(
+      'href',
+      'https://knowlab.example.test/zh-CN/applications/new?from=knowbench&ref=expert',
+    )
     expect(screen.getByText(messages.findExpert.incubateNote)).toBeInTheDocument()
     expect(calls).toHaveLength(0)
     expect(screen.queryByText('在 knowmart 挂个需求')).not.toBeInTheDocument()

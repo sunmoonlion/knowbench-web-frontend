@@ -1220,7 +1220,7 @@
     "finishHereNote": "Keep this search record and return to the project without starting further work.",
     "directNote": "Opens a chat in this project answered by your own model. Not an expert; the method is untested.",
     "incubate": "Incubate an expert",
-    "incubateNote": "To incubate your own expert, use “Submit an idea in knowlab” above to prepare and submit your idea.",
+    "incubateNote": "Describe your idea in KnowLab and review it before submitting an incubation request.",
     "recommend": "Recommended: {action}. {reason}",
     "incubated": "Created the request “{title}” in knowlab; see it under Requests in knowlab.",
     "actionFailed": "That did not go through. Please try again.",

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useEffect, useId, useRef, useState } from 'react'
 
+import { CrossAppLink } from '@/components/common/cross-app-link'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -31,7 +32,7 @@ export type ChosenExpert = {
 
 // 「ai去knowmart请回专家」的结果（请专家方案设计第 4.9 节）：你的模型按专家自己写的范围找，平台不排序。
 // 免费匹配自动选中；收费候选由用户点击选中。这里只钉版，提交问题才创建分析委托。
-// 都不合适：直接回答由用户启动；孵化仅给建议，使用上方 knowlab 入口自行提交创意。
+// 都不合适：直接回答由用户启动；孵化仅给建议，由用户在结果中打开 KnowLab 后自行提交创意。
 export function FindExpertPanel({
   task,
   project,
@@ -439,7 +440,14 @@ function NoneCard({
             recommended === 'incubate' && 'border-foreground bg-muted/60',
           )}
         >
-          <p className="text-sm font-medium">{t('incubate')}</p>
+          <CrossAppLink
+            to="knowlab.createIdea"
+            refValue="expert"
+            className="text-sm font-medium underline"
+            fallback={<p className="text-sm font-medium">{t('incubate')}</p>}
+          >
+            {t('incubate')}
+          </CrossAppLink>
           <p className="text-muted-foreground text-[13px]">{t('incubateNote')}</p>
         </div>
       </div>

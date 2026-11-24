@@ -1220,7 +1220,7 @@
     "finishHereNote": "保留这次找专家的记录，返回项目，不再发起后续工作。",
     "directNote": "在这个项目里开一段聊天，用你自己的模型答。不是专家，方法没经过测试。",
     "incubate": "孵化一个专家",
-    "incubateNote": "如需孵化自己的专家，请使用上方“去knowlab提交创意”入口，在 knowlab 整理并提交创意。",
+    "incubateNote": "可以在 KnowLab 填写自己的创意，再决定是否提交孵化申请。",
     "recommend": "推荐：{action}。{reason}",
     "incubated": "已在 knowlab 建了申请「{title}」，到 knowlab「申请」里看。",
     "actionFailed": "没有办成，请再试一次。",
