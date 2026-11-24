@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useState } from 'react'
+import { DirectoryFacets } from '@/components/common/directory-facets'
+import { allMethods } from '@/lib/directory-facets'
 import { Button } from '@/components/ui/button'
 import { RequestFailure } from '@/components/common/request-failure'
 import { useWorkbench } from '@/lib/workbench/context'
@@ -10,6 +12,7 @@ import { routes } from '@/lib/workbench/routes'
 import type { MethodReference } from '@/lib/workbench/formal-method-reference'
 import {
   methodSkillCenterKey,
+  browsePlanningDirectory,
   methodSkillCenterPlanningMethods,
   planningDeclaration,
   type PlanningQuery,
@@ -94,18 +97,36 @@ export function PlanningMethods({
   const [searchBasis, setBasis] = useState<PlanningQuery>({ stage: 'directory' })
   const basis: PlanningQuery =
     forQuestion === undefined ? searchBasis : { stage: 'composition', question: forQuestion }
+  const [facet, setFacet] = useState(allMethods)
   const [pages, setPages] = useState([0])
   const offset = pages[pages.length - 1]
   const search = (next: PlanningQuery) => {
     setPages([0])
     setBasis(next)
+    setFacet(allMethods)
   }
-  const query = useQuery({
+  const regular = useQuery({
+    enabled: !facet.kind,
     queryKey: [...methodSkillCenterKey, 'planning', offset, basis],
     queryFn: () => methodSkillCenterPlanningMethods(offset, basis, csrfToken),
   })
+  const filtered = useQuery({
+    queryKey: [...methodSkillCenterKey, 'browse', facet, offset, basis],
+    enabled: !!facet.kind,
+    queryFn: () => browsePlanningDirectory(facet, offset, basis, csrfToken),
+  })
+  const query = facet.kind ? filtered : regular
   return (
     <div className="space-y-3">
+      <DirectoryFacets
+        value={facet}
+        change={(v) => {
+          setFacet(v)
+          setPages([0])
+        }}
+        categories={filtered.data?.categories}
+        total={filtered.data?.total}
+      />
       {forQuestion === undefined && (
         <form
           className="space-y-2"

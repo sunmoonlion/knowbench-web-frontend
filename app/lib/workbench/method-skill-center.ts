@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { directoryBrowseSchema, type Facet } from '@/lib/directory-facets'
 import { getJson, sendJson } from './http'
 import { formalMethodReferenceSchema } from './formal-method-reference'
 
@@ -128,6 +129,23 @@ export const methodSkillCenterPlanningMethods = (
     `/api/workbench/method-skill-center/planning-methods?limit=30&offset=${offset}`,
     { method: 'POST', body: query, csrfToken },
   )
+
+export const browsePlanningDirectory = (
+  facet: Facet,
+  offset: number,
+  query: PlanningQuery,
+  csrfToken: string,
+) =>
+  sendJson(directoryBrowseSchema, '/api/workbench/method-skill-center/directory-browse', {
+    method: 'POST',
+    csrfToken,
+    body: {
+      kind: facet.kind,
+      category: facet.category || facet.group || null,
+      offset,
+      question: query.stage === 'directory' ? null : query.question,
+    },
+  })
 
 export async function planningDeclaration(
   reference: z.infer<typeof formalMethodReferenceSchema>,

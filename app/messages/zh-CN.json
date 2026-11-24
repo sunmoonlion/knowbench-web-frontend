@@ -1,4 +1,13 @@
 {
+  "directoryFacets": {
+    "kind": "方法类型",
+    "all": "全部",
+    "tool": "工具方法",
+    "expert": "专家方法",
+    "group": "一级类目",
+    "category": "细分类目",
+    "count": "共 {count} 项"
+  },
   "reviewRouting": {
     "openReports": "查看复核意见",
     "missingStages": "缺少已封存的{stages}。",

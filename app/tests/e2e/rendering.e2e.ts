@@ -367,9 +367,7 @@ test('registry management follows an installed source to its two frozen versions
   )
   await page.goto('/en/workbench/settings/method-skill-center')
   await expect(page).toHaveURL(/\/en\/workbench\/methods$/)
-  await expect(
-    page.getByRole('heading', { name: 'Methods and skills', exact: true }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Methods and skills', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Monthly report/ })).toBeVisible()
   await page.getByRole('button', { name: 'Installations', exact: true }).click()
   await expect(page.getByText('Office mail', { exact: true })).toBeVisible()
@@ -430,6 +428,33 @@ test('registry management follows an installed source to its two frozen versions
   await expect(page.getByText(/Output fields · differences/)).toBeVisible()
   await page.getByRole('button', { name: 'Browse all available versions' }).click()
   await expect(page.getByLabel('What question are you working on?')).toHaveValue('')
+  const categoriesSeen: (string | null)[] = []
+  await page.route('**/api/workbench/method-skill-center/directory-browse', (route) => {
+    categoriesSeen.push(route.request().postDataJSON().category)
+    return route.fulfill({
+      json: {
+        items: [],
+        next: null,
+        total: 0,
+        categories: [
+          {
+            code: 'financial.reconciliation',
+            group: 'financial',
+            group_name: '财务核验',
+            name: '报表勾稽',
+            count: 0,
+          },
+        ],
+      },
+    })
+  })
+  await page.getByRole('combobox', { name: 'Method type', exact: true }).selectOption('tool')
+  await page.getByRole('combobox', { name: 'Category', exact: true }).selectOption('financial')
+  await page
+    .getByRole('combobox', { name: 'Subcategory', exact: true })
+    .selectOption('financial.reconciliation')
+  await expect.poll(() => categoriesSeen.at(-1)).toBe('financial.reconciliation')
+  await expect(page.getByText('0 methods', { exact: true })).toBeVisible()
 })
 
 test('author registers a standalone script and publishes a second text revision', async ({

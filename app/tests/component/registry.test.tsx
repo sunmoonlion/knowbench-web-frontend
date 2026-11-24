@@ -222,10 +222,53 @@ it('uses the current question and hands its exact version to the planning draft 
     ],
     next: null,
   })
+  const facets = [
+    {
+      code: 'financial.reconciliation',
+      name: '报表勾稽',
+      group: 'financial',
+      group_name: '财务核验',
+      count: 1,
+    },
+  ]
+  const response = {
+    categories: facets,
+    total: 1,
+    next: null,
+    items: [
+      {
+        method_id: reference.method_id,
+        latest_version: reference.version,
+        digest: reference.digest,
+        method_kind: 'tool' as const,
+        title,
+        summary: '核对',
+        category: 'financial.reconciliation',
+        usable: true,
+      },
+    ],
+  }
+  const browse = vi.spyOn(registry, 'browsePlanningDirectory').mockResolvedValue(response)
   renderPage(<PlanningMethods forQuestion="核对原行" onPick={pick} />)
   const choose = await screen.findByRole('button', { name: zh.methodSkillCenter.chooseVersion })
   expect(query).toHaveBeenCalledWith(0, { stage: 'composition', question: '核对原行' }, 'csrf')
   expect(pick).not.toHaveBeenCalled()
   fireEvent.click(choose)
   expect(pick).toHaveBeenCalledWith({ reference, title })
+  fireEvent.change(screen.getByLabelText(zh.directoryFacets.kind), { target: { value: 'tool' } })
+  await screen.findByRole('option', { name: '财务核验' })
+  fireEvent.change(screen.getByLabelText(zh.directoryFacets.group), {
+    target: { value: 'financial' },
+  })
+  await screen.findByRole('option', { name: '报表勾稽' })
+  fireEvent.change(screen.getByLabelText(zh.directoryFacets.category), {
+    target: { value: 'financial.reconciliation' },
+  })
+  expect(await screen.findByText('共 1 项')).toBeVisible()
+  expect(browse).toHaveBeenLastCalledWith(
+    { kind: 'tool', group: 'financial', category: 'financial.reconciliation' },
+    0,
+    { stage: 'composition', question: '核对原行' },
+    'csrf',
+  )
 })

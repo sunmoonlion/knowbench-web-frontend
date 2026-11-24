@@ -1,4 +1,13 @@
 {
+  "directoryFacets": {
+    "kind": "Method type",
+    "all": "All",
+    "tool": "Tool methods",
+    "expert": "Expert methods",
+    "group": "Category",
+    "category": "Subcategory",
+    "count": "{count} methods"
+  },
   "reviewRouting": {
     "openReports": "Open review findings",
     "missingStages": "No sealed report for {stages}.",
