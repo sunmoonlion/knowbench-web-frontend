@@ -49,6 +49,7 @@ beforeEach(() => {
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
       const path = String(input).split('?')[0]
+      if (path === '/api/workbench/expert/entry') return Response.json({ unified: true })
       const method = init.method ?? 'GET'
       if (method !== 'GET') {
         calls.push({ method, path, body: JSON.parse(String(init.body ?? '{}')) })
@@ -93,12 +94,6 @@ describe('专家首页', () => {
     expect(waiting.getByText('有勾稽规则不平，不往下算')).toBeInTheDocument()
     const running = within(screen.getByRole('region', { name: '进行中' }))
     expect(running.getByText('第 3 步，共 5 步')).toBeInTheDocument()
-    const packs = within(screen.getByRole('region', { name: '有哪些专家' }))
-    expect(await packs.findByRole('heading', { name: '财报体检' })).toBeInTheDocument()
-    expect(packs.getByRole('heading', { name: '问数' })).toBeInTheDocument()
-    expect(packs.getByRole('button', { name: '删除 财报体检' })).toBeInTheDocument()
-    expect(packs.getByRole('button', { name: '删除 问数' })).toBeInTheDocument()
-    expect(packs.getByText('7 步 · 要用我们的数据')).toBeInTheDocument()
     const returned = within(screen.getByRole('region', { name: '最近交回的' }))
     expect(returned.getByText('打回')).toBeInTheDocument()
     expect(returned.getAllByText('已完成').length).toBeGreaterThan(0)
@@ -106,86 +101,6 @@ describe('专家首页', () => {
     for (const code of ['FIN_REVIEW', 'DATA_QUERY', 'SMOKE']) {
       expect(document.body.textContent).not.toContain(code)
     }
-  })
-})
-
-describe('请专家', () => {
-  const project = parts('项目页')[4]
-
-  it('从市场指定专家后可核对做法并换一位', async () => {
-    page(<AskExpertScreen project={project} from={null} expert="FIN_REVIEW" />)
-    await screen.findByText('3 勾稽')
-    expect(screen.getByRole('heading', { name: '请专家：财报体检' })).toBeInTheDocument()
-    // 每一步：名字、一句白话、不过时怎么办。没有方法的原文
-    expect(screen.getByText('3 勾稽')).toBeInTheDocument()
-    expect(
-      screen.getByText('→ 重做，最多 1 次；仍不过，退回第 2 步，最多 1 次；仍不过，停下来问你'),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/预测、估值、评级、买卖或仓位建议/)).toBeInTheDocument()
-    // 换一位：右边整个换掉（AT-INV-18）
-    fireEvent.click(screen.getByRole('button', { name: '问数' }))
-    expect(screen.queryByText('3 勾稽')).toBeNull()
-    expect(screen.getByText('3 执行 SQL')).toBeInTheDocument()
-    // 不填预算；专家看得到什么只数数
-    expect(screen.queryByText(/预算/)).toBeNull()
-    expect(screen.getByText('项目里别的 3 段对话、1 次专家交回')).toBeInTheDocument()
-  })
-
-  it('从专家入口交出：建对话并交出，一次提交；不带预算上限', async () => {
-    window.sessionStorage.setItem(
-      'workbench.question',
-      '恒瑞医药 2023 到 2025 年的盈利能力怎么样？',
-    )
-    page(<AskExpertScreen project={project} from={null} expert="FIN_REVIEW" />)
-    const box = await screen.findByRole('textbox', { name: '要解决什么问题' })
-    // 首页写的那句带进来了
-    await waitFor(() => expect(box).toHaveValue('恒瑞医药 2023 到 2025 年的盈利能力怎么样？'))
-    const submit = screen.getByRole('button', { name: '交给专家' })
-    await waitFor(() => expect(submit).toBeEnabled())
-    fireEvent.click(submit)
-    await waitFor(() => expect(calls).toHaveLength(1))
-    expect(calls[0].path).toBe(`/api/workbench/projects/${project}/delegations`)
-    expect(calls[0].body).toMatchObject({
-      expert: 'FIN_REVIEW',
-      question: '恒瑞医药 2023 到 2025 年的盈利能力怎么样？',
-    })
-    expect(Object.keys(calls[0].body).sort()).toEqual(['expert', 'idempotency_key', 'question'])
-    await waitFor(() =>
-      expect(push).toHaveBeenCalledWith(
-        `/zh-CN/workbench/projects/${project}/c/22222222-2222-4222-8222-222222222222`,
-      ),
-    )
-  })
-
-  it('从对话里交出：带入那段对话里最近说的一句，专家接着那段对话做', async () => {
-    const chat = parts('项目里的聊天')
-    page(<AskExpertScreen project={chat[4]} from={chat[6]} expert="DATA_QUERY" />)
-    const box = await screen.findByRole('textbox', { name: '要解决什么问题' })
-    await waitFor(() => expect(box).toHaveValue('帮我把这两句概括写进 notes/概括.md。'))
-    expect(screen.getByText('这段对话（3 轮）')).toBeInTheDocument()
-    fireEvent.change(box, { target: { value: '恒瑞医药近五年的毛利率分别是多少？' } })
-    fireEvent.click(screen.getByRole('button', { name: '交给专家' }))
-    await waitFor(() => expect(calls).toHaveLength(1))
-    expect(calls[0].path).toBe(`/api/workbench/sessions/${chat[6]}/handover`)
-    expect(calls[0].body).toMatchObject({
-      profile_id: 'DATA_QUERY',
-      original_input: { text: '恒瑞医药近五年的毛利率分别是多少？' },
-    })
-    await waitFor(() =>
-      expect(push).toHaveBeenCalledWith(`/zh-CN/workbench/projects/${chat[4]}/c/${chat[6]}`),
-    )
-  })
-
-  it('这个项目里专家还在做：仍能提交，说明等待执行', async () => {
-    const busy = parts('专家处理中')
-    page(<AskExpertScreen project={busy[4]} from={null} expert="DATA_QUERY" />)
-    expect(
-      await screen.findByText('专家已选好；提交后将排队，前一项委托结束后开始执行。'),
-    ).toBeInTheDocument()
-    fireEvent.change(screen.getByRole('textbox', { name: '要解决什么问题' }), {
-      target: { value: '问' },
-    })
-    expect(screen.getByRole('button', { name: '交给专家' })).toBeEnabled()
   })
 })
 
@@ -215,6 +130,7 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
       const path = String(input).split('?')[0]
+      if (path === '/api/workbench/expert/entry') return Response.json({ unified: true })
       if (path.endsWith('/execution-preview'))
         return Response.json({
           revision,
@@ -380,9 +296,12 @@ it('正式专家匹配比较两个精确版本，改题即撤下旧选项，选�
       return Response.json(sample(path) ?? {}, { status: 200 })
     }),
   )
-  page(<AskExpertScreen project={project} from={null} expert={null} />)
+  page(<AskExpertScreen project={project} from={null} />)
   const question = screen.getByRole('textbox', { name: messages.askExpert.question })
   fireEvent.change(question, { target: { value: '需要差异表' } })
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: messages.formalIntake.unifiedTitle })).toBeEnabled(),
+  )
   fireEvent.click(screen.getByRole('button', { name: messages.formalIntake.unifiedTitle }))
   const options = await screen.findAllByRole('button', { name: messages.formalIntake.choose })
   expect(options).toHaveLength(2)
@@ -462,6 +381,7 @@ it('空窗口只在用户继续查找时翻页，改题从头查，查尽后撤�
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
       const path = String(input).split('?')[0]
+      if (path === '/api/workbench/expert/entry') return Response.json({ unified: true })
       if (init.method === 'POST' && path.endsWith('/find-expert')) {
         const body = JSON.parse(String(init.body))
         requests.push(body)
@@ -470,15 +390,17 @@ it('空窗口只在用户继续查找时翻页，改题从头查，查尽后撤�
       return Response.json(sample(path) ?? {})
     }),
   )
-  page(<AskExpertScreen project={project} from={null} expert={null} />)
+  page(<AskExpertScreen project={project} from={null} />)
   const question = screen.getByRole('textbox', { name: messages.askExpert.question })
   const start = () => screen.getByRole('button', { name: messages.formalIntake.unifiedTitle })
   fireEvent.change(question, { target: { value: '原题' } })
+  await waitFor(() => expect(start()).toBeEnabled())
   fireEvent.click(start())
   await screen.findByText(messages.formalIntake.emptyWindow)
   expect(requests).toHaveLength(1)
   fireEvent.change(question, { target: { value: '新题' } })
   expect(screen.queryByText(messages.formalIntake.emptyWindow)).toBeNull()
+  await waitFor(() => expect(start()).toBeEnabled())
   fireEvent.click(start())
   await screen.findByText(messages.formalIntake.emptyWindow)
   const next = screen.getByRole('button', { name: messages.formalIntake.continueSearch })
@@ -502,6 +424,7 @@ it('未匹配时由用户明确结束，重读回执，改题另开委托', asyn
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
       const path = String(input).split('?')[0]
+      if (path === '/api/workbench/expert/entry') return Response.json({ unified: true })
       if (init.method === 'POST' && path.endsWith('/find-expert')) {
         starts.push(JSON.parse(String(init.body)))
         return Response.json({ task_id: task })
@@ -536,10 +459,11 @@ it('未匹配时由用户明确结束，重读回执，改题另开委托', asyn
       return Response.json(sample(path) ?? {})
     }),
   )
-  page(<AskExpertScreen project={project} from={null} expert={null} />)
+  page(<AskExpertScreen project={project} from={null} />)
   const question = screen.getByRole('textbox', { name: messages.askExpert.question })
   const start = () => screen.getByRole('button', { name: messages.formalIntake.unifiedTitle })
   fireEvent.change(question, { target: { value: '核对交易' } })
+  await waitFor(() => expect(start()).toBeEnabled())
   fireEvent.click(start())
   const finish = await screen.findByRole('button', { name: messages.formalIntake.end })
   expect(decisions).toHaveLength(0)
@@ -548,15 +472,16 @@ it('未匹配时由用户明确结束，重读回执，改题另开委托', asyn
   expect(screen.queryByRole('button', { name: messages.formalIntake.end })).toBeNull()
   expect(decisions).toEqual([{ review_digest: fingerprint }])
   fireEvent.change(question, { target: { value: '新的问题' } })
+  await waitFor(() => expect(start()).toBeEnabled())
   fireEvent.click(start())
   await waitFor(() => expect(starts).toHaveLength(2))
   expect(starts[1].question).toBe('新的问题')
   expect(starts[1]).not.toHaveProperty('revises')
 })
 
-it('shows one ask action on a fresh unified entry and preserves the selected legacy expert', async () => {
+it('shows one ask action on a fresh unified entry without legacy choices', async () => {
   const project = parts('项目页')[4]
-  const view = page(<AskExpertScreen project={project} from={null} expert={null} />)
+  page(<AskExpertScreen project={project} from={null} />)
   expect(
     await screen.findByRole('button', { name: messages.formalIntake.unifiedTitle }),
   ).toBeDisabled()
@@ -564,9 +489,6 @@ it('shows one ask action on a fresh unified entry and preserves the selected leg
   expect(screen.queryByRole('button', { name: 'ai去knowmart请回专家' })).toBeNull()
   expect(screen.queryByRole('link', { name: '去knowlab提交创意' })).toBeNull()
   expect(calls).toHaveLength(0)
-  view.unmount()
-  page(<AskExpertScreen project={project} from={null} expert="FIN_REVIEW" />)
-  expect(await screen.findByRole('heading', { name: '请专家：财报体检' })).toBeInTheDocument()
 })
 
 it('shows the actual change before the owner starts a separate request for an acquired revision', async () => {

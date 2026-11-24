@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 
 import { AskExpertScreen } from '@/features/expert'
@@ -20,5 +21,6 @@ export default async function AskExpertPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const [{ project }, query] = await Promise.all([params, searchParams])
-  return <AskExpertScreen project={project} from={one(query.from)} expert={one(query.expert)} />
+  if ('match' in query || 'expert' in query) notFound()
+  return <AskExpertScreen project={project} from={one(query.from)} />
 }

@@ -53,6 +53,7 @@ beforeEach(() => {
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
       const path = String(input).split('?')[0]
+      if (path === '/api/workbench/expert/entry') return Response.json({ unified: true })
       calls.push({ path, method: init.method ?? 'GET' })
       if (init.method && init.method !== 'GET') throw new Error('Unexpected mutation')
       if (path === '/api/workbench/environments') {
@@ -191,104 +192,10 @@ describe('电脑接入入口', () => {
     const p = page(<ExpertHomeScreen />)
     await screen.findByText(zh.expertHome.noMachine)
     checkLink()
-    p.rerender(<AskExpertScreen project="fixture-project" from={null} expert={null} />)
+    p.rerender(<AskExpertScreen project="fixture-project" from={null} />)
     await screen.findByText(zh.askExpert.blocker.noMachine)
     checkLink()
     expect(screen.getByRole('button', { name: '请专家' })).toBeDisabled()
-  })
-
-  it('商城回跳在同一首页更新专家参数时选好专家，保留问题并允许再次手选', async () => {
-    const id = 'knowbot:0b8a6c3e-1f2d-4c5b-9a7e-6d5c4b3a2f10@3'
-    const pack = {
-      id,
-      name: '财务分析与预测第3版',
-      tagline: '按作者的方法分析财报',
-      solves: '',
-      does_not_solve: '',
-      input: '',
-      output: '',
-      uses_our_data: false,
-      source: 'knowbot',
-      steps: [],
-    }
-    const base = globalThis.fetch
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (input: string, init: RequestInit = {}) => {
-        if (String(input) === '/api/workbench/packs') {
-          return Response.json({ packs: [pack, { ...pack, id: 'another', name: '另一位专家' }] })
-        }
-        return base(input, init)
-      }),
-    )
-    navigation.query = 'mode=expert'
-    const p = page(<HomeScreen />)
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: '分析贵州茅台' } })
-    expect(screen.queryByRole('button', { name: '自己指定' })).toBeNull()
-
-    // 模拟 KnowbotArrival pin 成功后的软导航，保持同一个组件实例。
-    navigation.query = `mode=expert&expert=${encodeURIComponent(id)}`
-    p.rerender(<HomeScreen />)
-    expect(await screen.findByRole('button', { name: pack.name })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
-    expect(screen.getByRole('textbox')).toHaveValue('分析贵州茅台')
-
-    fireEvent.click(screen.getByRole('button', { name: '另一位专家' }))
-    p.rerender(<HomeScreen />)
-    expect(screen.getByRole('button', { name: '另一位专家' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
-    expect(calls.every((c) => c.method === 'GET')).toBe(true)
-  })
-  it.each([false, true])('点名旧专家时依其范围核验要求处理 (%s)', async (requiresScope) => {
-    const project = fixture('full', '/api/workbench/projects').projects[0]
-    const task = '11111111-1111-4111-8111-111111111111'
-    const id = 'knowbot:55555555-5555-4555-8555-555555555555@3'
-    const posted: string[] = []
-    const base = fetch
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (input: string, init: RequestInit = {}) => {
-        const path = String(input).split('?')[0]
-        if (init.method === 'POST') {
-          posted.push(path)
-          expect(JSON.parse(String(init.body))).toMatchObject({ expert: id, question: '核对年报' })
-          return Response.json({ task_id: task, session_id: task })
-        }
-        if (path.endsWith('/data-needs'))
-          return Response.json({
-            contract: 'knowbot-manifest/v3',
-            bound: 0,
-            scope_check_required: requiresScope,
-          })
-        if (path === '/api/workbench/packs')
-          return Response.json({
-            packs: [{ ...fixture('full', path).packs[0], id, source: 'knowbot' }],
-          })
-        const body = fixture('full', path)
-        return body ? Response.json(body) : base(input, init)
-      }),
-    )
-    navigation.query = new URLSearchParams({
-      mode: 'expert',
-      project: project.id,
-      expert: id,
-    }).toString()
-    page(<HomeScreen />)
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: '核对年报' } })
-    const submit = screen.getByRole('button', { name: '请专家' })
-    await waitFor(() => expect(submit).toBeEnabled())
-    fireEvent.click(submit)
-    await waitFor(() => expect(navigation.push).toHaveBeenCalledTimes(1))
-    expect(posted).toEqual([
-      `/api/workbench/projects/${project.id}/${requiresScope ? 'find-expert' : 'delegations'}`,
-    ])
-    expect(navigation.push.mock.calls[0][0]).toContain(
-      requiresScope ? `match=${task}` : `/c/${task}`,
-    )
   })
 
   it.each(['click', 'enter'])('首页用 %s 提交一次正式匹配，直接打开原委托', async (action) => {
@@ -301,6 +208,7 @@ describe('电脑接入入口', () => {
       'fetch',
       vi.fn(async (input: string, init: RequestInit = {}) => {
         const path = String(input).split('?')[0]
+        if (path === '/api/workbench/expert/entry') return Response.json({ unified: true })
         if (init.method === 'POST') {
           mutations.push({ path, body: JSON.parse(String(init.body)) })
           return Response.json({ task_id: task })
@@ -370,6 +278,7 @@ describe('电脑接入入口', () => {
         }
         // 这个文件的公共桩只让「电脑」按 full 回；树还要工作区、项目、对话
         const path = String(input).split('?')[0]
+        if (path === '/api/workbench/expert/entry') return Response.json({ unified: true })
         if (
           [
             '/api/workbench/workspaces',

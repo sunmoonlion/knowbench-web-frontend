@@ -1,6 +1,6 @@
 'use client'
 
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
 import { useRef, useState, type Ref } from 'react'
@@ -9,6 +9,7 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { useWorkbench } from '@/lib/workbench/context'
 import { formalMethodReferenceSchema as pin } from '@/lib/workbench/formal-method-reference'
+import { getJson } from '@/lib/workbench/http'
 import { startRound } from '@/lib/workbench/start-formal-match'
 
 export function FormalExpertStart({
@@ -32,6 +33,10 @@ export function FormalExpertStart({
 }) {
   const t = useTranslations('formalIntake')
   const { csrfToken } = useWorkbench()
+  const availability = useQuery({
+    queryKey: ['formal-expert-entry'],
+    queryFn: () => getJson(z.object({ unified: z.boolean() }), '/api/workbench/expert/entry'),
+  })
   const params = useSearchParams()
   const [submitted, setSubmitted] = useState<string | null>(null)
   const named = params.get('formalReference')
@@ -93,6 +98,8 @@ export function FormalExpertStart({
   })
   return (
     <div className="space-y-2">
+      {availability.data?.unified === false && <p>{t('unavailableAccount')}</p>}
+      {availability.isError && <p role="alert">{t('availabilityError')}</p>}
       {named !== null && (
         <p>
           {reference
@@ -104,6 +111,7 @@ export function FormalExpertStart({
         type="button"
         ref={startButtonRef}
         disabled={
+          availability.data?.unified !== true ||
           blocked ||
           (named !== null && !reference) ||
           !current ||

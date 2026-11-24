@@ -74,6 +74,8 @@
     "sealedFindings": "首轮独立发现已封存，第 {version} 版"
   },
   "formalIntake": {
+    "unavailableAccount": "此账号尚未开放正式专家匹配。",
+    "availabilityError": "暂时无法核实账号资格，请刷新后重试。",
     "treeTitle": "规划分解",
     "focus": "本轮重拟范围",
     "whole": "完整问题",
@@ -1116,6 +1118,8 @@
     }
   },
   "expertHome": {
+    "directoryFailed": "未能读取正式专家目录。",
+    "emptyFormal": "当前没有可点名的正式专家。",
     "title": "专家",
     "lead": "把一件事整个交出去。专家按方法一步一步做，每一步都验过才往下，做完把成稿写进项目文件。",
     "waiting": "等我决定",

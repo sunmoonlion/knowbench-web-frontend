@@ -74,6 +74,8 @@
     "sealedFindings": "Independent findings sealed, version {version}"
   },
   "formalIntake": {
+    "unavailableAccount": "Formal expert matching is not enabled for this account.",
+    "availabilityError": "Account eligibility could not be verified. Refresh to try again.",
     "treeTitle": "Goal decomposition",
     "focus": "Revise this part",
     "whole": "Whole request",
@@ -1116,6 +1118,8 @@
     }
   },
   "expertHome": {
+    "directoryFailed": "Could not load the formal expert directory.",
+    "emptyFormal": "No formal experts are available to select.",
     "title": "Experts",
     "lead": "Hand over a whole piece of work. The expert follows a method step by step, checks every step before moving on, and writes the deliverable into the project files.",
     "waiting": "Waiting for me",

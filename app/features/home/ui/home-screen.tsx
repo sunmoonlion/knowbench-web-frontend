@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useRef, useState } from 'react'
 
-import { ExpertChoices } from '@/components/workbench/expert-choices'
 import { KnowbotArrival } from '@/components/workbench/knowbot-arrival'
 import { ProjectPicker } from '@/components/workbench/project-picker'
 import { ConnectComputerLink } from '@/components/workbench/connect-computer'
@@ -25,8 +24,6 @@ import { conversationRoute, isBuilt, MODES, routes, type Mode } from '@/lib/work
 import { cn } from '@/lib/utils'
 
 import { FormalExpertStart } from '@/components/workbench/formal-expert-start'
-import { useAsk, useDataNeeds, usePacks } from '@/lib/workbench/expert-desk'
-import { useExpertFinder } from '@/lib/workbench/expert-finder'
 
 import { useOpenTaskFromRef } from '../api/open-task'
 import { useStart } from '../api/start'
@@ -35,7 +32,6 @@ import { blockerOf, projectIsRequired } from '../model/start'
 export function HomeScreen() {
   const t = useTranslations('home')
   const intakeText = useTranslations('formalIntake')
-  const askText = useTranslations('askExpert')
   const connect = useTranslations('computerConnection')
   const router = useRouter()
   const { locale } = useWorkbench()
@@ -59,25 +55,7 @@ export function HomeScreen() {
   // 聊天什么都不选（0017）：带进来的项目只对工作、专家有效
   const projectId = mode === 'chat' ? null : chosen === undefined ? given : chosen
   const [picking, setPicking] = useState(false)
-  // 市场带回的已选专家在项目页确认范围和委托。
-  // 从 knowmart 请来分身后会带 expert=<这一位> 回到这里，先选好它
-  const incomingExpert = query.get('expert')
-  const packs = usePacks(mode === 'expert' && !!incomingExpert)
-  const [expert, setExpert] = useState<string | null>(incomingExpert)
-  const ask = useAsk()
-  const finder = useExpertFinder()
-  const [askKey] = useState(() => crypto.randomUUID())
-  const needs = useDataNeeds(mode === 'expert' ? expert : null)
-  const selected = packs.data?.find((pack) => pack.id === expert)
-  const checkingNeeds = !!expert?.startsWith('knowbot:') && !needs.isSuccess
   const formalButton = useRef<HTMLButtonElement>(null)
-  const [seenExpert, setSeenExpert] = useState(incomingExpert)
-  // pin 后 router.replace 只更新查询参数，首页不会重新挂载。收到新的专家时同步
-  // 选择状态；同一参数下保留用户后续切换，也保留已经输入的问题和项目。
-  if (incomingExpert !== seenExpert) {
-    setSeenExpert(incomingExpert)
-    setExpert(incomingExpert)
-  }
   const project = (projects.data ?? []).find((each) => each.id === projectId)
   const blocker = blockerOf({
     mode,
@@ -94,29 +72,7 @@ export function HomeScreen() {
   async function send() {
     if (blocker !== null || start.isPending) return
     if (mode === 'expert') {
-      if (!projectId) return
-      if (!expert) {
-        formalButton.current?.click()
-        return
-      }
-      if (!selected || checkingNeeds || ask.isPending || finder.isPending) return
-      try {
-        if (needs.data?.scope_check_required) {
-          await finder.find({ project: projectId, question: text.trim(), from: null, expert })
-          return
-        }
-        const made = await ask.mutateAsync({
-          project: projectId,
-          question: text.trim(),
-          from: null,
-          expert,
-          key: askKey,
-        })
-        if (made.conversation)
-          router.push(routes.projectConversation(locale, projectId, made.conversation))
-      } catch {
-        // The form shows the failed request and can retry it.
-      }
+      if (projectId) formalButton.current?.click()
       return
     }
     try {
@@ -185,28 +141,6 @@ export function HomeScreen() {
               placeholder={t(`mode.${mode}.placeholder`)}
               className="max-h-64 min-h-20 resize-none border-0 bg-transparent px-2 text-[15px] shadow-none focus-visible:ring-0 dark:bg-transparent"
             />
-            {mode === 'expert' && incomingExpert ? (
-              <div className="px-1 pt-1" aria-label={t('expert.who')}>
-                <ExpertChoices
-                  packs={packs.data ?? []}
-                  selected={expert}
-                  onSelect={setExpert}
-                  onRemoved={(id) => {
-                    if (expert === id) {
-                      setExpert(null)
-                    }
-                    if (incomingExpert === id) {
-                      const params = new URLSearchParams(query.toString())
-                      params.delete('expert')
-                      router.replace(`${routes.home(locale)}?${params}`)
-                    }
-                  }}
-                />
-                {packs.isPending ? (
-                  <span className="text-muted-foreground text-xs">{t('expert.loading')}</span>
-                ) : null}
-              </div>
-            ) : null}
             <div className="flex flex-wrap items-center gap-2 px-1 pt-1">
               {/* 在哪个项目里：工作与专家在输入框的角上选；聊天什么都不选（0017） */}
               {projectIsRequired(mode) ? (
@@ -224,7 +158,7 @@ export function HomeScreen() {
                 </>
               ) : null}
               <div className="flex-1" />
-              {mode === 'expert' && !expert && projectId ? (
+              {mode === 'expert' && projectId ? (
                 <FormalExpertStart
                   key={projectId}
                   project={projectId}
@@ -242,13 +176,7 @@ export function HomeScreen() {
                 <Button
                   size={mode === 'expert' ? 'default' : 'icon'}
                   onClick={() => void send()}
-                  disabled={
-                    blocker !== null ||
-                    start.isPending ||
-                    (mode === 'expert' &&
-                      !!expert &&
-                      (!selected || checkingNeeds || ask.isPending || finder.isPending))
-                  }
+                  disabled={blocker !== null || start.isPending}
                   aria-label={
                     mode === 'expert' ? intakeText('unifiedTitle') : t(`mode.${mode}.send`)
                   }
@@ -258,29 +186,6 @@ export function HomeScreen() {
               )}
             </div>
           </div>
-          {mode === 'expert' && expert && (
-            <>
-              {needs.isError && (
-                <p role="alert">
-                  {askText('scopeLoadFailed')}{' '}
-                  <Button variant="link" onClick={() => void needs.refetch()}>
-                    {askText('scopeRetry')}
-                  </Button>
-                </p>
-              )}
-              {needs.data?.scope_check_required && (
-                <p className="text-muted-foreground text-sm">{intakeText('cost')}</p>
-              )}
-              {finder.isError && <p role="alert">{askText('findFailed')}</p>}
-              {ask.isError && (
-                <p role="alert">
-                  {askText.has(`problem.${(ask.error as WorkbenchError).code}`)
-                    ? askText(`problem.${(ask.error as WorkbenchError).code}`)
-                    : askText('problem.other')}
-                </p>
-              )}
-            </>
-          )}
           {said && !(welcome && said === 'noSandbox') ? (
             <p className="text-muted-foreground mt-2 text-center text-[13px]">
               {t(`blocker.${said}`)}

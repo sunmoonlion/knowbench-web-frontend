@@ -2,20 +2,17 @@
 
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
 
 import { CrossAppLink } from '@/components/common/cross-app-link'
-import { Button, buttonVariants } from '@/components/ui/button'
-import { ProjectPicker } from '@/components/workbench/project-picker'
 import { ConnectComputerLink } from '@/components/workbench/connect-computer'
 import { useWorkbench } from '@/lib/workbench/context'
-import { useRemoveExpert } from '@/lib/workbench/knowbots'
 import { useMachines, useProjects } from '@/lib/workbench/queries'
 import { conversationRoute, routes } from '@/lib/workbench/routes'
 import { cn } from '@/lib/utils'
 
-import { useOverview, usePacks } from '../api/desk'
+import { buttonVariants } from '@/components/ui/button'
+import { FormalExpertDirectory } from './formal-expert-directory'
+import { useOverview } from '../api/desk'
 import { amountText } from './parts'
 
 const section = 'space-y-2'
@@ -24,16 +21,11 @@ const heading = 'text-sm font-medium'
 // 专家首页：等我决定的在最上面；进行中的；有哪些专家；最近交回的。
 export function ExpertHomeScreen() {
   const t = useTranslations('expertHome')
-  const expertText = useTranslations('home.expert')
-  const remove = useRemoveExpert()
-  const router = useRouter()
   const { locale } = useWorkbench()
   const overview = useOverview()
-  const packs = usePacks()
   const projects = useProjects()
   const machines = useMachines()
   const noComputer = machines.isSuccess && machines.data.length === 0
-  const [asking, setAsking] = useState<string | null>(null)
   const names = new Map((projects.data ?? []).map((each) => [each.id, each.title]))
   const data = overview.data
 
@@ -147,77 +139,7 @@ export function ExpertHomeScreen() {
               {t('summonKnowbot')}
             </CrossAppLink>
           </div>
-          {remove.isError ? (
-            <p role="alert" className="text-destructive text-sm">
-              {expertText('removeFailed')}
-            </p>
-          ) : null}
-          {packs.isPending ? (
-            <p className="text-muted-foreground text-sm">{t('loading')}</p>
-          ) : (
-            <ul className="grid gap-4 md:grid-cols-2">
-              {(packs.data ?? []).map((pack) => (
-                <li key={pack.id} className="flex flex-col rounded-xl border p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="flex items-center gap-2 text-base font-semibold">
-                      {pack.name}
-                      {pack.status === 'preparing' ? (
-                        <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[11px] font-normal">
-                          {t('preparing')}
-                        </span>
-                      ) : null}
-                    </h3>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      aria-label={expertText('removeNamed', { name: pack.name })}
-                      disabled={remove.isPending}
-                      onClick={() =>
-                        remove.mutate(pack.id, {
-                          onSuccess: () => {
-                            if (asking === pack.id) setAsking(null)
-                          },
-                        })
-                      }
-                    >
-                      {expertText('remove')}
-                    </Button>
-                  </div>
-                  <p className="text-muted-foreground text-sm">{pack.tagline}</p>
-                  {pack.status === 'preparing' && pack.preparing_note ? (
-                    <p className="text-muted-foreground mt-1 text-xs">{pack.preparing_note}</p>
-                  ) : null}
-                  <dl className="mt-3 space-y-2 text-[13px]">
-                    <div>
-                      <dt className="text-muted-foreground inline">{t('solves')}：</dt>
-                      <dd className="inline">{pack.solves}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-muted-foreground inline">{t('doesNot')}：</dt>
-                      <dd className="inline">{pack.does_not_solve}</dd>
-                    </div>
-                  </dl>
-                  <div className="mt-auto flex items-center justify-between pt-4">
-                    <span className="text-muted-foreground text-[13px]">
-                      {pack.steps.length
-                        ? t('stepsCount', { n: pack.steps.length })
-                        : pack.status === 'preparing'
-                          ? t('preparing')
-                          : t('planAtStart')}{' '}
-                      · {pack.uses_our_data ? t('usesData') : t('noData')}
-                    </span>
-                    <Button
-                      size="sm"
-                      disabled={noComputer || pack.status === 'preparing'}
-                      onClick={() => setAsking(pack.id)}
-                    >
-                      {t('ask')}
-                    </Button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          <FormalExpertDirectory />
         </section>
 
         <section className={section} aria-label={t('returned')}>
@@ -258,16 +180,6 @@ export function ExpertHomeScreen() {
           )}
         </section>
       </div>
-
-      <ProjectPicker
-        open={asking !== null}
-        onOpenChange={(open) => !open && setAsking(null)}
-        title={t('pickTitle')}
-        description={t('pickBody')}
-        onPick={(project) =>
-          router.push(`${routes.askExpert(locale, project)}?expert=${encodeURIComponent(asking!)}`)
-        }
-      />
     </div>
   )
 }
