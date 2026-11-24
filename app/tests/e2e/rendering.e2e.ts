@@ -366,8 +366,9 @@ test('registry management follows an installed source to its two frozen versions
     }),
   )
   await page.goto('/en/workbench/settings/method-skill-center')
+  await expect(page).toHaveURL(/\/en\/workbench\/methods$/)
   await expect(
-    page.getByRole('heading', { name: 'Method and Skill Management Center', exact: true }),
+    page.getByRole('heading', { name: 'Methods and skills', exact: true }),
   ).toBeVisible()
   await expect(page.getByRole('heading', { name: /Monthly report/ })).toBeVisible()
   await page.getByRole('button', { name: 'Installations', exact: true }).click()
@@ -490,7 +491,7 @@ test('author registers a standalone script and publishes a second text revision'
     )
     return route.fulfill({ status: row ? 200 : 404, json: row ?? {} })
   })
-  await page.goto('/en/workbench/settings/method-skill-center')
+  await page.goto('/en/workbench/methods')
   await page.getByRole('button', { name: 'Scripts and instructions' }).click()
   await page.getByRole('button', { name: 'New registration' }).click()
   await page.getByLabel('Load from file').setInputFiles({

@@ -175,6 +175,7 @@ export type FootEntry = { key: string; kind: 'page'; page: Page; href: (locale: 
 export const FOOT: readonly FootEntry[] = [
   { key: 'pending', kind: 'page', page: 'home', href: (locale) => routes.home(locale) },
   // 长期记忆：关于这位用户的几条事实（0019 §四）
+  { key: 'methods', kind: 'page', page: 'methods', href: routes.methods },
   { key: 'memory', kind: 'page', page: 'memory', href: routes.memory },
   // 「我的电脑」不再单列：灯在中段的电脑行上，接入与上限在设置页（0016 S2）
   { key: 'settings', kind: 'page', page: 'settings', href: routes.settings },

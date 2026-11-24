@@ -181,7 +181,7 @@
     "partialReceive": "Receive only the outputs of {step}",
     "partialUnavailable": "Could not verify the partial delivery. Review its scope again.",
     "named": "This round checks only method {id}, version {version}.",
-    "invalidPin": "The specified version is incomplete. Select it again in the method and skill center.",
+    "invalidPin": "The specified version is incomplete. Select it again in Methods and skills.",
     "latest": "Open the latest revision",
     "round": "View progress or handle a waiting request",
     "title": "Match registered experts",
@@ -276,7 +276,9 @@
     "pendingExecution": "Save your task inputs and account choices to review the execution steps and their cost.",
     "choose": "Confirm this version",
     "sourceRequest": "Open original request",
-    "priorMaterial": "Released prior output {name}"
+    "priorMaterial": "Released prior output {name}",
+    "methodDirectory": "Methods and skills",
+    "clearMethod": "Clear selection"
   },
   "meta": {
     "title": "SunmoonAI Knowbench",
@@ -480,7 +482,8 @@
       "pending": "Waiting for me",
       "machines": "My computers",
       "settings": "Settings",
-      "memory": "Memory"
+      "memory": "Memory",
+      "methods": "Methods and skills"
     },
     "computers": "Computers and projects",
     "computer": {
@@ -1573,16 +1576,14 @@
       "cloud": "Models",
       "computer": "Computer & sandbox",
       "connections": "Connections & tools",
-      "skills": "Skills",
-      "method-skill-center": "Method and Skill Management Center"
+      "skills": "Skills"
     },
     "navHint": {
       "preferences": "Stored in this browser only",
       "cloud": "Follows your account",
       "computer": "Local link, sandbox and token",
       "connections": "Service accounts and tools",
-      "skills": "Instructions and versions",
-      "method-skill-center": "Inspect registered tool and expert methods, see where each runs, and manage your installations."
+      "skills": "Instructions and versions"
     },
     "preferences": {
       "title": "Preferences",
@@ -1950,7 +1951,7 @@
   "methodSkillCenter": {
     "askVersion": "Ask this version",
     "sources": "Scripts and instructions",
-    "title": "Method and Skill Management Center",
+    "title": "Methods and skills",
     "lead": "Inspect registered tool and expert methods, see where each runs, and manage your installations.",
     "declaredCallers": "Callers declared by this version: {callers}",
     "caller": {
@@ -2039,7 +2040,8 @@
     "candidatePromises": "Promised deliverables",
     "planningScope": "Registered method versions available for planning under your current use rights.",
     "previousPage": "Previous page",
-    "nextPage": "Next page"
+    "nextPage": "Next page",
+    "chooseVersion": "Use for this step"
   },
   "directRegistry": {
     "withdraw": "Withdraw source",

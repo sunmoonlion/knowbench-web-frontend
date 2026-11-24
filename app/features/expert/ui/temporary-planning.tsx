@@ -1,4 +1,6 @@
 'use client'
+import { PlanningMethods } from '@/components/workbench/planning-methods'
+import type { MethodReference } from '@/lib/workbench/formal-method-reference'
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
@@ -20,14 +22,18 @@ import {
 export function TemporaryPlanning({
   task,
   digest,
+  question,
   reload,
 }: {
   task: string
   digest: string
+  question: string
   reload: () => Promise<unknown>
 }) {
   const t = useTranslations('formalIntake')
   const { csrfToken } = useWorkbench()
+  const [browse, setBrowse] = useState(false)
+  const [pick, setPick] = useState<{ reference: MethodReference; title: string } | null>(null)
   const [details, setDetails] = useState('')
   const [focus, setFocus] = useState('')
   const [materialId, setMaterialId] = useState('')
@@ -66,11 +72,17 @@ export function TemporaryPlanning({
         task,
         csrfToken,
         digest,
-        focus && details.trim() ? `[${focus}] ${details}` : details,
+        focus && !pick && details.trim() ? `[${focus}] ${details}` : details,
         plan.data?.planning_task,
         plan.data?.probe?.consent,
+        focus && pick ? { node: focus, method: pick.reference } : undefined,
       ),
-    onSuccess: () => plan.refetch(),
+    onSuccess: () => {
+      setPick(null)
+      setFocus('')
+      setDetails('')
+      return plan.refetch()
+    },
     retry: false,
   })
   const sourcePreview = useMutation({ mutationFn: () => readSketch(source.trim()), retry: false })
@@ -103,6 +115,29 @@ export function TemporaryPlanning({
   const adopted = plan.data?.outcome === 'adopted'
   return (
     <section aria-label={t('sketchTitle')} className="space-y-3">
+      <Button
+        type="button"
+        variant="outline"
+        aria-expanded={browse}
+        onClick={() => setBrowse(!browse)}
+      >
+        {t('methodDirectory')}
+      </Button>
+      {browse && (
+        <PlanningMethods
+          key={question}
+          forQuestion={question}
+          onPick={
+            focus &&
+            !reuse &&
+            plan.data &&
+            ['plan', 'gap', 'clarify'].includes(plan.data.outcome) &&
+            (plan.data.remaining_rounds ?? 0) > 0
+              ? setPick
+              : undefined
+          }
+        />
+      )}
       {plan.data?.outcome === 'idle' && (
         <>
           <Button disabled={query.isPending} onClick={() => query.mutate()}>
@@ -214,7 +249,13 @@ export function TemporaryPlanning({
             {plan.data.selection?.tree && (
               <label>
                 {t('focus')}{' '}
-                <select value={focus} onChange={(e) => setFocus(e.target.value)}>
+                <select
+                  value={focus}
+                  onChange={(e) => {
+                    setFocus(e.target.value)
+                    setPick(null)
+                  }}
+                >
                   <option value="">{t('whole')}</option>
                   {plan.data.selection.tree.nodes.map((n) => (
                     <option key={n.id} value={n.id}>
@@ -223,6 +264,14 @@ export function TemporaryPlanning({
                   ))}
                 </select>
               </label>
+            )}
+            {focus && pick && (
+              <p>
+                {pick.title} · v{pick.reference.version}{' '}
+                <Button variant="outline" onClick={() => setPick(null)}>
+                  {t('clearMethod')}
+                </Button>
+              </p>
             )}
             <label>
               {t('clarifyPlan')}
@@ -234,7 +283,8 @@ export function TemporaryPlanning({
             </label>
             <Button
               disabled={
-                (!details.trim() && !plan.data?.probe && !plan.data?.search_goal) || query.isPending
+                (!details.trim() && !pick && !plan.data?.probe && !plan.data?.search_goal) ||
+                query.isPending
               }
               onClick={() => query.mutate()}
             >

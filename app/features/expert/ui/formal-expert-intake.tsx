@@ -239,6 +239,7 @@ export function FormalExpertIntake({
             !result.ended &&
             result.match.outcome === 'no_match' && (
               <TemporaryPlanning
+                question={current}
                 key={task}
                 task={task}
                 digest={result.review_digest}

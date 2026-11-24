@@ -8,6 +8,8 @@ export const formalMethodReferenceSchema = z
   })
   .strict()
 
+export type MethodReference = z.infer<typeof formalMethodReferenceSchema>
+
 export const formalMethodSelectionsSchema = z
   .array(formalMethodReferenceSchema)
   .max(20)

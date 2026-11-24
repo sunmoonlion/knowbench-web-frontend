@@ -10,7 +10,6 @@ export const SETTINGS_SECTIONS = [
   'computer',
   'connections',
   'skills',
-  'method-skill-center',
 ] as const
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number]
 
@@ -35,6 +34,7 @@ export const routes = {
   // 接入电脑是第三类；旧的 settings#computer 由 SettingsRedirect 转过来
   computer: (locale: string) => at(locale, 'settings', 'computer'),
   // 长期记忆（0019 §四）
+  methods: (locale: string) => at(locale, 'methods'),
   memory: (locale: string) => at(locale, 'memory'),
 }
 
@@ -59,6 +59,7 @@ export type Page =
   | 'expert'
   | 'machines'
   | 'settings'
+  | 'methods'
   | 'memory'
 
 const BUILT: ReadonlySet<Page> = new Set([
@@ -71,6 +72,7 @@ const BUILT: ReadonlySet<Page> = new Set([
   'askExpert',
   'machines',
   'settings',
+  'methods',
   'memory',
 ])
 

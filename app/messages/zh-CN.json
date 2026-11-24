@@ -57,7 +57,7 @@
     "session": "项目中的专家会话",
     "select": "请选择",
     "startReview": "开始单轮独立复核",
-    "missingInputs": "请先在方法技能管理中心登记复核指令，并在当前沙箱的项目中准备一个空闲专家会话。",
+    "missingInputs": "请先在「方法与技能」登记复核指令，并在当前沙箱的项目中准备一个空闲专家会话。",
     "routeNotLoaded": "确认的连接、模型或目的地址与当前执行单元可用的路由不一致。",
     "executorUnavailable": "专用指令执行单元或其报价当前不可用。",
     "startComparison": "开始严格双轮复核",
@@ -181,7 +181,7 @@
     "partialReceive": "仅接收 {step} 的成果",
     "partialUnavailable": "部分交付范围读取或确认失败，请重新核对。",
     "named": "本轮仅核对指定方法 {id} 的第 {version} 版。",
-    "invalidPin": "指定的方法版本不完整，请从方法技能管理中心重新选择。",
+    "invalidPin": "指定的方法版本不完整，请从「方法与技能」重新选择。",
     "latest": "打开最新问题修订",
     "round": "查看匹配进度或处理等待",
     "title": "按本题匹配正式专家",
@@ -276,7 +276,9 @@
     "pendingExecution": "保存本次输入、账号和预算后，可核对实际执行步骤与费用。",
     "choose": "确认选用此版本",
     "sourceRequest": "返回来源委托",
-    "priorMaterial": "上期已放行成稿「{name}」"
+    "priorMaterial": "上期已放行成稿「{name}」",
+    "methodDirectory": "方法与技能",
+    "clearMethod": "清除选择"
   },
   "meta": {
     "title": "SunmoonAI Knowbench",
@@ -480,7 +482,8 @@
       "pending": "待我决定",
       "machines": "我的电脑",
       "settings": "设置",
-      "memory": "长期记忆"
+      "memory": "长期记忆",
+      "methods": "方法与技能"
     },
     "computers": "我的电脑与项目",
     "computer": {
@@ -1573,16 +1576,14 @@
       "cloud": "模型",
       "computer": "电脑与沙箱",
       "connections": "连接与工具",
-      "skills": "技能",
-      "method-skill-center": "方法技能管理中心"
+      "skills": "技能"
     },
     "navHint": {
       "preferences": "只存在这个浏览器里",
       "cloud": "跟着账号走",
       "computer": "本地 link、沙箱与令牌",
       "connections": "服务账号与工具接入",
-      "skills": "作业指令与版本",
-      "method-skill-center": "查看已登记的工具方法、专家方法及其执行方式，管理本人的安装入口。"
+      "skills": "作业指令与版本"
     },
     "preferences": {
       "title": "个人偏好",
@@ -1950,7 +1951,7 @@
   "methodSkillCenter": {
     "askVersion": "用此版本请专家",
     "sources": "脚本和指令",
-    "title": "方法技能管理中心",
+    "title": "方法与技能",
     "lead": "查看已登记的工具方法、专家方法及其执行方式，管理本人的安装入口。",
     "declaredCallers": "版本声明的发起方：{callers}",
     "caller": {
@@ -2039,7 +2040,8 @@
     "candidatePromises": "承诺交付",
     "planningScope": "按当前账号的正式使用资格列出的已登记方法版本。",
     "previousPage": "上一页",
-    "nextPage": "下一页"
+    "nextPage": "下一页",
+    "chooseVersion": "为此步骤选用"
   },
   "directRegistry": {
     "withdraw": "撤回来源",

@@ -2,7 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, expect, it, vi } from 'vitest'
-import { MethodSkillCenterSection } from '@/features/settings/ui/method-skill-center-section'
+import { PlanningMethods } from '@/components/workbench/planning-methods'
+import { MethodSkillCenterSection } from '@/features/methods'
 import { WorkbenchProvider } from '@/lib/workbench/context'
 import zh from '@/messages/zh-CN.json'
 import * as registry from '@/lib/workbench/method-skill-center'
@@ -35,7 +36,7 @@ const methods: registry.RegisteredMethod[] = ['发送成稿', '发送对账通�
   source_entry: 'send',
   dependencies: [],
 }))
-function renderPage() {
+function renderPage(view = <MethodSkillCenterSection />) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
@@ -43,7 +44,7 @@ function renderPage() {
     <NextIntlClientProvider locale="zh-CN" messages={zh} timeZone="Asia/Shanghai">
       <QueryClientProvider client={client}>
         <WorkbenchProvider csrfToken="csrf" locale="zh-CN">
-          <MethodSkillCenterSection />
+          {view}
         </WorkbenchProvider>
       </QueryClientProvider>
     </NextIntlClientProvider>,
@@ -203,4 +204,28 @@ it('withdraws a direct source from its latest revision after confirmation', asyn
   fireEvent.click(button)
   await screen.findByText(zh.directRegistry.empty)
   expect(withdraw).toHaveBeenCalledWith(row, 'csrf')
+})
+
+it('uses the current question and hands its exact version to the planning draft on selection', async () => {
+  const pick = vi.fn()
+  const { reference, title } = methods[0]
+  const query = vi.spyOn(registry, 'methodSkillCenterPlanningMethods').mockResolvedValue({
+    items: [
+      {
+        method_id: reference.method_id,
+        latest_version: reference.version,
+        digest: reference.digest,
+        title,
+        summary: '按原行核对',
+        method_kind: 'tool',
+      },
+    ],
+    next: null,
+  })
+  renderPage(<PlanningMethods forQuestion="核对原行" onPick={pick} />)
+  const choose = await screen.findByRole('button', { name: zh.methodSkillCenter.chooseVersion })
+  expect(query).toHaveBeenCalledWith(0, { stage: 'composition', question: '核对原行' }, 'csrf')
+  expect(pick).not.toHaveBeenCalled()
+  fireEvent.click(choose)
+  expect(pick).toHaveBeenCalledWith({ reference, title })
 })

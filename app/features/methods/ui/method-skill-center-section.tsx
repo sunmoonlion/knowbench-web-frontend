@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { PlanningMethods } from '@/components/workbench/planning-methods'
 import { MethodSkillCenterSources } from './method-skill-center-sources'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
@@ -15,11 +16,8 @@ import { routes } from '@/lib/workbench/routes'
 import {
   methodSkillCenterInstallation,
   methodSkillCenterInventory,
-  methodSkillCenterPlanningMethods,
   methodSkillCenterActivity,
   methodSkillCenterKey,
-  planningDeclaration,
-  type PlanningQuery,
   type RegisteredMethod,
   type MethodSkillCenterAsset,
 } from '@/lib/workbench/method-skill-center'
@@ -214,203 +212,6 @@ function RecentActivity() {
   )
 }
 
-function CandidateDeclaration({
-  reference,
-}: {
-  reference: Parameters<typeof planningDeclaration>[0]
-}) {
-  const t = useTranslations('methodSkillCenter')
-  const { csrfToken } = useWorkbench()
-  const [open, setOpen] = useState(false)
-  const query = useQuery({
-    queryKey: [...methodSkillCenterKey, 'declaration', reference],
-    queryFn: () => planningDeclaration(reference, csrfToken),
-    enabled: open,
-    retry: false,
-  })
-  return (
-    <details onToggle={(e) => setOpen(e.currentTarget.open)}>
-      <summary>{t('candidateDeclaration')}</summary>
-      {open &&
-        (query.isError ? (
-          <RequestFailure error={query.error} retry={() => void query.refetch()} />
-        ) : !query.data || query.isFetching ? (
-          <p>{t('loading')}</p>
-        ) : (
-          <dl>
-            <dt>{t('candidatePurpose')}</dt>
-            <dd>{query.data.purpose}</dd>
-            <dt>{t('candidateApplies')}</dt>
-            <dd>{query.data.applies_when.join(' · ')}</dd>
-            {query.data.excludes.length > 0 && (
-              <>
-                <dt>{t('candidateExcludes')}</dt>
-                <dd>{query.data.excludes.join(' · ')}</dd>
-              </>
-            )}
-            <dt>{t('candidatePromises')}</dt>
-            <dd>
-              <ul>
-                {Object.entries(query.data.promises).map(([id, text]) => {
-                  const condition = query.data.conditions?.[id]
-                  return (
-                    <li key={id}>
-                      <strong>{text}</strong>
-                      {condition && (
-                        <p>
-                          {t('candidateApplies')} · {condition.when}
-                        </p>
-                      )}
-                      {!!condition?.input_slots.length && (
-                        <p>
-                          {t('promiseInputs')} · {condition.input_slots.join(', ')}
-                        </p>
-                      )}
-                      <p>
-                        {t('promiseDeliverables')} · {query.data.outputs[id]?.join(', ')}
-                      </p>
-                    </li>
-                  )
-                })}
-              </ul>
-            </dd>
-          </dl>
-        ))}
-    </details>
-  )
-}
-
-function PlanningMethods() {
-  const t = useTranslations('methodSkillCenter')
-  const { csrfToken, locale } = useWorkbench()
-  const [question, setQuestion] = useState('')
-  const [basis, setBasis] = useState<PlanningQuery>({ stage: 'directory' })
-  const [pages, setPages] = useState([0])
-  const offset = pages[pages.length - 1]
-  const search = (next: PlanningQuery) => {
-    setPages([0])
-    setBasis(next)
-  }
-  const query = useQuery({
-    queryKey: [...methodSkillCenterKey, 'planning', offset, basis],
-    queryFn: () => methodSkillCenterPlanningMethods(offset, basis, csrfToken),
-  })
-  return (
-    <div className="space-y-3">
-      <form
-        className="space-y-2"
-        onSubmit={(e) => {
-          e.preventDefault()
-          if (question.trim()) search({ stage: 'expert', question: question.trim() })
-        }}
-      >
-        <label className="block">
-          {t('planningQuestion')}
-          <textarea
-            className="mt-1 w-full rounded border p-2"
-            maxLength={2000}
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-          />
-        </label>
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit" disabled={!question.trim()}>
-            {t('searchExperts')}
-          </Button>
-          {basis.stage === 'expert' && basis.question === question.trim() && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => search({ stage: 'composition', question: basis.question })}
-            >
-              {t('searchComponents')}
-            </Button>
-          )}
-          {basis.stage !== 'directory' && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setQuestion('')
-                search({ stage: 'directory' })
-              }}
-            >
-              {t('allPlanningMethods')}
-            </Button>
-          )}
-        </div>
-      </form>
-      <p className="text-muted-foreground text-sm">
-        {basis.stage === 'directory'
-          ? t('planningScope')
-          : t('planningRank', { question: basis.question })}
-      </p>
-      {query.isError ? (
-        <RequestFailure error={query.error} retry={() => void query.refetch()} />
-      ) : !query.data ? (
-        <p>{t('loading')}</p>
-      ) : (
-        <>
-          {query.data.items.map((m) => (
-            <article className={panel} key={m.method_id + ':' + m.latest_version}>
-              <h3>
-                {m.title} · v{m.latest_version}
-              </h3>
-              <p>
-                {t('methodKind.' + m.method_kind)} · {m.summary}
-              </p>
-              {m.method_kind === 'expert' && (
-                <Link
-                  className="underline"
-                  href={
-                    routes.home(locale) +
-                    '?' +
-                    new URLSearchParams({
-                      mode: 'expert',
-                      formalReference: JSON.stringify({
-                        method_id: m.method_id,
-                        version: m.latest_version,
-                        digest: m.digest,
-                      }),
-                    })
-                  }
-                >
-                  {t('askVersion')}
-                </Link>
-              )}
-              <CandidateDeclaration
-                reference={{ method_id: m.method_id, version: m.latest_version, digest: m.digest }}
-              />
-              <details>
-                <summary>{t('identity')}</summary>
-                <code className="break-all">
-                  {m.method_id} · {m.digest}
-                </code>
-              </details>
-            </article>
-          ))}
-          {!query.data.items.length && <p>{t('empty')}</p>}
-          <div className="flex gap-2">
-            {offset > 0 && (
-              <Button variant="outline" onClick={() => setPages((prev) => prev.slice(0, -1))}>
-                {t('previousPage')}
-              </Button>
-            )}
-            {query.data.next !== null && (
-              <Button
-                variant="outline"
-                onClick={() => setPages((prev) => [...prev, query.data.next!])}
-              >
-                {t('nextPage')}
-              </Button>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
 export function MethodSkillCenterSection() {
   const t = useTranslations('methodSkillCenter')
   const { locale } = useWorkbench()
@@ -436,7 +237,7 @@ export function MethodSkillCenterSection() {
     <section className="space-y-4">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold">{t('title')}</h2>
+          <h1 className="text-xl font-semibold">{t('title')}</h1>
           <p className="text-muted-foreground mt-1 text-sm">{t('lead')}</p>
         </div>
         <Button

@@ -272,11 +272,12 @@ export const requestSketch = (
   clarification: string,
   previous?: string | null,
   probe_digest?: string,
+  node_method?: { node: string; method: z.infer<typeof pin> },
 ) =>
   sendJson(sketch, sketchPath(task), {
     method: 'PUT',
     csrfToken,
-    body: { review_digest, clarification, previous, probe_digest },
+    body: { review_digest, clarification, previous, probe_digest, node_method },
   })
 export const adoptSketch = (
   task: string,
