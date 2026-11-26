@@ -146,6 +146,7 @@
     "planOutput": "{input} 取自第 {index} 步的 {output}",
     "planObjects": "{input} 逐项取自 {name}",
     "planRows": "{input} 汇总第 {index} 步各对象的 {output}",
+    "deliverOutput": "向委托人交付「{name}」，取自本步的「{output}」。",
     "planReviews": "独立复核第 {steps} 步的结果",
     "planBatch": "逐项处理，最多 {count} 个对象",
     "planAlternative": "目录里还有输入相近的方法：{names}。请核对本题是否需要按条件分派。",

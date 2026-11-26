@@ -84,6 +84,9 @@ export function TemporaryPlanReview({
                     })}
               </p>
             ))}
+            {Object.entries(step.deliver_as ?? {}).map(([output, name]) => (
+              <p key={`delivery-${name}`}>{t('deliverOutput', { output, name })}</p>
+            ))}
             {!!step.reviews.length && (
               <p>{t('planReviews', { steps: step.reviews.map(number).join(', ') })}</p>
             )}

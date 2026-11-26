@@ -213,6 +213,7 @@ const sketchStep = z.object({
   ),
   cases: z.record(z.string(), z.string()),
   route_input: z.string().nullable(),
+  deliver_as: z.record(z.string(), z.string()).optional(),
   reviews: z.array(z.string()),
 })
 const sketch = z.object({
