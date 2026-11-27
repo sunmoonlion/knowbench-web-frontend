@@ -16,7 +16,7 @@ import {
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 
 import { ResizeHandle } from '@/components/common/resize-handle'
 import { Button } from '@/components/ui/button'
@@ -192,6 +192,17 @@ export function Sidebar() {
   useEffect(() => restorePanes(), [restorePanes])
   const preferred = { narrow: 208, normal: 240, wide: 288 }[preferences.sidebar]
   const width = panes.widths.sidebar ?? preferred
+  // SSR uses the stylesheet width. Apply saved or dragged widths after mounting.
+  const applyWidth = useCallback(
+    (node: HTMLElement | null) => {
+      if (!node) return
+      node.style.width = `${width}px`
+      return () => {
+        node.style.removeProperty('width')
+      }
+    },
+    [width],
+  )
   // 哪一行正在问「确定删除？」
   const [asking, setAsking] = useState<string | null>(null)
   const remove = useRemove()
@@ -254,8 +265,8 @@ export function Sidebar() {
         if (narrow && event.target instanceof Element && event.target.closest('a'))
           setMobileOpenAt(null)
       }}
-      style={{ width }}
-      className="bg-muted/40 relative flex h-full shrink-0 flex-col gap-4 border-r p-3"
+      ref={applyWidth}
+      className="bg-muted/40 relative flex h-full w-60 max-w-[calc(100%_-_2.5rem)] min-w-0 shrink-0 flex-col gap-4 border-r p-3"
     >
       <ResizeHandle
         edge="right"

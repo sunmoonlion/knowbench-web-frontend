@@ -131,7 +131,7 @@ export function SessionBoundary({
   return (
     <RecoveredSession.Provider value={recovered}>
       <div
-        style={{ display: expired ? 'none' : 'contents' }}
+        className={expired ? 'hidden' : 'contents'}
         hidden={expired}
         inert={expired || undefined}
         aria-hidden={expired || undefined}
