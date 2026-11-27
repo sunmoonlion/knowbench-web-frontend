@@ -74,6 +74,7 @@ export function AskExpertScreen({
           from={from}
           project={projectId}
           question={question}
+          onSubmitted={setTyped}
           onRestore={typed === null ? setTyped : undefined}
         />
       </section>
