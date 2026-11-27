@@ -23,6 +23,7 @@ it('requires an independent routing decision, each label and confirmation of the
                 task: '分派单据',
                 route_input: 'kind',
                 cases: { A: 'a', B: 'b' },
+                deliver_as: { receipt: 'evidence' },
                 reviews: [],
                 inputs: { kind: { source: 'caller', name: 'label' } },
               },
@@ -33,6 +34,7 @@ it('requires an independent routing decision, each label and confirmation of the
       />
     </NextIntlClientProvider>,
   )
+  expect(screen.getByText('向委托人交付「evidence」，取自本步的「receipt」。')).toBeVisible()
   const adopt = screen.getByRole('button', { name: /采用/ })
   const confirm = screen.getByRole('checkbox', { name: /我已核对/ })
   expect(adopt).toBeDisabled()
