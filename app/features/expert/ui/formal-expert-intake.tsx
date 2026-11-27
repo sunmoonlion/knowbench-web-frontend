@@ -8,6 +8,7 @@ import { z } from 'zod'
 
 import { FormalExpertStart } from '@/components/workbench/formal-expert-start'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { useWorkbench } from '@/lib/workbench/context'
 import { formalMethodReferenceSchema as pin } from '@/lib/workbench/formal-method-reference'
 import { routes } from '@/lib/workbench/routes'
@@ -23,11 +24,72 @@ import { ScopePreview } from './formal-expert-scope'
 const terminal = new Set(['SUCCEEDED', 'CANCELLED', 'FAILED', 'REJECTED'])
 const pinKey = (p: z.infer<typeof pin>) => [p.method_id, p.version, p.digest].join('/')
 
+function MatchClarification({
+  prompt,
+  question,
+  project,
+  from,
+  task,
+  blocked,
+  onStarted,
+}: {
+  prompt: string
+  question: string
+  project: string
+  from: string | null
+  task: string
+  blocked: boolean
+  onStarted: (id: string, question: string) => void
+}) {
+  const t = useTranslations('formalIntake')
+  const [reply, setReply] = useState('')
+  const [replaceQuestion, setReplaceQuestion] = useState(false)
+  const answer = reply.trim()
+  const combined = question + '\n\n' + answer
+  const revised = replaceQuestion ? answer : combined
+
+  return (
+    <div className="space-y-2">
+      <p className="whitespace-pre-wrap">{prompt}</p>
+      <label className="block space-y-1">
+        <span>{t('replyLabel')}</span>
+        <Textarea
+          value={reply}
+          rows={3}
+          placeholder={t('replyPlaceholder')}
+          onChange={(event) => setReply(event.target.value)}
+        />
+      </label>
+      {(combined.length > 2000 || replaceQuestion) && (
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={replaceQuestion}
+            onChange={(event) => setReplaceQuestion(event.target.checked)}
+          />
+          {t('replyReplace')}
+        </label>
+      )}
+      {answer && revised.length > 2000 && <p role="status">{t('replyTooLong')}</p>}
+      <FormalExpertStart
+        project={project}
+        from={from}
+        task={task}
+        question={revised}
+        blocked={blocked || !answer || revised === question}
+        actionLabel={t('replySubmit')}
+        onStarted={onStarted}
+      />
+    </div>
+  )
+}
+
 export function FormalExpertIntake({
   project,
   question,
   blocked = false,
   onRestore,
+  onSubmitted,
   from,
 }: {
   project: string
@@ -35,6 +97,7 @@ export function FormalExpertIntake({
   question: string
   blocked?: boolean
   onRestore?: (value: string) => void
+  onSubmitted: (value: string) => void
 }) {
   const t = useTranslations('formalIntake')
   const { csrfToken, locale } = useWorkbench()
@@ -74,6 +137,21 @@ export function FormalExpertIntake({
   const same = original === current
   const result = same ? round.data?.formal : undefined
   const busy = !!task && !round.isError && (!round.data || !terminal.has(round.data.state))
+  const clarification =
+    !round.isError &&
+    !round.data?.superseded_by &&
+    !round.data?.execution &&
+    !result?.selected &&
+    !result?.ended
+      ? result?.match.clarification
+      : null
+  function openRound(id: string, submittedQuestion: string) {
+    onSubmitted(submittedQuestion)
+    setTask(id)
+    const url = new URL(window.location.href)
+    url.searchParams.set('formalMatch', id)
+    window.history.replaceState(window.history.state, '', url)
+  }
   return (
     <section className="space-y-3" aria-label={t('title')}>
       {round.data?.followup && (
@@ -94,27 +172,24 @@ export function FormalExpertIntake({
           )}
         </div>
       )}
-      <FormalExpertStart
-        project={project}
-        from={from}
-        task={task}
-        ended={round.data?.formal?.ended}
-        question={current}
-        blocked={
-          blocked ||
-          busy ||
-          !!result ||
-          (!!round.data?.execution && same) ||
-          !!round.data?.superseded_by ||
-          (!!task && !round.data)
-        }
-        onStarted={(id) => {
-          setTask(id)
-          const url = new URL(window.location.href)
-          url.searchParams.set('formalMatch', id)
-          window.history.replaceState(window.history.state, '', url)
-        }}
-      />
+      {!clarification && (
+        <FormalExpertStart
+          project={project}
+          from={from}
+          task={task}
+          ended={round.data?.formal?.ended}
+          question={current}
+          blocked={
+            blocked ||
+            busy ||
+            !!result ||
+            (!!round.data?.execution && same) ||
+            !!round.data?.superseded_by ||
+            (!!task && !round.data)
+          }
+          onStarted={openRound}
+        />
+      )}
       {round.data?.superseded_by && (
         <a
           className="underline"
@@ -258,7 +333,20 @@ export function FormalExpertIntake({
                 reload={() => round.refetch()}
               />
             )}
-          {result.match.clarification && <p>{result.match.clarification}</p>}
+          {task && clarification ? (
+            <MatchClarification
+              key={task}
+              prompt={clarification}
+              question={current}
+              task={task}
+              project={project}
+              from={from}
+              blocked={blocked || busy}
+              onStarted={openRound}
+            />
+          ) : (
+            result.match.clarification && <p>{result.match.clarification}</p>
+          )}
           {result.match.picks.map((p) => {
             const e = result.options.find((o) => pinKey(o.reference) === pinKey(p.reference))
             if (!e) return null

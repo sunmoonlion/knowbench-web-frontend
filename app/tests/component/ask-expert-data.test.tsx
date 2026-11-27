@@ -154,3 +154,97 @@ describe('请专家：数据按问题定', () => {
     )
   })
 })
+
+const oldRound = 'aaaaaaaa-1111-4111-8111-111111111111'
+const nextRound = '11111111-1111-4111-8111-111111111111'
+function showClarification(question: string, superseded = false) {
+  search = 'formalMatch=' + oldRound
+  const previousFetch = global.fetch
+  vi.stubGlobal('fetch', async (input: string, init: RequestInit = {}) => {
+    if (input === '/api/workbench/find-expert/' + oldRound)
+      return Response.json({
+        task_id: oldRound,
+        project_id: project,
+        state: 'SUCCEEDED',
+        question,
+        ...(superseded ? { superseded_by: nextRound } : {}),
+        formal: {
+          review_digest: 'sha256:test',
+          more: false,
+          selected: null,
+          scope_preview: null,
+          options: [],
+          match: {
+            outcome: 'clarify',
+            explanation: '需要明确交付目标',
+            clarification: '您希望核对哪项财务数据？',
+            requirements: [],
+            picks: [],
+          },
+        },
+      })
+    if (input === '/api/workbench/find-expert/' + nextRound)
+      return Response.json({
+        task_id: nextRound,
+        project_id: project,
+        state: 'RUNNING',
+        question: calls.at(-1)?.body.question,
+      })
+    return previousFetch(input, init)
+  })
+  return page(<AskExpertScreen project={project} from={null} />)
+}
+
+it('在澄清问题下作答，携带原问题修订本轮，失败重试沿用同一笔匹配', async () => {
+  showClarification('你好')
+  const answer = await screen.findByRole('textbox', { name: '你的回答' })
+  const send = screen.getByRole('button', { name: '提交回答并继续匹配' })
+  expect(send).toBeDisabled()
+  fireEvent.change(answer, { target: { value: '  ' } })
+  expect(send).toBeDisabled()
+  fireEvent.change(answer, { target: { value: '请核对资产负债表是否平衡。' } })
+  expect(calls).toHaveLength(0)
+  const originalFetch = global.fetch
+  vi.stubGlobal('fetch', async (input: string, init: RequestInit = {}) => {
+    if (init.method === 'POST' && !calls.length) {
+      calls.push({ method: 'POST', path: String(input), body: JSON.parse(String(init.body)) })
+      return Response.json({}, { status: 503 })
+    }
+    return originalFetch(input, init)
+  })
+  await waitFor(() => expect(send).toBeEnabled())
+  fireEvent.click(send)
+  await screen.findByText(messages.formalIntake.failed)
+  expect(answer).toHaveValue('请核对资产负债表是否平衡。')
+  fireEvent.click(send)
+  await waitFor(() =>
+    expect(new URL(location.href).searchParams.get('formalMatch')).toBe(nextRound),
+  )
+  expect(calls).toHaveLength(2)
+  expect(calls[0].body).toMatchObject({
+    question: '你好\n\n请核对资产负债表是否平衡。',
+    revises: oldRound,
+    budget_limit: '2',
+  })
+  expect(calls[1]).toEqual(calls[0])
+  expect(screen.queryByRole('textbox', { name: '你的回答' })).toBeNull()
+  expect(screen.getByLabelText(messages.askExpert.question)).toHaveValue('你好\n\n请核对资产负债表是否平衡。')
+})
+
+it('原问题已达上限时可以明确选择用回答改写，旧轮次不可重复作答', async () => {
+  const view = showClarification('长'.repeat(2000))
+  fireEvent.change(await screen.findByRole('textbox', { name: '你的回答' }), {
+    target: { value: '核对报表' },
+  })
+  const send = screen.getByRole('button', { name: '提交回答并继续匹配' })
+  expect(send).toBeDisabled()
+  fireEvent.click(screen.getByRole('checkbox', { name: messages.formalIntake.replyReplace }))
+  await waitFor(() => expect(send).toBeEnabled())
+  fireEvent.click(send)
+  await waitFor(() => expect(calls).toHaveLength(1))
+  expect(calls[0].body).toMatchObject({ question: '核对报表', revises: oldRound })
+  view.unmount()
+  showClarification('你好', true)
+  await screen.findByRole('link', { name: messages.formalIntake.latest })
+  expect(screen.queryByRole('textbox', { name: '你的回答' })).toBeNull()
+})

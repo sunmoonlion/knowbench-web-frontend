@@ -19,6 +19,7 @@ export function FormalExpertStart({
   task = null,
   ended = false,
   blocked,
+  actionLabel,
   startButtonRef,
   onStarted,
 }: {
@@ -28,8 +29,9 @@ export function FormalExpertStart({
   task?: string | null
   ended?: boolean
   blocked: boolean
+  actionLabel?: string
   startButtonRef?: Ref<HTMLButtonElement>
-  onStarted: (id: string) => void
+  onStarted: (id: string, question: string) => void
 }) {
   const t = useTranslations('formalIntake')
   const { csrfToken } = useWorkbench()
@@ -84,7 +86,7 @@ export function FormalExpertStart({
       })
       if ('task_id' in result) {
         setSubmitted(search)
-        onStarted(result.task_id)
+        onStarted(result.task_id, current)
       }
       setEmpty('empty' in result ? { search, next: result.next } : null)
       pending.current = null
@@ -131,7 +133,7 @@ export function FormalExpertStart({
           }
         }}
       >
-        {emptyPage?.next ? t('continueSearch') : t('unifiedTitle')}
+        {emptyPage?.next ? t('continueSearch') : (actionLabel ?? t('unifiedTitle'))}
       </Button>
       <p className="text-muted-foreground text-sm">{t('cost')}</p>
       {emptyPage && <p role="status">{emptyPage.next ? t('emptyWindow') : t('empty')}</p>}
