@@ -146,6 +146,7 @@
     "planOutput": "{input} comes from step {index}, output {output}",
     "planObjects": "{input} takes each item from {name}",
     "planRows": "{input} collects {output} from step {index} for each item",
+    "deliverOutput": "Return {output} as {name} to the requester",
     "planReviews": "Independently review results from step(s) {steps}",
     "planBatch": "Process up to {count} items individually",
     "planAlternative": "Other methods accept similar inputs: {names}. Check whether this question requires conditional routing.",
