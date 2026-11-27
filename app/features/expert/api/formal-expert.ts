@@ -57,6 +57,7 @@ const feedback = z.object({
   handoff_gap: z.string().nullable().optional(),
   handoff_reference: pin.nullable().optional(),
   suggested_plan: suggestion.nullable().optional(),
+  htn_tree: z.record(z.string(), z.any()).nullable().optional(),
   attached_plan: z.boolean().optional(),
 })
 export type Feedback = z.infer<typeof feedback>
@@ -177,11 +178,18 @@ export const sendHandoff = (
   gap: string,
   reference: z.infer<typeof pin> | null,
   plan_digest?: string,
+  htn_tree?: Record<string, unknown> | null,
 ) =>
   sendJson(handoffReceipt, `/api/workbench/find-expert/${seg(task)}/handoff`, {
     method: 'PUT',
     csrfToken,
-    body: { review_digest, gap, reference, plan_digest },
+    body: {
+      review_digest,
+      gap,
+      reference,
+      plan_digest,
+      ...(htn_tree ? { htn_tree } : {}),
+    },
   })
 export type FormalReview = NonNullable<z.infer<typeof reviewed>['formal']>
 

@@ -18,6 +18,7 @@ import {
   methodSkillCenterInventory,
   methodSkillCenterActivity,
   methodSkillCenterKey,
+  planningDeclaration,
   type RegisteredMethod,
   type MethodSkillCenterAsset,
 } from '@/lib/workbench/method-skill-center'
@@ -42,6 +43,66 @@ function EntryList({ asset }: { asset: MethodSkillCenterAsset }) {
       ))}
       {!query.data.entries.length && <li>{t('emptyEntries')}</li>}
     </ul>
+  )
+}
+
+function FiveElementDrawer({
+  reference,
+}: {
+  reference: RegisteredMethod['reference']
+}) {
+  const t = useTranslations('methodSkillCenter')
+  const { csrfToken } = useWorkbench()
+  const [open, setOpen] = useState(false)
+  const query = useQuery({
+    queryKey: [...methodSkillCenterKey, 'declaration', reference],
+    queryFn: () => planningDeclaration(reference, csrfToken),
+    enabled: open,
+    retry: false,
+  })
+  return (
+    <details onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary className="cursor-pointer text-sm">{t('candidateDeclaration')}</summary>
+      {open &&
+        (query.isError ? (
+          <RequestFailure error={query.error} retry={() => void query.refetch()} />
+        ) : !query.data || query.isFetching ? (
+          <p className="mt-2 text-sm">{t('loading')}</p>
+        ) : (
+          <dl className="mt-2 space-y-1 text-sm">
+            <dt className="font-medium">{t('candidatePurpose')}</dt>
+            <dd className="text-muted-foreground">{query.data.purpose}</dd>
+            {query.data.applies_when.length > 0 ? (
+              <>
+                <dt className="font-medium">{t('candidateApplies')}</dt>
+                <dd className="text-muted-foreground">{query.data.applies_when.join(' · ')}</dd>
+              </>
+            ) : null}
+            {query.data.excludes.length > 0 ? (
+              <>
+                <dt className="font-medium">{t('candidateExcludes')}</dt>
+                <dd className="text-muted-foreground">{query.data.excludes.join(' · ')}</dd>
+              </>
+            ) : null}
+            <dt className="font-medium">{t('candidatePromises')}</dt>
+            <dd>
+              <ul className="space-y-1">
+                {Object.entries(query.data.promises).map(([id, text]) => (
+                  <li key={id}>
+                    <strong>{text}</strong>
+                    {query.data.outputs[id]?.length ? (
+                      <span className="text-muted-foreground">
+                        {' '}
+                        · {t('promiseDeliverables')}：{query.data.outputs[id].join(', ')}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </dd>
+          </dl>
+        ))}
+    </details>
   )
 }
 
@@ -215,10 +276,10 @@ function RecentActivity() {
 export function MethodSkillCenterSection() {
   const t = useTranslations('methodSkillCenter')
   const { locale } = useWorkbench()
-  const [tab, setTab] = useState<
-    'installed' | 'formal' | 'sources' | 'planning' | 'native' | 'activity'
-  >('formal')
+  // 面向用户的 3 个清晰页签：可用专家与工具(formal) · 本地技能与连接器(installed) · 调用与授权记录(activity)
+  const [tab, setTab] = useState<'formal' | 'installed' | 'activity'>('formal')
   const [term, setTerm] = useState('')
+  const [showPlanningSearch, setShowPlanningSearch] = useState(false)
   const query = useQuery({ queryKey: methodSkillCenterKey, queryFn: methodSkillCenterInventory })
   const client = useQueryClient()
   const data = query.data
@@ -250,22 +311,20 @@ export function MethodSkillCenterSection() {
         </Button>
       </header>
       <div className="flex flex-wrap gap-2">
-        {(['formal', 'planning', 'sources', 'installed', 'native', 'activity'] as const).map(
-          (k) => (
-            <Button
-              key={k}
-              size="sm"
-              variant={tab === k ? 'default' : 'outline'}
-              aria-pressed={tab === k}
-              onClick={() => {
-                setTab(k)
-                setTerm('')
-              }}
-            >
-              {t(k)}
-            </Button>
-          ),
-        )}
+        {(['formal', 'installed', 'activity'] as const).map((k) => (
+          <Button
+            key={k}
+            size="sm"
+            variant={tab === k ? 'default' : 'outline'}
+            aria-pressed={tab === k}
+            onClick={() => {
+              setTab(k)
+              setTerm('')
+            }}
+          >
+            {t(`tabs.${k}`)}
+          </Button>
+        ))}
       </div>
       {(tab === 'installed' || tab === 'formal') && (
         <input
@@ -277,42 +336,66 @@ export function MethodSkillCenterSection() {
           onChange={(e) => setTerm(e.target.value)}
         />
       )}
-      {tab === 'planning' ? (
-        <PlanningMethods />
-      ) : tab === 'sources' ? (
-        <MethodSkillCenterSources />
-      ) : query.isError ? (
+      {query.isError ? (
         <RequestFailure error={query.error} retry={() => void query.refetch()} />
       ) : !data ? (
         <p>{t('loading')}</p>
       ) : (
         <>
           {tab === 'installed' && (
-            <>
-              <div className="flex gap-4 text-sm underline">
-                <Link href={routes.settings(locale, 'connections')}>{t('connections')}</Link>
-                <Link href={routes.settings(locale, 'skills')}>{t('skills')}</Link>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-base font-semibold">{t('connectorsAndSkillsHeading')}</h2>
+                  <div className="flex gap-4 text-sm underline">
+                    <Link href={routes.settings(locale, 'connections')}>{t('connections')}</Link>
+                    <Link href={routes.settings(locale, 'skills')}>{t('skills')}</Link>
+                  </div>
+                </div>
+                {data.installed
+                  .filter((a) => matches(a.name, a.account_label, a.asset_id))
+                  .map((a) => (
+                    <Installation
+                      key={a.asset_id + ':' + a.revision}
+                      asset={a}
+                      methods={data.formal.filter((m) => m.source_asset_id === a.asset_id)}
+                    />
+                  ))}
+                {!data.installed.some((a) => matches(a.name, a.account_label, a.asset_id)) && (
+                  <p className="text-muted-foreground text-sm">{t('empty')}</p>
+                )}
               </div>
-              {data.installed
-                .filter((a) => matches(a.name, a.account_label, a.asset_id))
-                .map((a) => (
-                  <Installation
-                    key={a.asset_id + ':' + a.revision}
-                    asset={a}
-                    methods={data.formal.filter((m) => m.source_asset_id === a.asset_id)}
-                  />
-                ))}
-              {!data.installed.some((a) => matches(a.name, a.account_label, a.asset_id)) && (
-                <p>{t('empty')}</p>
-              )}
-            </>
+
+              <div className="space-y-3 border-t pt-4">
+                <h2 className="text-base font-semibold">{t('sources')}</h2>
+                <MethodSkillCenterSources />
+              </div>
+            </div>
           )}
+
           {tab === 'formal' && (
             <>
-              <div className="flex gap-4 text-sm underline">
-                <CrossAppLink to="knowlab.incubation">{t('lab')}</CrossAppLink>
-                <CrossAppLink to="knowmart.shop">{t('shop')}</CrossAppLink>
+              <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                <div className="flex flex-wrap gap-4 underline">
+                  <CrossAppLink to="knowmart.knowbots">{t('browseMoreInMarket')}</CrossAppLink>
+                  <CrossAppLink to="knowlab.studio">{t('lab')}</CrossAppLink>
+                  <CrossAppLink to="knowmart.shop">{t('shop')}</CrossAppLink>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  aria-expanded={showPlanningSearch}
+                  onClick={() => setShowPlanningSearch(!showPlanningSearch)}
+                >
+                  {t('planning')}
+                </Button>
               </div>
+              {showPlanningSearch ? (
+                <div className="rounded-xl border p-4">
+                  <PlanningMethods />
+                </div>
+              ) : null}
               <p className="text-muted-foreground text-sm">{t('qualification')}</p>
               {methods?.map((m) => {
                 const asset = data.installed.find((a) => a.asset_id === m.source_asset_id)
@@ -321,9 +404,38 @@ export function MethodSkillCenterSection() {
                     className={panel}
                     key={m.reference.method_id + ':' + m.reference.version}
                   >
-                    <h3 className="font-semibold">
-                      {m.title} · v{m.reference.version}
-                    </h3>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="font-semibold">
+                        {m.title} · v{m.reference.version}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-3 text-sm">
+                        {m.method_kind === 'expert' ? (
+                          <Link
+                            className="font-medium underline"
+                            href={
+                              routes.home(locale) +
+                              '?' +
+                              new URLSearchParams({
+                                mode: 'expert',
+                                formalReference: JSON.stringify(m.reference),
+                              })
+                            }
+                          >
+                            {t('askVersion')}
+                          </Link>
+                        ) : null}
+                        <CrossAppLink
+                          to="knowlab.methods"
+                          values={{
+                            method_id: m.reference.method_id,
+                            version: String(m.reference.version),
+                          }}
+                          className="text-xs underline"
+                        >
+                          {t('reviseInKnowLab')}
+                        </CrossAppLink>
+                      </div>
+                    </div>
                     <p className="text-sm">
                       {t('methodKind.' + m.method_kind)} · {t('runnerRoute.' + m.runner_route)}
                     </p>
@@ -344,8 +456,29 @@ export function MethodSkillCenterSection() {
                           {t('sourceChanged')}
                         </p>
                       )}
+                    <FiveElementDrawer reference={m.reference} />
+                    {m.dependencies.length > 0 && (
+                      <div className="text-sm">
+                        <strong>{t('dependencies')}</strong>
+                        <ul>
+                          {m.dependencies.map((r) => (
+                            <li className="break-all" key={r.method_id + r.version}>
+                              {data.formal.find(
+                                (f) =>
+                                  f.reference.method_id === r.method_id &&
+                                  f.reference.version === r.version &&
+                                  f.reference.digest === r.digest,
+                              )?.title || r.method_id}{' '}
+                              · v{r.version}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     <details>
-                      <summary className="cursor-pointer text-sm">{t('identity')}</summary>
+                      <summary className="cursor-pointer text-xs text-muted-foreground">
+                        {t('identity')}
+                      </summary>
                       <dl className="mt-2 space-y-1 font-mono text-xs break-all">
                         <dt>ID</dt>
                         <dd>{m.reference.method_id}</dd>
@@ -359,52 +492,42 @@ export function MethodSkillCenterSection() {
                         )}
                       </dl>
                     </details>
-                    {m.dependencies.length > 0 && (
-                      <div className="text-sm">
-                        <strong>{t('dependencies')}</strong>
-                        <ul>
-                          {m.dependencies.map((r) => (
-                            <li className="break-all" key={r.method_id + r.version}>
-                              {data.formal.find(
-                                (f) =>
-                                  f.reference.method_id === r.method_id &&
-                                  f.reference.version === r.version &&
-                                  f.reference.digest === r.digest,
-                              )?.title || r.method_id}{' '}
-                              · v{r.version} · {r.digest}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </article>
                 )
               })}
               {!methods?.length && <p>{t('empty')}</p>}
             </>
           )}
-          {tab === 'activity' && <RecentActivity />}
-          {tab === 'native' && (
-            <>
-              {data.native.map((a) => (
-                <article className={panel} key={a.name}>
-                  <h3 className="font-semibold">
-                    {t.has('actions.' + a.name) ? t('actions.' + a.name) : a.name}
-                  </h3>
-                  {a.request && (
-                    <p className="text-sm break-all">
-                      {t(a.interaction === 'question' ? 'question' : 'approval')} ·{' '}
-                      <code>{a.request}</code>
-                    </p>
-                  )}
-                  {a.item_type && (
-                    <p className="text-sm">
-                      {t('observe')} · <code>{a.item_type}</code>
-                    </p>
-                  )}
-                </article>
-              ))}
-            </>
+
+          {tab === 'activity' && (
+            <div className="space-y-6">
+              <RecentActivity />
+              <details className="rounded-xl border p-4">
+                <summary className="cursor-pointer text-sm font-medium">
+                  {t('protocolDiagnostics')}
+                </summary>
+                <div className="mt-3 space-y-3">
+                  {data.native.map((a) => (
+                    <article className={panel} key={a.name}>
+                      <h3 className="font-semibold">
+                        {t.has('actions.' + a.name) ? t('actions.' + a.name) : a.name}
+                      </h3>
+                      {a.request && (
+                        <p className="text-sm break-all">
+                          {t(a.interaction === 'question' ? 'question' : 'approval')} ·{' '}
+                          <code>{a.request}</code>
+                        </p>
+                      )}
+                      {a.item_type && (
+                        <p className="text-sm">
+                          {t('observe')} · <code>{a.item_type}</code>
+                        </p>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              </details>
+            </div>
           )}
         </>
       )}

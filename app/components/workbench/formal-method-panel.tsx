@@ -30,36 +30,50 @@ export function FormalMethodPanel({ sessionId, visible }: { sessionId: string; v
           className="space-y-3 rounded border p-3"
           aria-label={`${record.title} · ${t(`status.${record.status}`)}`}
         >
-          <h4 className="font-medium">
-            {record.title} · v{record.reference.version} · {t(`status.${record.status}`)}
-          </h4>
-          <p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h4 className="font-medium">
+              {record.title} · v{record.reference.version} · {t(`status.${record.status}`)}
+            </h4>
+            {record.status === 'succeeded' && record.outputs !== null ? (
+              <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+                ✓ {t('v0VerifiedBadge')}
+              </span>
+            ) : null}
+          </div>
+          <p className="text-muted-foreground text-sm">
             {t(
               record.call.detail.execution_kind === 'formal_method_model'
                 ? 'modelOrigin'
                 : 'manualOrigin',
             )}
           </p>
-          <p>{record.detail}</p>
+          <p className="text-sm">{record.detail}</p>
           {record.status === 'unknown' ? <p role="status">{t('unknown')}</p> : null}
           {record.status === 'succeeded' && record.outputs !== null ? (
-            <div>
-              <h5 className="font-medium">{t('validatedOutputs')}</h5>
-              <pre className="bg-muted max-h-72 overflow-auto rounded p-2 text-xs whitespace-pre-wrap">
-                {JSON.stringify(record.outputs, null, 2)}
-              </pre>
+            <div className="space-y-2">
+              <h5 className="text-sm font-medium">{t('validatedOutputs')}</h5>
+              <dl className="bg-muted/60 divide-y rounded-lg border p-2 text-xs">
+                {Object.entries(record.outputs).map(([slotName, val]) => (
+                  <div key={slotName} className="py-1.5 first:pt-0 last:pb-0">
+                    <dt className="font-semibold">{slotName}</dt>
+                    <dd className="mt-0.5 font-mono whitespace-pre-wrap break-words">
+                      {typeof val === 'string' ? val : JSON.stringify(val, null, 2)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           ) : null}
-          <details>
-            <summary>{t('requestDetails')}</summary>
-            <p className="break-all">
+          <details className="text-xs">
+            <summary className="cursor-pointer">{t('requestDetails')}</summary>
+            <p className="mt-1 break-all">
               {record.request_id} · {record.method_call_id}
             </p>
             <p className="break-all">
               {record.reference.method_id} · {record.reference.digest}
             </p>
           </details>
-          <h5>{t('operation')}</h5>
+          <h5 className="text-sm font-medium">{t('operation')}</h5>
           <CapabilityActionCard call={record.call} showResult={false} />
         </section>
       ))}

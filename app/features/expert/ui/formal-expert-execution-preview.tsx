@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useWorkbench } from '@/lib/workbench/context'
 import { readExecutionPreview, submitExecution } from '../api/formal-expert-preparation'
@@ -7,13 +8,16 @@ import { readExecutionPreview, submitExecution } from '../api/formal-expert-prep
 export function ExecutionPreview({
   task,
   revision,
+  hasEnvelope = false,
   onConfirmed,
 }: {
   task: string
   revision: number
+  hasEnvelope?: boolean
   onConfirmed: () => void
 }) {
   const t = useTranslations('formalIntake')
+  const [acceptEnvelope, setAcceptEnvelope] = useState(true)
   const read = useMutation({
     mutationFn: async () => {
       const data = await readExecutionPreview(task, revision)
@@ -25,7 +29,14 @@ export function ExecutionPreview({
   })
   const { csrfToken } = useWorkbench()
   const submit = useMutation({
-    mutationFn: (fingerprint: string) => submitExecution(task, revision, fingerprint, csrfToken),
+    mutationFn: (fingerprint: string) =>
+      submitExecution(
+        task,
+        revision,
+        fingerprint,
+        csrfToken,
+        hasEnvelope && acceptEnvelope ? true : undefined,
+      ),
     onSuccess: onConfirmed,
     retry: false,
   })
@@ -153,13 +164,25 @@ export function ExecutionPreview({
             <p>{t(`previewIssues.${result.dispatch_gap}`)}</p>
           )}
           {!result.dispatch_gap && !result.issues.length && (
-            <Button
-              type="button"
-              disabled={submit.isPending || submit.isSuccess}
-              onClick={() => submit.mutate(result.preview_digest)}
-            >
-              {t('confirmExecution')}
-            </Button>
+            <div className="space-y-2">
+              {hasEnvelope ? (
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={acceptEnvelope}
+                    onChange={(e) => setAcceptEnvelope(e.target.checked)}
+                  />
+                  {t('acceptEnvelopeConsent')}
+                </label>
+              ) : null}
+              <Button
+                type="button"
+                disabled={submit.isPending || submit.isSuccess}
+                onClick={() => submit.mutate(result.preview_digest)}
+              >
+                {t('confirmExecution')}
+              </Button>
+            </div>
           )}
           {result.issues.map((issue, i) => (
             <p key={i}>

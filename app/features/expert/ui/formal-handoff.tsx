@@ -37,31 +37,52 @@ export function FormalHandoff({
         gap.trim(),
         ref,
         attach ? proposal?.sketch_digest : undefined,
+        attach ? result.htn_tree : undefined,
       ),
     onSuccess: reload,
     retry: false,
   })
   if (result.handoff)
     return (
-      <div>
+      <div className="space-y-2">
         <p role="status">{t(result.handoff.mode)}</p>
-        <CrossAppLink
-          to="knowlab.application"
-          values={{ item: result.handoff.request_id }}
-          refValue={task}
-          fallback={<span>{result.handoff.request_id}</span>}
-          className="underline"
-        >
-          {t('openHandoff')}
-        </CrossAppLink>
+        <div className="flex flex-wrap gap-3 text-sm">
+          <CrossAppLink
+            to="knowlab.studioNew"
+            values={{ handoff_task: task }}
+            refValue={task}
+            className="font-medium underline"
+          >
+            {t('openStudioHandoff')}
+          </CrossAppLink>
+          <CrossAppLink
+            to="knowlab.application"
+            values={{ item: result.handoff.request_id }}
+            refValue={task}
+            fallback={<span>{result.handoff.request_id}</span>}
+            className="underline"
+          >
+            {t('openHandoff')}
+          </CrossAppLink>
+        </div>
         <HandoffVersions task={task} />
       </div>
     )
   if (!open)
     return (
-      <Button variant="outline" onClick={() => setOpen(true)}>
-        {t('toLab')}
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          {t('toLab')}
+        </Button>
+        <CrossAppLink
+          to="knowmart.demands"
+          values={{ title: question.slice(0, 80), problem: question.slice(0, 500) }}
+          refValue={task}
+          className="text-sm underline"
+        >
+          {t('postDemandInMarket')}
+        </CrossAppLink>
+      </div>
     )
   return (
     <section aria-label={t('toLab')} className="space-y-2">
@@ -91,18 +112,32 @@ export function FormalHandoff({
           )}
         </div>
       )}
-      <label>
+      <label className="block">
         {t('handoffGap')}
         <textarea
+          className="mt-1 w-full rounded border p-2"
           value={gap}
           maxLength={2000}
           disabled={!!result.handoff_gap || submit.isPending}
           onChange={(event) => setGap(event.target.value)}
         />
       </label>
-      <Button disabled={!gap.trim() || submit.isPending} onClick={() => submit.mutate()}>
-        {t('sendHandoff')}
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button disabled={!gap.trim() || submit.isPending} onClick={() => submit.mutate()}>
+          {t('sendHandoff')}
+        </Button>
+        <CrossAppLink
+          to="knowmart.demands"
+          values={{
+            title: question.slice(0, 80),
+            problem: `${question}\n${gap}`.slice(0, 500),
+          }}
+          refValue={task}
+          className="text-sm underline"
+        >
+          {t('postDemandInMarket')}
+        </CrossAppLink>
+      </div>
       {submit.isError && <p role="alert">{t('handoffRetry')}</p>}
     </section>
   )

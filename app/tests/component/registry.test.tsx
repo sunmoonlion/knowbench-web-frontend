@@ -51,7 +51,8 @@ function renderPage(view = <MethodSkillCenterSection />) {
   )
 }
 afterEach(() => vi.restoreAllMocks())
-it('keeps source and method identities visible and confirms before disabling the exact revision', async () => {
+
+it('presents 3 clean user views, confirms connector disable impact, and folds native diagnostics under activity', async () => {
   let status = asset.status
   vi.spyOn(registry, 'methodSkillCenterInventory').mockImplementation(async () => ({
     installed: [{ ...asset, status }],
@@ -65,6 +66,7 @@ it('keeps source and method identities visible and confirms before disabling the
       },
     ],
   }))
+  vi.spyOn(registry, 'listSources').mockResolvedValue([])
   vi.spyOn(registry, 'methodSkillCenterInstallation').mockResolvedValue({
     path: 'installed',
     ...asset,
@@ -98,7 +100,8 @@ it('keeps source and method identities visible and confirms before disabling the
   renderPage()
   expect(await screen.findByRole('heading', { name: /发送成稿/ })).toBeVisible()
   expect(screen.getAllByText(/工具方法 · MCP/)).toHaveLength(2)
-  fireEvent.click(screen.getByRole('button', { name: zh.methodSkillCenter.installed }))
+
+  fireEvent.click(screen.getByRole('button', { name: zh.methodSkillCenter.tabs.installed }))
   expect(await screen.findByText('工作邮件')).toBeVisible()
   fireEvent.click(screen.getByRole('button', { name: '查看安装入口' }))
   expect(await screen.findByText('send')).toBeVisible()
@@ -107,19 +110,22 @@ it('keeps source and method identities visible and confirms before disabling the
   expect(change).not.toHaveBeenCalled()
   fireEvent.click(screen.getByRole('button', { name: zh.capabilities.disable }))
   await waitFor(() => expect(change).toHaveBeenCalledWith(asset_id, 3, 'disable', 'csrf'))
-  fireEvent.click(screen.getByRole('button', { name: '正式方法' }))
+
+  fireEvent.click(screen.getByRole('button', { name: zh.methodSkillCenter.tabs.formal }))
   fireEvent.change(screen.getByRole('searchbox'), { target: { value: '发送成稿' } })
   expect(screen.getByRole('heading', { name: /发送成稿/ })).toBeVisible()
   expect(screen.queryByRole('heading', { name: /对账通知/ })).toBeNull()
   expect(await screen.findByText(/当前安装已停用/)).toBeVisible()
-  fireEvent.click(screen.getByRole('button', { name: 'Codex 原生动作' }))
-  expect(screen.getByText('item/permissions/requestApproval')).toBeVisible()
-  fireEvent.click(screen.getByRole('button', { name: '最近记录' }))
+
+  fireEvent.click(screen.getByRole('button', { name: zh.methodSkillCenter.tabs.activity }))
   expect(await screen.findByText(/正式方法 · send/)).toBeVisible()
   fireEvent.click(screen.getByText(zh.methodSkillCenter.trace))
   expect(screen.getByText(new RegExp(methods[0].reference.digest))).toBeVisible()
+  fireEvent.click(screen.getByText(zh.methodSkillCenter.protocolDiagnostics))
+  expect(screen.getByText('item/permissions/requestApproval')).toBeVisible()
 })
-it('lists an expert with no installation and shows who runs each of its leaves', async () => {
+
+it('lists an expert with direct summon link and shows who runs each of its leaves', async () => {
   const leaves: registry.RegisteredMethod[] = methods.map((m, i) => ({
     ...m,
     title: i ? '复核指令' : '汇总脚本',
@@ -149,6 +155,10 @@ it('lists an expert with no installation and shows who runs each of its leaves',
   })
   renderPage()
   expect(await screen.findByRole('heading', { name: /月末专家/ })).toBeVisible()
+  expect(screen.getByRole('link', { name: zh.methodSkillCenter.askVersion })).toHaveAttribute(
+    'href',
+    expect.stringContaining('/zh-CN/workbench?mode=expert&formalReference='),
+  )
   expect(screen.getByText(/专家方法 · runtime/)).toBeVisible()
   expect(screen.getByText(/工具方法 · 隔离脚本/)).toBeVisible()
   expect(screen.getByText(/工具方法 · 隔离模型/)).toBeVisible()
@@ -156,22 +166,24 @@ it('lists an expert with no installation and shows who runs each of its leaves',
   expect(screen.getByRole('heading', { name: /月末专家/ })).toBeVisible()
   expect(screen.queryByRole('heading', { name: /汇总脚本/ })).toBeNull()
 })
+
 it('shows an empty registry with working installation links', async () => {
   vi.spyOn(registry, 'methodSkillCenterInventory').mockResolvedValue({
     installed: [],
     formal: [],
     native: [],
   })
+  vi.spyOn(registry, 'listSources').mockResolvedValue([])
   renderPage()
   expect(await screen.findByText(zh.methodSkillCenter.empty)).toBeVisible()
-  fireEvent.click(screen.getByRole('button', { name: zh.methodSkillCenter.installed }))
+  fireEvent.click(screen.getByRole('button', { name: zh.methodSkillCenter.tabs.installed }))
   expect(screen.getByRole('link', { name: '安装技能' })).toHaveAttribute(
     'href',
     '/zh-CN/workbench/settings/skills',
   )
 })
 
-it('withdraws a direct source from its latest revision after confirmation', async () => {
+it('withdraws a direct source from its latest revision inside the unified local skills tab', async () => {
   vi.spyOn(registry, 'methodSkillCenterInventory').mockResolvedValue({
     installed: [],
     formal: [],
@@ -193,7 +205,7 @@ it('withdraws a direct source from its latest revision after confirmation', asyn
     return { withdrawn: true }
   })
   renderPage()
-  fireEvent.click(screen.getByRole('button', { name: zh.methodSkillCenter.sources }))
+  fireEvent.click(await screen.findByRole('button', { name: zh.methodSkillCenter.tabs.installed }))
   fireEvent.click(await screen.findByRole('button', { name: /回执 · v1/ }))
   await screen.findByText('test')
   expect(screen.queryByRole('button', { name: zh.directRegistry.withdraw })).not.toBeInTheDocument()

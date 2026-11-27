@@ -158,6 +158,10 @@
     "adoptSketch": "采用这份草图并准备执行",
     "savePlan": "保存这份计划",
     "toLab": "去 KnowLab",
+    "openStudioHandoff": "在 KnowLab 方法工坊打开",
+    "postDemandInMarket": "去 KnowMart 发布专家悬赏需求",
+    "approvalSummary": "审批包络摘要：包络预授权 {envelope} 项 · 外部写/发逐次强批 {perAction} 项",
+    "acceptEnvelopeConsent": "确认一次性包络预授权（覆盖只读资料与隔离运行步骤；外部写入与发送仍逐次审批）",
     "handoffPreview": "将以下问题、缺口和原委托编号发到你的 KnowLab 申请。反馈他人方法时，原作者也会收到你填写的缺口。",
     "handoffMethod": "关联方法 {id}，版本 {version}。所提修改将交给原作者。",
     "handoffGap": "缺少的接口或需要改进之处",
@@ -1918,6 +1922,7 @@
     "delegationReviewRequired": "委派依据发生变化或不再适用，请先清除或重新选择。"
   },
   "formalMethods": {
+    "v0VerifiedBadge": "两视图与输出契约已核验",
     "unknown": "结果未知。请先核对外部服务；不会自动重放本次调用。",
     "history": "最近的方法调用",
     "validatedOutputs": "已通过输出声明校验的结果",
@@ -1962,6 +1967,15 @@
     "clear": "清除此委派依据"
   },
   "methodSkillCenter": {
+    "tabs": {
+      "formal": "可用专家与工具",
+      "installed": "本地技能与连接器",
+      "activity": "调用与授权记录"
+    },
+    "connectorsAndSkillsHeading": "已接入连接器与技能包",
+    "browseMoreInMarket": "去 KnowMart 选更多专家与工具",
+    "reviseInKnowLab": "去 KnowLab 升版",
+    "protocolDiagnostics": "开发者协议诊断（Codex 原生动作）",
     "askVersion": "用此版本请专家",
     "sources": "脚本和指令",
     "title": "方法与技能",
@@ -2057,6 +2071,7 @@
     "chooseVersion": "为此步骤选用"
   },
   "directRegistry": {
+    "wrapInKnowLab": "去 KnowLab 封装为正式工具",
     "withdraw": "撤回来源",
     "withdrawConfirm": "撤回「{name}」的全部版本？新试跑和待派发的调用将无法使用它。",
     "scope": "登记自己的脚本文件或指令正文，按版本查看和引用。",

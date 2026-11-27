@@ -98,6 +98,11 @@ function BindingEditor({
     uncapped ||
     (/^\d{1,6}(\.\d{1,2})?$/.test(budget) && Number(budget) > 0 && Number(budget) <= 100000)
   const accountOptions = view.account_options
+  const materialInputSlots =
+    view.material_slots !== undefined
+      ? scope.inputs.filter((slot) => view.material_slots!.includes(slot.name))
+      : scope.inputs
+  const hasEnvelope = (view.approval_summary?.envelope.length ?? 0) > 0
   return (
     <fieldset
       className="space-y-3 rounded-lg border p-3"
@@ -135,7 +140,7 @@ function BindingEditor({
           )}
         </div>
       ))}
-      {scope.inputs.length > 0 && (
+      {materialInputSlots.length > 0 && (
         <>
           <Button
             type="button"
@@ -146,7 +151,7 @@ function BindingEditor({
             {t('browseMaterials')}
           </Button>
           {shelf.isError && <p role="alert">{t('libraryError')}</p>}
-          {scope.inputs.map((slot) => {
+          {materialInputSlots.map((slot) => {
             const current = materials[slot.name]
             const choices = shelf.data?.materials ?? []
             const keyOf = (p: Preparation['materials'][number] | typeof current) =>
@@ -270,12 +275,23 @@ function BindingEditor({
       {view.revision > 0 && (
         <p role="status">{t('savedPreparation', { revision: view.revision })}</p>
       )}
+      {view.approval_summary &&
+        (view.approval_summary.envelope.length > 0 ||
+          view.approval_summary.per_action.length > 0) && (
+          <p className="text-muted-foreground text-xs">
+            {t('approvalSummary', {
+              envelope: view.approval_summary.envelope.length,
+              perAction: view.approval_summary.per_action.length,
+            })}
+          </p>
+        )}
       {!edited && view.revision > 0 && (
         <ExecutionPreview
           onConfirmed={onConfirmed}
           key={view.revision}
           task={task}
           revision={view.revision}
+          hasEnvelope={hasEnvelope}
         />
       )}
       {save.isError && (

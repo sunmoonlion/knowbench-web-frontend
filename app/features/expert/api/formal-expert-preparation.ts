@@ -13,6 +13,13 @@ const account = z.object({
 })
 const view = z.object({
   input_types: z.record(z.string(), z.string()),
+  material_slots: z.array(z.string()).optional(),
+  approval_summary: z
+    .object({
+      envelope: z.array(z.string()),
+      per_action: z.array(z.string()),
+    })
+    .optional(),
   revision: z.number().int(),
   bindings: z.object({
     values: z.record(z.string(), z.json()),
@@ -130,9 +137,14 @@ export const submitExecution = (
   revision: number,
   preview_digest: string,
   csrfToken: string,
+  accept_envelope?: boolean,
 ) =>
   sendJson(z.object({ task_id: z.uuid() }), `/api/workbench/find-expert/${seg(task)}/execution`, {
     method: 'PUT',
     csrfToken,
-    body: { revision, preview_digest },
+    body: {
+      revision,
+      preview_digest,
+      ...(accept_envelope ? { accept_envelope: true } : {}),
+    },
   })

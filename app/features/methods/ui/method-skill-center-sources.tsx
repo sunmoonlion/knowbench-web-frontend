@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
+import { CrossAppLink } from '@/components/common/cross-app-link'
 import { RequestFailure } from '@/components/common/request-failure'
 import { useWorkbench } from '@/lib/workbench/context'
 import {
@@ -216,13 +217,28 @@ export function MethodSkillCenterSources() {
           const key = row.source_id + '/' + row.version
           return (
             <article key={key} className="space-y-2 rounded border p-3">
-              <button
-                className="text-left underline"
-                aria-expanded={key === selected}
-                onClick={() => select(key === selected ? '' : key)}
-              >
-                {row.name} · v{row.version} · {t(row.kind)}
-              </button>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <button
+                  className="text-left underline"
+                  aria-expanded={key === selected}
+                  onClick={() => select(key === selected ? '' : key)}
+                >
+                  {row.name} · v{row.version} · {t(row.kind)}
+                </button>
+                <CrossAppLink
+                  to="knowlab.studioNew"
+                  values={{
+                    method_kind: 'tool',
+                    source_kind: row.kind,
+                    source_id: row.source_id,
+                    source_version: String(row.version),
+                    source_name: row.name,
+                  }}
+                  className="text-xs underline"
+                >
+                  {t('wrapInKnowLab')}
+                </CrossAppLink>
+              </div>
               {key === selected && (
                 <SourceDetail
                   source={row}
