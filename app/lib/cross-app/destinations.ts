@@ -21,9 +21,7 @@ export const destinations = defineDestinations({
     segments: ['methods'],
     params: ['method_id', 'version'],
   },
-  'knowlab.createIdea': { target: 'knowlab', segments: ['applications', 'new'] },
-  'knowlab.application': { target: 'knowlab', segments: ['applications'], params: ['item'] },
-  'knowlab.incubation': { target: 'knowlab', segments: ['incubation'] },
+  'knowlab.studioDraft': { target: 'knowlab', segments: ['studio', ':method'], params: ['version'] },
   'knowmart.shop': { target: 'knowmart', segments: ['shop'] },
   'knowmart.knowbots': { target: 'knowmart', segments: ['knowbots'] },
   'knowmart.formalDetail': {

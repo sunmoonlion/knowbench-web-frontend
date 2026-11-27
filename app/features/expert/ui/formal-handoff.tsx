@@ -47,23 +47,16 @@ export function FormalHandoff({
       <div className="space-y-2">
         <p role="status">{t(result.handoff.mode)}</p>
         <div className="flex flex-wrap gap-3 text-sm">
-          <CrossAppLink
-            to="knowlab.studioNew"
-            values={{ handoff_task: task }}
-            refValue={task}
-            className="font-medium underline"
-          >
-            {t('openStudioHandoff')}
-          </CrossAppLink>
-          <CrossAppLink
-            to="knowlab.application"
-            values={{ item: result.handoff.request_id }}
-            refValue={task}
-            fallback={<span>{result.handoff.request_id}</span>}
-            className="underline"
-          >
-            {t('openHandoff')}
-          </CrossAppLink>
+          {result.handoff.studio_method_id && (
+            <CrossAppLink
+              to="knowlab.studioDraft"
+              values={{ method: result.handoff.studio_method_id, version: result.handoff.next_version?.toString() }}
+              refValue={task}
+              className="font-medium underline"
+            >
+              {t('openStudioHandoff')}
+            </CrossAppLink>
+          )}
         </div>
         <HandoffVersions task={task} />
       </div>

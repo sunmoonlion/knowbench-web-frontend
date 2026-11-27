@@ -42,7 +42,6 @@ export function ProjectScreen({ project: id }: { project: string }) {
   // 委托看列表还是看板（请专家方案设计第 4.8 节）
   const [view, setView] = useState<'list' | 'board'>('list')
   const tb = useTranslations('projects.board')
-  const tr = useTranslations('reviewRouting')
 
   if (!detail.data) {
     return (
@@ -234,14 +233,6 @@ export function ProjectScreen({ project: id }: { project: string }) {
                           >
                             {row}
                           </Link>
-                          {task.has_review_report && (
-                            <Link
-                              className="px-3 text-sm underline"
-                              href={routes.reviewDecisions(locale, task.id)}
-                            >
-                              {tr('openReports')}
-                            </Link>
-                          )}
                         </li>
                       )
                     })}

@@ -46,6 +46,8 @@ const scope = z.object({
 })
 export type FrozenScope = z.infer<typeof scope>
 const handoffReceipt = z.object({
+  studio_method_id: z.uuid().optional(),
+  next_version: z.number().int().positive().optional(),
   request_id: z.uuid(),
   mode: z.enum(['new', 'author_revision', 'user_demand']),
   review_digest: z.string(),
