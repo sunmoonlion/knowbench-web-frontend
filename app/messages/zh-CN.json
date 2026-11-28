@@ -134,6 +134,7 @@
     "decline": "不采纳",
     "defer": "待定",
     "handoffReason": "处置依据",
+    "handoffCostPending": "费用待核",
     "handoffNext": "后续责任人（不采纳或待定时必填）",
     "handoffClosed": "已结案",
     "handoffClose": "确认本组处置并结案",

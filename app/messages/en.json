@@ -134,6 +134,7 @@
     "decline": "Decline",
     "defer": "Defer",
     "handoffReason": "Reason",
+    "handoffCostPending": "Cost pending settlement",
     "handoffNext": "Next owner (required for declined or deferred work)",
     "handoffClosed": "Closed",
     "handoffClose": "Confirm dispositions and close",

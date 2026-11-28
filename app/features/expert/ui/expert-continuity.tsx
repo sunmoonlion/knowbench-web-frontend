@@ -56,12 +56,14 @@ export function HandoffVersions({ task }: { task: string }) {
                 {opt.candidate.declaration.title} · v{opt.candidate.reference.version}
               </strong>
               <p>{Object.values(opt.candidate.declaration.promises).join(' / ')}</p>
-              <p>
-                {[
-                  ...opt.candidate.declaration.applies_when,
-                  ...opt.candidate.declaration.excludes,
-                ].join(' / ')}
-              </p>
+              <dl>
+                {(['applies_when', 'excludes'] as const).map((key) => (
+                  <div key={key}>
+                    <dt>{t('fields.' + key)}</dt>
+                    <dd>{opt.candidate.declaration[key].join(' / ') || '—'}</dd>
+                  </div>
+                ))}
+              </dl>
               <details>
                 <summary>{t('changes')}</summary>
                 <dl>

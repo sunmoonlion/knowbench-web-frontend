@@ -36,6 +36,7 @@ const round = z.object({
       failure: z.string().nullable(),
       executor: z.record(z.string(), z.string()),
       cost: z.string().nullable(),
+      cost_pending: z.boolean().optional(),
     }),
   ),
   late: z.array(z.object({ status: z.string(), operation_call_id: z.uuid() })),

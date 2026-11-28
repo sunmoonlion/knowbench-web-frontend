@@ -53,6 +53,7 @@ function Parent({
 }) {
   const t = useTranslations('formalIntake')
   const { csrfToken } = useWorkbench()
+  const [choices, setChoices] = useState<Record<string, string>>({})
   const save = useMutation({
     mutationFn: (body: HandoffCommand) => closeHandoffs(task, csrfToken, body),
     onSettled: onChange,
@@ -97,6 +98,7 @@ function Parent({
                 {r.receipts.map((s, i) => (
                   <div key={i}>
                     {s.state} {s.failure} {Object.values(s.executor).join(' · ')} {s.cost}
+                    {s.cost_pending && <span> {t('handoffCostPending')}</span>}
                     {s.artifacts.map((a) => (
                       <Evidence key={a.id} task={task} child={c.child_call_id} artifact={a} />
                     ))}
@@ -120,7 +122,8 @@ function Parent({
                   required
                   aria-label={t('handoffDecision')}
                   name={c.child_call_id}
-                  defaultValue=""
+                  value={choices[c.child_call_id] ?? ''}
+                  onChange={(e) => setChoices({ ...choices, [c.child_call_id]: e.target.value })}
                 >
                   <option value="">{t('handoffDecision')}</option>
                   {c.state === 'COMPLETED' && <option value="accept">{t('accept')}</option>}
@@ -129,10 +132,21 @@ function Parent({
                 </select>
                 <label>
                   {t('handoffReason')}{' '}
-                  <input required maxLength={2000} name={c.child_call_id + '-reason'} />
+                  <input
+                    required
+                    pattern={'.*\\S.*'}
+                    maxLength={2000}
+                    name={c.child_call_id + '-reason'}
+                  />
                 </label>
                 <label>
-                  {t('handoffNext')} <input maxLength={200} name={c.child_call_id + '-owner'} />
+                  {t('handoffNext')}{' '}
+                  <input
+                    required={['decline', 'defer'].includes(choices[c.child_call_id])}
+                    pattern={'.*\\S.*'}
+                    maxLength={200}
+                    name={c.child_call_id + '-owner'}
+                  />
                 </label>
               </>
             )}
@@ -155,7 +169,8 @@ function Parent({
         <>
           {parent.missing.length > 0 && (
             <label>
-              {t('handoffResidual')} <input name="residual" required maxLength={2000} />
+              {t('handoffResidual')}{' '}
+              <input name="residual" pattern={'.*\\S.*'} required maxLength={2000} />
             </label>
           )}
           <Button type="submit" disabled={save.isPending}>

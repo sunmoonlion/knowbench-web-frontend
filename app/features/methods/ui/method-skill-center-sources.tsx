@@ -17,6 +17,7 @@ import {
   type SourceInput,
 } from '@/lib/workbench/method-skill-center'
 
+const maxSourceBytes = 256 * 1024
 const sourceKey = [...methodSkillCenterKey, 'sources']
 type Edit = SourceInput & { id: string; version: number }
 function SourceDetail({
@@ -98,8 +99,17 @@ export function MethodSkillCenterSources() {
       select(row.source_id + '/' + row.version)
       await client.invalidateQueries({ queryKey: sourceKey })
     },
-    onError: () => client.invalidateQueries({ queryKey: sourceKey }),
   })
+  const contentTooLarge =
+    !!edit && new TextEncoder().encode(edit.content).byteLength > maxSourceBytes
+  const canSave =
+    !!edit &&
+    !!edit.name.trim() &&
+    !!edit.content.trim() &&
+    !contentTooLarge &&
+    !fileError &&
+    !loadingFile &&
+    !action.isPending
   function start(d: Edit) {
     action.reset()
     setFileError(false)
@@ -125,7 +135,7 @@ export function MethodSkillCenterSources() {
           className="space-y-3 rounded-lg border p-4"
           onSubmit={(e) => {
             e.preventDefault()
-            action.mutate(edit)
+            if (canSave) action.mutate(edit)
           }}
         >
           <fieldset disabled={action.isPending || loadingFile} className="grid gap-3">
@@ -159,7 +169,7 @@ export function MethodSkillCenterSources() {
                   if (!file) return
                   setLoadingFile(true)
                   try {
-                    if (file.size > 262144) throw new RangeError()
+                    if (file.size > maxSourceBytes) throw new RangeError()
                     const content = new TextDecoder('utf-8', {
                       fatal: true,
                       ignoreBOM: true,
@@ -178,7 +188,6 @@ export function MethodSkillCenterSources() {
               {t('content')}{' '}
               <textarea
                 required
-                maxLength={262144}
                 rows={9}
                 className="block w-full rounded border p-2 font-mono"
                 value={edit.content}
@@ -188,12 +197,9 @@ export function MethodSkillCenterSources() {
                 }}
               />
             </label>
-            {fileError && <p role="alert">{t('fileError')}</p>}
+            {(fileError || contentTooLarge) && <p role="alert">{t('fileError')}</p>}
             <div className="flex gap-2">
-              <Button
-                type="submit"
-                disabled={fileError || !edit.name.trim() || !edit.content.trim()}
-              >
+              <Button type="submit" disabled={!canSave}>
                 {t('save', { version: edit.version })}
               </Button>
               <Button type="button" variant="outline" onClick={() => setEdit(null)}>
@@ -202,7 +208,10 @@ export function MethodSkillCenterSources() {
             </div>
           </fieldset>
           {action.isError && (
-            <RequestFailure error={action.error} retry={() => void query.refetch()} />
+            <RequestFailure
+              error={action.error}
+              retry={canSave ? () => action.mutate(edit) : undefined}
+            />
           )}
         </form>
       )}
