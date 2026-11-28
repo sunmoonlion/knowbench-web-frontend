@@ -93,6 +93,7 @@ export function SkillSourceInstaller({
   const preview = useMutation({
     mutationFn: () => api.previewSkillSource(url.trim(), csrfToken),
     onSuccess: (data) => {
+      setDependencies([])
       setSelected(data.candidates.length === 1 ? data.candidates[0].path : null)
       setRequestId(crypto.randomUUID())
     },
@@ -139,6 +140,7 @@ export function SkillSourceInstaller({
             disabled={preview.isPending || install.isPending}
             placeholder="https://github.com/owner/repository"
             onChange={(event) => {
+              setDependencies([])
               setUrl(event.target.value)
               preview.reset()
               install.reset()

@@ -6,14 +6,17 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ConversationView } from '@/app/[locale]/(dashboard)/workbench/projects/[project]/c/[conversation]/conversation-view'
+import { MemoryScreen } from '@/features/memory/ui/memory-screen'
 import { ChatScreen } from '@/features/chat'
 import { CostLine } from '@/features/usage'
 import { WorkbenchProvider } from '@/lib/workbench/context'
 import { ConversationEventsProvider } from '@/lib/workbench/conversation-events'
 import messages from '@/messages/zh-CN.json'
 
+const replaced = vi.fn()
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: replaced }),
   useSearchParams: () => new URLSearchParams(),
   usePathname: () => '/zh-CN/workbench',
 }))
@@ -62,6 +65,7 @@ function answer(body: unknown, status = 200) {
 }
 
 beforeEach(() => {
+  replaced.mockClear()
   calls = []
   events = null
   vi.stubGlobal('EventSource', FakeEventSource)
@@ -89,18 +93,20 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-function page(conversation: string = CHAT) {
+function page(conversation: string = CHAT, content?: React.ReactNode) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <NextIntlClientProvider locale="zh-CN" messages={messages}>
       <QueryClientProvider client={client}>
         <WorkbenchProvider csrfToken="csrf-for-test" locale="zh-CN">
-          <ConversationEventsProvider conversation={conversation}>
-            <ChatScreen
-              conversation={conversation}
-              cost={<CostLine conversation={conversation} />}
-            />
-          </ConversationEventsProvider>
+          {content ?? (
+            <ConversationEventsProvider conversation={conversation}>
+              <ChatScreen
+                conversation={conversation}
+                cost={<CostLine conversation={conversation} />}
+              />
+            </ConversationEventsProvider>
+          )}
         </WorkbenchProvider>
       </QueryClientProvider>
     </NextIntlClientProvider>,
@@ -210,4 +216,96 @@ describe('聊天页', () => {
     })
     await waitFor(() => expect(box).toHaveValue(''))
   })
+})
+
+it('retains the unsent second draft when the first send is acknowledged', async () => {
+  const original = vi.mocked(fetch).getMockImplementation()!
+  const gate = Promise.withResolvers<void>()
+  vi.stubGlobal('fetch', async (url: string, options: RequestInit = {}) => {
+    if (url.endsWith('/turns')) await gate.promise
+    return original(url, options)
+  })
+  page()
+  await screen.findByText('片仔癀 2025 年的毛利率是多少？')
+  const box = screen.getByRole('textbox', { name: '对它说' })
+  fireEvent.change(box, { target: { value: 'first question' } })
+  fireEvent.click(screen.getByRole('button', { name: '发送' }))
+  fireEvent.change(box, { target: { value: 'second question' } })
+  expect(box).toHaveValue('second question')
+  await act(async () => gate.resolve())
+  await waitFor(() => expect(calls.filter((c) => c.path.endsWith('/turns'))).toHaveLength(1))
+  expect(box).toHaveValue('second question')
+  expect(calls.filter((c) => c.path.endsWith('/turns')).map((c) => c.body)).toEqual([
+    { text: 'first question' },
+  ])
+})
+
+it('offers retry after the projects service fails', async () => {
+  const original = vi.mocked(fetch).getMockImplementation()!
+  let failed = false
+  vi.stubGlobal('fetch', async (url: string, options: RequestInit = {}) => {
+    if (url.split('?')[0].endsWith('/projects')) {
+      failed = true
+      return answer({ code: 'unavailable' }, 503)
+    }
+    return original(url, options)
+  })
+  page()
+  fireEvent.click(await screen.findByRole('button', { name: '放进项目' }))
+  expect(await screen.findByText(messages.projectPicker.failed)).toBeVisible()
+  expect(failed).toBe(true)
+})
+
+it('checks project membership before opening the event stream', async () => {
+  page(IN_PROJECT, <ConversationView project="different-project" conversation={IN_PROJECT} />)
+  expect(await screen.findByRole('alert')).toHaveTextContent(messages.chat.unavailable)
+  expect(calls.some((row) => row.path.endsWith('/events'))).toBe(false)
+})
+
+it('distinguishes a failed memory read and keeps edits typed while saving', async () => {
+  const m = messages.memory
+  const pending = Promise.withResolvers<void>()
+  const row = {
+    id: 'ffea6766-5b87-4d3f-8232-44d969e5d9ba',
+    kind: 'fact',
+    text: 'saved',
+    enabled: true,
+    created_at: '2026-11-28T00:00:00Z',
+    updated_at: '2026-11-28T00:00:00Z',
+  }
+  let available = false
+  const service = vi.fn(async (_url: string, opts: RequestInit = {}) => {
+    if ((opts.method ?? 'GET') === 'GET')
+      return available ? answer({ memories: [row] }) : answer({}, 503)
+    await pending.promise
+    return answer({ memory: row })
+  })
+  vi.stubGlobal('fetch', service)
+  page(CHAT, <MemoryScreen />)
+  expect(await screen.findByRole('alert')).toHaveTextContent(m.readFailed)
+  available = true
+  fireEvent.click(screen.getByRole('button', { name: m.retry }))
+  await screen.findByText('saved')
+  const box = screen.getByLabelText(m.addLabel)
+  fireEvent.change(box, { target: { value: 'first' } })
+  fireEvent.click(screen.getByRole('button', { name: m.add }))
+  fireEvent.change(box, { target: { value: 'second' } })
+  await act(async () => pending.resolve())
+  await waitFor(() => expect(screen.getByRole('button', { name: m.add })).toBeEnabled())
+  expect(box).toHaveValue('second')
+})
+
+it('navigates a chat to its assigned project after the server accepts it', async () => {
+  const list = sample('/api/workbench/projects') as {
+    projects: { id: string; title: string; archived: boolean }[]
+  }
+  const first = list.projects.find((row) => !row.archived)!
+  page()
+  fireEvent.click(await screen.findByRole('button', { name: '放进项目' }))
+  const dialog = within(await screen.findByRole('dialog'))
+  fireEvent.click(await dialog.findByRole('button', { name: new RegExp(first.title) }))
+  await waitFor(() =>
+    expect(replaced).toHaveBeenCalledWith('/zh-CN/workbench/projects/' + first.id + '/c/' + CHAT),
+  )
+  expect(calls.find((c) => c.path.endsWith('/project'))?.body).toEqual({ project_id: first.id })
 })

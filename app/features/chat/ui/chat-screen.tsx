@@ -80,8 +80,10 @@ export function ChatScreen({
     const why = asking
     setAsking(null)
     try {
-      if (why === 'project') await act.putInProject.mutateAsync(projectId)
-      else if (why === 'work') await intoWork(projectId)
+      if (why === 'project') {
+        await act.putInProject.mutateAsync(projectId)
+        router.replace(routes.projectConversation(locale, projectId, id))
+      } else if (why === 'work') await intoWork(projectId)
       else if (why === 'expert') {
         await act.putInProject.mutateAsync(projectId)
         router.push(routes.askExpert(locale, projectId, id))

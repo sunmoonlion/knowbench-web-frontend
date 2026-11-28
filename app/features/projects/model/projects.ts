@@ -51,12 +51,29 @@ export function onlyMachine(machines: Machine[]): string | null {
 }
 
 // 子目录是相对工作区的。不许往上走、不许是绝对路径
-export type PathProblem = 'absolute' | 'upward' | null
+export type PathProblem = 'absolute' | 'upward' | 'invalid' | null
 
 export function pathProblem(path: string): PathProblem {
   const cleaned = path.trim()
-  if (cleaned.startsWith('/') || /^[A-Za-z]:[\\/]/.test(cleaned)) return 'absolute'
-  if (cleaned.split(/[\\/]/).some((part) => part === '..')) return 'upward'
+  if (!cleaned || cleaned === '.') return null
+  if (/^[\\/~]|^[a-z]:[\\/]/i.test(cleaned)) return 'absolute'
+  const parts = cleaned.replace(/\/+$/, '').split('/')
+  if (cleaned.split(/[\\/]/).includes('..')) return 'upward'
+  if (
+    Array.from(cleaned).length > 400 ||
+    parts.some(
+      (part) =>
+        !part ||
+        part === '.' ||
+        part !== part.trim() ||
+        part.endsWith('.') ||
+        Array.from(part).length > 120 ||
+        /[<>:"|?*\\]/.test(part) ||
+        Array.from(part).some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127) ||
+        /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i.test(part),
+    )
+  )
+    return 'invalid'
   return null
 }
 
@@ -69,8 +86,8 @@ export function defaultTitle(root: string, path: string): string {
 // 分隔符跟着工作区的写法走（同后端 project_dir）：Windows 工作区用反斜杠，代理与工作台核的是同一串
 export function fullDirectory(root: string, path: string): string {
   const cleaned = path.trim().replace(/^[\\/]+|[\\/]+$/g, '')
-  if (!cleaned) return root
-  if (/^[A-Za-z]:\\/.test(root))
+  if (!cleaned || cleaned === '.') return root
+  if (/^[A-Za-z]:[\\/]|^\\\\/.test(root))
     return `${root.replace(/[\\/]+$/, '')}\\${cleaned.replace(/\//g, '\\')}`
   return `${root.replace(/\/+$/, '')}/${cleaned}`
 }

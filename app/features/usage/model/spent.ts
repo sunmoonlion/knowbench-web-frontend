@@ -18,8 +18,28 @@ export function spent(events: readonly ConversationEvent[]): Spent {
   for (const event of events) {
     if (event.type !== USAGE_EVENT) continue
     const cost = callCostSchema.safeParse(event.payload.cost)
-    if (!cost.success) continue
     total.calls += 1
+    if (!cost.success) {
+      total.micros = null
+      const raw = event.payload.tokenUsage ?? event.payload.usage
+      if (
+        raw &&
+        typeof raw === 'object' &&
+        'last' in raw &&
+        raw.last &&
+        typeof raw.last === 'object'
+      ) {
+        const fields = raw.last as Record<string, unknown>
+        const count = (value: unknown) => {
+          const n = Number(value)
+          return Number.isSafeInteger(n) && n >= 0 ? n : 0
+        }
+        total.tokens +=
+          count(fields.inputTokens) + count(fields.outputTokens) || count(fields.totalTokens)
+      }
+      continue
+    }
+    if (total.calls > 1 && total.currency !== cost.data.currency) total.micros = null
     total.tokens += cost.data.call_tokens.total
     total.currency = cost.data.currency
     const call = cost.data.priced && cost.data.call !== null ? toMicros(cost.data.call) : null

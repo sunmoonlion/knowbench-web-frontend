@@ -92,3 +92,20 @@ describe('新建项目', () => {
     expect(repoFolder('git@example.com:team/repo')).toBe('repo')
   })
 })
+
+it('uses backend folder rules before creating a directory on the machine', () => {
+  for (const path of [
+    'a//b',
+    'a/./b',
+    'bad?',
+    'NUL.txt',
+    'trailing.',
+    'p/'.repeat(201) + 'q',
+    'long/' + 'a'.repeat(121),
+  ])
+    expect(pathProblem(path)).toBe('invalid')
+  expect(pathProblem('~/work')).toBe('absolute')
+  expect(pathProblem('项目/季度/')).toBeNull()
+  expect(fullDirectory('C:/work', 'a/b')).toBe('C:/work\\a\\b')
+  expect(fullDirectory('\\\\host\\team', 'a/b')).toBe('\\\\host\\team\\a\\b')
+})

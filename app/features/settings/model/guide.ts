@@ -9,10 +9,9 @@ export type GuideProgress = {
 
 export function progress(machines: Machine[] | undefined): GuideProgress {
   const list = machines ?? []
-  if (list.some(isOnline)) return { install: true, connect: true, folders: true }
   return {
     install: list.length > 0,
-    connect: false,
+    connect: list.some(isOnline),
     folders: list.some((machine) => machine.roots.length > 0),
   }
 }

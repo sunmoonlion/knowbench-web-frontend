@@ -78,27 +78,32 @@ export function ConversationEventsProvider({
         return retry()
       }
       if (stopped) return
-      source = new EventSource(
+      const stream = new EventSource(
         `/api/workbench/sessions/${seg(conversation)}/stream?after=${cursor.current}`,
         { withCredentials: true },
       )
-      source.onopen = () => {
-        attempt = 0
-        setState('live')
-      }
-      source.onmessage = (message) => {
-        try {
-          append([conversationEventSchema.parse(JSON.parse(message.data))])
-        } catch {
-          // 坏的一帧丢掉；下一次补取会补上
-        }
-      }
-      source.onerror = () => {
-        source?.close()
+      source = stream
+      const reconnect = () => {
+        if (stopped || source !== stream) return
         source = null
+        stream.close()
         setState('offline')
         retry()
       }
+      stream.onopen = () => {
+        if (stopped || source !== stream) return
+        attempt = 0
+        setState('live')
+      }
+      stream.onmessage = (message) => {
+        if (stopped || source !== stream) return
+        try {
+          append([conversationEventSchema.parse(JSON.parse(message.data))])
+        } catch {
+          reconnect()
+        }
+      }
+      stream.onerror = reconnect
     }
 
     const retry = () => {

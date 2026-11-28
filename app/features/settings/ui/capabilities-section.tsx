@@ -337,7 +337,7 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
           {renewing === asset.id ? (
             <RenewForm asset={asset} done={() => setRenewing(null)} />
           ) : null}
-          {disconnecting?.id === asset.id ? (
+          {disconnecting?.id === asset.id && disconnecting.revision === asset.revision ? (
             <div role="alert" className="rounded-lg border p-3">
               <p className="mb-3 text-sm">
                 {t(kind === 'skill' ? 'uninstallWarning' : 'disconnectWarning')}
@@ -345,7 +345,10 @@ export function CapabilitySettings({ kind }: { kind: 'connection' | 'skill' }) {
               <Button
                 disabled={action.isPending}
                 onClick={() =>
-                  action.mutate({ asset, action: kind === 'skill' ? 'remove' : 'disconnect' })
+                  action.mutate({
+                    asset: disconnecting,
+                    action: kind === 'skill' ? 'remove' : 'disconnect',
+                  })
                 }
               >
                 {t(kind === 'skill' ? 'confirmUninstall' : 'confirmDisconnect')}
@@ -430,7 +433,16 @@ function ConnectionForm({
       )}
       <label className="block text-sm">
         {t('service')}
-        <select className={input} value={url} required onChange={(e) => setUrl(e.target.value)}>
+        <select
+          className={input}
+          value={url}
+          required
+          onChange={(e) => {
+            setUrl(e.target.value)
+            setAccount('')
+            setToken('')
+          }}
+        >
           {services.map((s) => (
             <option key={s.url} value={s.url}>
               {s.url}
@@ -553,9 +565,6 @@ function SkillForm({ done, assets }: { done: () => void; assets: api.Asset[] }) 
             const file = e.target.files?.[0]
             if (!file) return
             setReading(true)
-            setArchive('')
-            setContent('')
-            setFilename('')
             try {
               const upload = await api.readSkillUpload(file)
               setContent(upload.content)
@@ -583,7 +592,11 @@ function SkillForm({ done, assets }: { done: () => void; assets: api.Asset[] }) 
             required
             value={content}
             maxLength={64000}
-            onChange={(e) => setContent(e.target.value)}
+            disabled={reading || save.isPending}
+            onChange={(e) => {
+              setContent(e.target.value)
+              setError('')
+            }}
           />
         </label>
       )}

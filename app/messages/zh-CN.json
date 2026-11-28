@@ -507,6 +507,8 @@
     }
   },
   "projectPicker": {
+    "failed": "项目清单读取失败。",
+    "retry": "重试",
     "loading": "加载中…",
     "none": "还没有项目。项目是你机器上工作区里的一个目录。",
     "offline": "本地 link 没连着"
@@ -583,6 +585,8 @@
     }
   },
   "chat": {
+    "opening": "正在读取会话…",
+    "unavailable": "此项目无法打开这段会话。",
     "noProject": "未归入项目",
     "putInProject": "放进项目",
     "empty": "还没有说话。",
@@ -1252,6 +1256,8 @@
   },
   "projects": {
     "list": {
+      "loadFailed": "项目或工作区读取失败。",
+      "retryList": "重试",
       "title": "项目",
       "lead": "一个项目是你电脑上的一个文件夹，加上你围绕它聊过的、做过的、专家交回的。",
       "new": "新建项目",
@@ -1288,6 +1294,7 @@
       "choose": "请选择",
       "machineOffline": "（本地 link 没连着）",
       "problem": {
+        "invalid": "请填写有效的相对目录名，每段至多 120 个字符，全长至多 400 个字符。",
         "absolute": "子目录要写相对工作区的路径，不能是绝对路径。",
         "machine_not_connected": "选的这台电脑现在没连着：你此刻连着的是另一台电脑上的本地 link。",
         "upward": "子目录不能往上走（不能有 ..）。",
@@ -1532,6 +1539,8 @@
     "welcome": "先在设置里登记模型 key，再接入电脑，工作和专家就能读写你的文件。"
   },
   "memory": {
+    "readFailed": "长期记忆读取失败。",
+    "retry": "重试",
     "title": "长期记忆",
     "intro": "这里的内容会放进你每段对话的开头，只有你能看。写关于你自己的事实：关注什么、看什么口径、想要什么样的回答。",
     "addTitle": "记一条",
@@ -1661,6 +1670,7 @@
         "paired": "配对成功：本地 link 连着，沙箱就绪。",
         "unpaired": "未配对：{missing}。",
         "missingLink": "本地 link 没连着",
+        "unknown": "状态未知",
         "missingSandbox": "沙箱没就绪",
         "and": "；"
       }

@@ -30,7 +30,17 @@ export function ProjectListScreen() {
       ? { environment_id: environmentId, workspace_root: workspaceRoot }
       : null
   const [archived, setArchived] = useState(false)
-  const [creating, setCreating] = useState(() => params.get('new') === '1')
+  const [creating, setCreating] = useState(false)
+  const fromLink = params.get('new') === '1'
+  function openChange(open: boolean) {
+    setCreating(open)
+    if (!open && fromLink) {
+      const remaining = new URLSearchParams(params.toString())
+      remaining.delete('new')
+      const query = remaining.toString()
+      router.replace(routes.projects(locale) + (query ? '?' + query : ''))
+    }
+  }
   const workspaces = useWorkspaces()
   const projects = useAllProjects(archived)
   const groups = byWorkspace(workspaces.data ?? [], projects.data ?? []).filter(
@@ -55,7 +65,20 @@ export function ProjectListScreen() {
           </Button>
         </header>
 
-        {!ready ? (
+        {workspaces.isError || projects.isError ? (
+          <div role="alert">
+            {t('loadFailed')}{' '}
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (workspaces.isError) void workspaces.refetch()
+                if (projects.isError) void projects.refetch()
+              }}
+            >
+              {t('retryList')}
+            </Button>
+          </div>
+        ) : !ready ? (
           <p className="text-muted-foreground text-sm">{t('loading')}</p>
         ) : groups.length === 0 ? (
           <section className="rounded-xl border p-5">
@@ -155,8 +178,8 @@ export function ProjectListScreen() {
 
       <NewProjectDialog
         key={only ?? ''}
-        open={creating}
-        onOpenChange={setCreating}
+        open={creating || fromLink}
+        onOpenChange={openChange}
         onCreated={(project) => router.push(routes.project(locale, project))}
         preset={preset}
       />

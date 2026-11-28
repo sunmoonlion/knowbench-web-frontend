@@ -43,7 +43,7 @@ export function Composer({
     const text = draft.trim()
     try {
       await onSend(text)
-      setDraft('')
+      setDraft((current) => (current === draft ? '' : current))
     } catch {
       // 没发出去：话留在输入框里，原因由上面显示
     }

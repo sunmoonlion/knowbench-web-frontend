@@ -33,8 +33,15 @@ export type TurnView = {
 
 export function thread(events: readonly ConversationEvent[]): TurnView[] {
   const turns: TurnView[] = []
+  const accepted = new Map<string, string>()
+  for (const event of events) {
+    if (event.type !== 'turn/accepted') continue
+    const payload = event.payload as Item
+    const id = turnIdOf(payload)
+    if (id) accepted.set(text(payload.request_id), id)
+  }
   const byTurnId = (id: string | null) =>
-    (id ? turns.find((turn) => turn.turnId === id) : undefined) ?? turns[turns.length - 1]
+    id ? turns.find((turn) => turn.turnId === id) : turns[turns.length - 1]
 
   // 回答之后又做了别的事：那句话就不是最后的回答，退回成顺口说的话
   const demote = (turn: TurnView) => {
@@ -56,7 +63,7 @@ export function thread(events: readonly ConversationEvent[]): TurnView[] {
     if (event.type === 'turn/requested') {
       turns.push({
         key: text(payload.request_id) || event.id,
-        turnId: null,
+        turnId: accepted.get(text(payload.request_id)) ?? null,
         text: text(payload.text),
         at: event.created_at,
         steps: [],
@@ -70,7 +77,7 @@ export function thread(events: readonly ConversationEvent[]): TurnView[] {
       const turn = turns.find((each) => each.key === text(payload.request_id))
       if (turn) {
         turn.turnId = turnIdOf(payload)
-        turn.status = 'running'
+        if (turn.status === 'queued') turn.status = 'running'
       }
       continue
     }

@@ -36,7 +36,14 @@ export function ProjectPicker({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {projects.isPending ? (
+        {projects.isError ? (
+          <div role="alert">
+            {t('failed')}{' '}
+            <button type="button" onClick={() => void projects.refetch()}>
+              {t('retry')}
+            </button>
+          </div>
+        ) : projects.isPending ? (
           <p className="text-muted-foreground text-sm">{t('loading')}</p>
         ) : usable.length === 0 ? (
           <p className="text-muted-foreground text-sm">{t('none')}</p>

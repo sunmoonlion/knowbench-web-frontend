@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
-import { ConversationEventsProvider } from '@/lib/workbench/conversation-events'
 
 import { ConversationView } from './conversation-view'
 
@@ -14,12 +13,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ProjectConversationPage({
   params,
 }: {
-  params: Promise<{ conversation: string }>
+  params: Promise<{ project: string; conversation: string }>
 }) {
-  const { conversation } = await params
-  return (
-    <ConversationEventsProvider conversation={conversation}>
-      <ConversationView conversation={conversation} />
-    </ConversationEventsProvider>
-  )
+  const { project, conversation } = await params
+  return <ConversationView conversation={conversation} project={project} />
 }

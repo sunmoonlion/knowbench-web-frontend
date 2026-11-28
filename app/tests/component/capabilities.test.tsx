@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { CapabilitySettings } from '@/features/settings/ui/capabilities-section'
@@ -72,7 +72,11 @@ beforeEach(() => {
           return Response.json(calls.calls[0])
         }
         if (path.endsWith('/cancel')) {
-          if (calls.calls[0].detail.execution_kind === 'formal_script') {
+          if (
+            ['formal_script', 'registry_script'].includes(
+              calls.calls[0].detail.execution_kind ?? '',
+            )
+          ) {
             calls.calls[0].detail.result = { stop_requested: true }
           } else {
             calls.calls[0].status = 'failed'
@@ -202,44 +206,62 @@ it('shows script artifacts as downloads and can stop a running script', async ()
   )
 })
 
-it('shows the approved container rate and root budget ceiling for a formal script', async () => {
-  const call = calls.calls[0]
-  const detail: Record<string, unknown> = { ...call.detail }
-  for (const key of ['selection_revision', 'runtime', 'method']) delete detail[key]
-  calls.calls[0] = callSchema.parse({
-    ...call,
-    status: 'dispatching',
-    connection_id: null,
-    detail: {
-      ...detail,
-      source_asset_id: call.id,
-      execution_kind: 'formal_script',
+it.each(['formal_script', 'registry_script'] as const)(
+  'shows the quote and stops a running %s',
+  async (kind) => {
+    const call = calls.calls[0]
+    const detail: Record<string, unknown> = { ...call.detail }
+    for (const key of ['selection_revision', 'runtime', 'method']) delete detail[key]
+    calls.calls[0] = callSchema.parse({
+      ...call,
+      status: 'dispatching',
       connection_id: null,
-      script_quote: {
-        environment: 'test-pool',
-        revision: 1,
-        currency: 'CNY',
-        per_container_second: '0.01',
-        maximum: '0.91',
-        maximum_seconds: 91,
-        tariff_digest: 'a'.repeat(64),
-        evidence_reference: 'test-only',
-        evidence_digest: 'sha256:' + 'b'.repeat(64),
+      detail: {
+        ...detail,
+        source_asset_id: kind === 'registry_script' ? null : call.id,
+        execution_kind: kind,
+        ...(kind === 'registry_script'
+          ? {
+              source: {
+                source_id: call.id,
+                version: 1,
+                digest: 'a'.repeat(64),
+                kind: 'script',
+                name: 'fixture',
+              },
+              approval_digest: 'b'.repeat(64),
+            }
+          : {}),
+        connection_id: null,
+        script_quote: {
+          environment: 'test-pool',
+          revision: 1,
+          currency: 'CNY',
+          per_container_second: '0.01',
+          maximum: '0.91',
+          maximum_seconds: 91,
+          tariff_digest: 'a'.repeat(64),
+          evidence_reference: 'test-only',
+          evidence_digest: 'sha256:' + 'b'.repeat(64),
+        },
       },
-    },
-  })
-  page(<CapabilityPanel sessionId={selection.session_id} />)
-  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.thisRun }))
-  expect(
-    await screen.findByText(/test-pool.*每秒 0.01 CNY.*最多预留 0.91 CNY.*失败或取消/),
-  ).toBeVisible()
-  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.stopScript }))
-  await waitFor(() => expect(writes.some((w) => w.path.endsWith(`/${call.id}/cancel`))).toBe(true))
-  expect(await screen.findByText(zh.capabilities.scriptStopping)).toBeVisible()
-  expect(screen.getByRole('button', { name: zh.capabilities.stopScript })).toBeDisabled()
-  expect(screen.queryByText(/stop_requested/)).toBeNull()
-  expect(screen.getByText(zh.capabilities.formalMethodCall)).toBeVisible()
-})
+    })
+    page(<CapabilityPanel sessionId={selection.session_id} />)
+    fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.thisRun }))
+    expect(
+      await screen.findByText(/test-pool.*每秒 0.01 CNY.*最多预留 0.91 CNY.*失败或取消/),
+    ).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: zh.capabilities.stopScript }))
+    await waitFor(() =>
+      expect(writes.some((w) => w.path.endsWith(`/${call.id}/cancel`))).toBe(true),
+    )
+    expect(await screen.findByText(zh.capabilities.scriptStopping)).toBeVisible()
+    expect(screen.getByRole('button', { name: zh.capabilities.stopScript })).toBeDisabled()
+    expect(screen.queryByText(/stop_requested/)).toBeNull()
+    if (kind === 'formal_script')
+      expect(screen.getByText(zh.capabilities.formalMethodCall)).toBeVisible()
+  },
+)
 
 it('shows the registered instruction, destination and maximum before approval', async () => {
   const call = calls.calls[0]
@@ -918,4 +940,120 @@ it('loads the named receipt from a work step and never substitutes another pendi
   page(<PendingConnectorAction sessionId={selection.session_id} callId={selection.session_id} />)
   expect(await screen.findByText(zh.capabilities.missingApproval)).toBeVisible()
   expect(screen.queryByRole('button', { name: zh.capabilities.allowOnce })).not.toBeInTheDocument()
+})
+
+it('discards purpose edits made while the previous revision is being saved', async () => {
+  const gate = Promise.withResolvers<void>()
+  const normal = globalThis.fetch
+  let pending = false
+  vi.stubGlobal('fetch', async (input: string, init: RequestInit = {}) => {
+    if (input.endsWith('/capabilities') && init.method === 'PUT') {
+      pending = true
+      await gate.promise
+    }
+    return normal(input, init)
+  })
+  page(<CapabilityPanel sessionId={selection.session_id} />)
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.thisRun }))
+  const box = await screen.findByLabelText(zh.capabilities.purpose)
+  fireEvent.change(box, { target: { value: '第一版用途' } })
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.saveSelection }))
+  await waitFor(() => expect(pending).toBe(true))
+  expect(box).toBeDisabled()
+  gate.resolve()
+  await waitFor(() =>
+    expect(screen.getByLabelText(zh.capabilities.purpose)).toHaveValue('第一版用途'),
+  )
+  expect(writes.map((w) => w.body.purpose)).toEqual(['第一版用途'])
+})
+
+it('retains the typed skill and permits manual recovery after an unreadable upload', async () => {
+  page(<CapabilitySettings kind="skill" />)
+  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.installSkill }))
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.fromFile }))
+  const content = screen.getByRole('textbox', { name: zh.capabilities.instructions })
+  fireEvent.change(content, { target: { value: '已审核指令' } })
+  fireEvent.change(screen.getByLabelText(zh.capabilities.importFile), {
+    target: {
+      files: [new File(['invalid'], 'unsupported.txt')],
+    },
+  })
+  await screen.findByRole('alert')
+  expect(content).toHaveValue('已审核指令')
+  fireEvent.change(content, { target: { value: '重新手填的指令' } })
+  fireEvent.change(screen.getByLabelText(zh.capabilities.skillName), {
+    target: { value: 'valid-skill' },
+  })
+  fireEvent.change(screen.getByLabelText(zh.capabilities.description), {
+    target: { value: 'purpose' },
+  })
+  expect(screen.getByRole('button', { name: zh.capabilities.import })).toBeEnabled()
+})
+it('resets dependency selection from one repository to the next sole candidate', async () => {
+  page(<CapabilitySettings kind="skill" />)
+  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.installSkill }))
+  const normal = globalThis.fetch
+  vi.stubGlobal('fetch', async (path: string, init: RequestInit = {}) => {
+    const response = await normal(path, init)
+    if (!path.endsWith('/preview') || !String(init.body).includes('/second')) return response
+    const data = await response.json()
+    return Response.json({
+      ...data,
+      repository: 'https://github.com/owner/second',
+      commit: 'f'.repeat(40),
+      candidates: [
+        {
+          ...data.candidates[0],
+          name: 'other-skill',
+          path: 'second-skill',
+          digest: 'e'.repeat(64),
+        },
+      ],
+    })
+  })
+  const url = screen.getByLabelText(zh.capabilities.repositoryUrl)
+  fireEvent.change(url, { target: { value: 'https://github.com/owner/first' } })
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.previewSource }))
+  fireEvent.click(await screen.findByRole('checkbox', { name: /Office mail/ }))
+  fireEvent.change(url, { target: { value: 'https://github.com/owner/second' } })
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.previewSource }))
+  expect(await screen.findByRole('radio', { name: /other-skill/ })).toBeChecked()
+  expect(await screen.findByRole('checkbox', { name: /Office mail/ })).not.toBeChecked()
+  fireEvent.click(screen.getByRole('button', { name: zh.capabilities.installEnable }))
+  await waitFor(() => expect(writes.at(-1)?.body.url).toBe('https://github.com/owner/second'))
+  await waitFor(() => expect(writes.at(-1)?.body.tool_requirements).toHaveLength(0))
+})
+
+it('clears both credentials when switching to another service', async () => {
+  const second = { ...catalog.services[0], url: 'https://second.example.test/mcp' }
+  catalog.services.push(second)
+  page(<CapabilitySettings kind="connection" />)
+  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.add }))
+  const account = screen.getByLabelText(zh.capabilities.account)
+  const token = screen.getByLabelText(zh.capabilities.token)
+  fireEvent.change(account, { target: { value: 'first account' } })
+  fireEvent.change(token, { target: { value: 'fixture' } })
+  fireEvent.change(screen.getByLabelText(zh.capabilities.service), {
+    target: { value: second.url },
+  })
+  expect(account).toHaveValue('')
+  expect(token).toHaveValue('')
+  expect(writes).toHaveLength(0)
+})
+
+it('requires a new uninstall confirmation when the asset revision changes', async () => {
+  page(<CapabilitySettings kind="skill" />)
+  fireEvent.click(await screen.findByRole('button', { name: zh.capabilities.uninstall }))
+  expect(screen.getByRole('button', { name: zh.capabilities.confirmUninstall })).toBeVisible()
+  const next = structuredClone(catalog)
+  next.assets.forEach((asset) => {
+    asset.revision += 1
+  })
+  act(() => {
+    clients[0].setQueryData(['capability-catalog'], next)
+  })
+  await waitFor(() =>
+    expect(screen.queryByRole('button', { name: zh.capabilities.confirmUninstall })).toBeNull(),
+  )
+  expect(writes).toHaveLength(0)
 })

@@ -93,18 +93,24 @@ function ConnectComputer({ csrfToken }: { csrfToken: string }) {
     setFound(null)
     setMessage(error instanceof WorkbenchError && error.status === 429 ? s('tooFast') : t('wrong'))
   }
+  const lookupVersion = useRef(0)
   const lookup = useMutation({
-    mutationFn: (value: string) => lookupPairing(csrfToken, value),
+    mutationFn: (request: { value: string; version: number }) =>
+      lookupPairing(csrfToken, request.value),
     onMutate: () => setMessage(null),
-    onSuccess: (result) => setFound(result),
-    onError: fail,
+    onSuccess: (result, request) => {
+      if (request.version === lookupVersion.current) setFound(result)
+    },
+    onError: (error, request) => {
+      if (request.version === lookupVersion.current) fail(error)
+    },
   })
   const lookupNow = lookup.mutate
   const started = useRef(false)
   useEffect(() => {
     if (started.current || !pairingCodeComplete(prefilled)) return
     started.current = true
-    lookupNow(prefilled)
+    lookupNow({ value: prefilled, version: ++lookupVersion.current })
     document.getElementById('agent-connect')?.scrollIntoView?.({ block: 'start' })
   }, [prefilled, lookupNow])
   // 决定之后把地址里的码去掉：刷新不再重复核对，历史里也不留着。
@@ -141,12 +147,14 @@ function ConnectComputer({ csrfToken }: { csrfToken: string }) {
         {t('code')}
         <input
           className="mt-1 w-full rounded border p-2 font-mono uppercase"
+          disabled={approve.isPending || deny.isPending}
           value={code}
           autoCapitalize="characters"
           spellCheck={false}
           maxLength={9}
           onChange={(event) => {
             setFound(null)
+            lookupVersion.current += 1
             setCode(formatPairingCode(event.target.value))
           }}
         />
@@ -156,7 +164,7 @@ function ConnectComputer({ csrfToken }: { csrfToken: string }) {
         type="button"
         className="rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
         disabled={!pairingCodeComplete(code) || lookup.isPending}
-        onClick={() => lookup.mutate(code)}
+        onClick={() => lookupNow({ value: code, version: ++lookupVersion.current })}
       >
         {t('lookup')}
       </button>

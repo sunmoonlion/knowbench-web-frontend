@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
+import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ProjectListScreen, ProjectScreen } from '@/features/projects'
@@ -11,9 +12,11 @@ import { WorkbenchProvider } from '@/lib/workbench/context'
 import messages from '@/messages/zh-CN.json'
 
 const push = vi.fn()
+const replace = vi.fn()
+let projectParams = ''
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push }),
-  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push, replace }),
+  useSearchParams: () => new URLSearchParams(projectParams),
   usePathname: () => '/zh-CN/workbench/projects',
 }))
 
@@ -39,6 +42,8 @@ beforeEach(() => {
   calls = []
   scenario = 'full'
   push.mockReset()
+  replace.mockReset()
+  projectParams = ''
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
@@ -218,8 +223,8 @@ describe('项目页', () => {
       'aria-disabled',
       'true',
     )
-    expect(screen.getByRole('link', { name: '新工作' })).toHaveAttribute('aria-disabled', 'true')
-    expect(screen.getByRole('link', { name: '请专家' })).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByRole('button', { name: '新工作' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '请专家' })).toBeDisabled()
   })
 
   it('归档：先问一句，说明归档之后怎样；确认才归档', async () => {
@@ -238,4 +243,47 @@ describe('项目页', () => {
       body: { archived: true },
     })
   })
+})
+
+it('shows a failed project list query and allows retry', async () => {
+  const original = vi.mocked(fetch).getMockImplementation()!
+  let failing = true
+  vi.stubGlobal('fetch', async (url: RequestInfo | URL, init?: RequestInit) => {
+    if (failing && String(url).split('?')[0].endsWith('/projects'))
+      return Response.json({}, { status: 503 })
+    return original(url, init)
+  })
+  page(<ProjectListScreen />)
+  const message = await screen.findByRole('alert')
+  expect(message).toHaveTextContent(messages.projects.list.loadFailed)
+  failing = false
+  fireEvent.click(screen.getByRole('button', { name: messages.projects.list.retryList }))
+  await waitFor(() => expect(screen.queryByRole('alert')).toBeNull())
+})
+
+it('opens the workspace creation link on the mounted list and retains the workspace when closed', async () => {
+  function ListWithNavigation() {
+    const [, setRevision] = useState(0)
+    return (
+      <>
+        <button
+          onClick={() => {
+            projectParams = 'new=1&workspace=demo'
+            setRevision(1)
+          }}
+        >
+          navigate
+        </button>
+        <ProjectListScreen />
+      </>
+    )
+  }
+  page(<ListWithNavigation />)
+  expect(screen.queryByRole('dialog')).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'navigate' }))
+  const dialog = await screen.findByRole('dialog')
+  fireEvent.keyDown(dialog, { key: 'Escape' })
+  await waitFor(() =>
+    expect(replace).toHaveBeenCalledWith('/zh-CN/workbench/projects?workspace=demo'),
+  )
 })

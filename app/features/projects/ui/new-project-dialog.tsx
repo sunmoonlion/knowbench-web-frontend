@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { ConnectComputerLink } from '@/components/workbench/connect-computer'
@@ -90,6 +90,7 @@ export function NewProjectDialog({
     busy === null &&
     (mode === 'folder' || (!!url.trim() && !!relative.trim() && (!asking || !!token)))
 
+  useEffect(() => () => stop.current?.abort(), [])
   function close(next: boolean) {
     if (!next) {
       stop.current?.abort()
@@ -129,6 +130,7 @@ export function NewProjectDialog({
           controller.signal,
         )
       }
+      if (controller.signal.aborted) return
       setBusy('registering')
       const made = await create.mutateAsync({
         environment_id: machine,
@@ -136,16 +138,20 @@ export function NewProjectDialog({
         path: relative.trim(),
         title,
       })
+      if (controller.signal.aborted) return
       setToken('')
       setAsking(false)
       onCreated(made.id)
     } catch (error) {
-      const code = controller.signal.aborted ? 'cancelled' : localProblemCode(error)
+      if (controller.signal.aborted) return
+      const code = localProblemCode(error)
       if (code === 'auth_required') setAsking(true)
       setProblem(code)
     } finally {
-      setBusy(null)
-      stop.current = null
+      if (stop.current === controller) {
+        setBusy(null)
+        stop.current = null
+      }
     }
   }
 
@@ -276,6 +282,9 @@ export function NewProjectDialog({
                     placeholder="https://github.com/owner/repo.git"
                     onChange={(event) => {
                       setUrl(event.target.value)
+                      setToken('')
+                      setUsername('')
+                      setRemember(false)
                       setAsking(false)
                     }}
                     className="font-mono"

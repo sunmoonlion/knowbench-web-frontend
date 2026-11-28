@@ -55,7 +55,6 @@ export function ProjectScreen({ project: id }: { project: string }) {
   const closed = project.archived
   const start = (mode: 'chat' | 'work') =>
     `${routes.home(locale)}?mode=${mode}&project=${encodeURIComponent(id)}`
-  const off = 'pointer-events-none opacity-50'
   const heading = 'mb-2 text-sm font-medium'
   const when = (at: string | null) =>
     at ? format.dateTime(new Date(at), { dateStyle: 'medium', timeStyle: 'short' }) : ''
@@ -114,20 +113,23 @@ export function ProjectScreen({ project: id }: { project: string }) {
                 <Link href={start('chat')} className={cn(buttonVariants({ variant: 'outline' }))}>
                   {t('newChat')}
                 </Link>
-                <Link
-                  href={start('work')}
-                  aria-disabled={offline}
-                  className={cn(buttonVariants({ variant: 'outline' }), offline && off)}
-                >
-                  {t('newWork')}
-                </Link>
-                <Link
-                  href={routes.askExpert(locale, id)}
-                  aria-disabled={offline}
-                  className={cn(buttonVariants({ variant: 'default' }), offline && off)}
-                >
-                  {t('askExpert')}
-                </Link>
+                {offline ? (
+                  <>
+                    <Button variant="outline" disabled>
+                      {t('newWork')}
+                    </Button>
+                    <Button disabled>{t('askExpert')}</Button>
+                  </>
+                ) : (
+                  <>
+                    <Link href={start('work')} className={buttonVariants({ variant: 'outline' })}>
+                      {t('newWork')}
+                    </Link>
+                    <Link href={routes.askExpert(locale, id)} className={buttonVariants()}>
+                      {t('askExpert')}
+                    </Link>
+                  </>
+                )}
               </div>
               {offline ? (
                 <p className="text-muted-foreground mt-2 text-[13px]">{t('offlineNote')}</p>

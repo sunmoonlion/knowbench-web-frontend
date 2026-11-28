@@ -38,7 +38,11 @@ export function MemoryScreen() {
             <Button
               size="sm"
               disabled={busy || !draft.trim()}
-              onClick={() => act.add.mutate(draft.trim(), { onSuccess: () => setDraft('') })}
+              onClick={() =>
+                act.add.mutate(draft.trim(), {
+                  onSuccess: () => setDraft((current) => (current === draft ? '' : current)),
+                })
+              }
             >
               {t('add')}
             </Button>
@@ -47,7 +51,14 @@ export function MemoryScreen() {
         </section>
 
         <section aria-label={t('listTitle')}>
-          {memories.isPending ? (
+          {memories.isError ? (
+            <p role="alert">
+              {t('readFailed')}{' '}
+              <button type="button" onClick={() => void memories.refetch()}>
+                {t('retry')}
+              </button>
+            </p>
+          ) : memories.isPending ? (
             <p className="text-muted-foreground text-sm">{t('loading')}</p>
           ) : (memories.data ?? []).length === 0 ? (
             <p className="text-muted-foreground text-sm">{t('empty')}</p>
@@ -84,7 +95,10 @@ export function MemoryScreen() {
                             onClick={() =>
                               act.change.mutate(
                                 { id: memory.id, text: editing.text.trim() },
-                                { onSuccess: () => setEditing(null) },
+                                {
+                                  onSuccess: () =>
+                                    setEditing((current) => (current === editing ? null : current)),
+                                },
                               )
                             }
                           >

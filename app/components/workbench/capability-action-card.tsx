@@ -38,7 +38,9 @@ export function CapabilityActionCard({
   call: api.CapabilityCall
   showResult?: boolean
 }) {
-  const isScript = ['skill_script', 'formal_script'].includes(call.detail.execution_kind ?? '')
+  const isScript = ['skill_script', 'formal_script', 'registry_script'].includes(
+    call.detail.execution_kind ?? '',
+  )
   const running = isScript && call.status === 'dispatching'
   const result = call.detail.result
   const stopping =
@@ -145,7 +147,8 @@ export function CapabilityActionCard({
             {call.detail.registered_source.digest}
           </p>
         )}
-      {call.detail.execution_kind === 'formal_script' ? (
+      {call.detail.execution_kind === 'formal_script' ||
+      call.detail.execution_kind === 'registry_script' ? (
         <p>
           {t('scriptQuote', {
             environment: call.detail.script_quote.environment,

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PlatformProviders } from '@/components/platform/providers'
 import { ResizeHandle } from '@/components/common/resize-handle'
 import { SettingsScreen } from '@/features/settings'
+import { LinkStatus } from '@/features/settings/ui/link-status'
 import { Sidebar } from '@/features/shell/ui/sidebar'
 import { PREFERENCES_KEY } from '@/lib/preferences-boot'
 import { PANE_WIDTHS_KEY, usePaneWidths } from '@/lib/pane-widths'
@@ -329,4 +330,30 @@ it('restores text selection when a dragging handle is removed', () => {
   expect(document.documentElement).toHaveClass('resizing-panes')
   view.unmount()
   expect(document.documentElement).not.toHaveClass('resizing-panes')
+})
+
+it('keeps sandbox status unknown while reading and when the request fails', async () => {
+  let finish!: (response: Response) => void
+  const pending = new Promise<Response>((resolve) => {
+    finish = resolve
+  })
+  const original = globalThis.fetch
+  const fetcher = vi.fn((url: RequestInfo | URL, init?: RequestInit) =>
+    String(url).includes('/sandboxes/provisioned') ? pending : original(url, init),
+  )
+  vi.stubGlobal('fetch', fetcher)
+  page(<LinkStatus />)
+  await waitFor(() =>
+    expect(fetcher.mock.calls.some(([url]) => String(url).includes('/sandboxes/provisioned'))).toBe(
+      true,
+    ),
+  )
+  const status = zh.settings.computer.status
+  expect(screen.getByText(status.unknown)).toBeVisible()
+  await act(async () => {
+    finish(new Response('{}', { status: 503 }))
+    await pending
+  })
+  expect(screen.getByText(status.unknown)).toBeVisible()
+  expect(screen.queryByText(status.notReady)).toBeNull()
 })

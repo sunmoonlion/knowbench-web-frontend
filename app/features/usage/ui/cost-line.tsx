@@ -80,7 +80,9 @@ export function CostLine({ conversation }: { conversation: string }) {
                     <td className="py-1 text-right">{turn.calls}</td>
                     <td className="py-1 text-right">{turn.tokens.total.toLocaleString()}</td>
                     <td className="py-1 text-right">
-                      {micros === null ? '—' : `${sign}${money(micros)}`}
+                      {micros === null
+                        ? '—'
+                        : `${symbol(turn.currency ?? usage.data?.currency ?? price?.currency ?? total.currency)}${money(micros)}`}
                     </td>
                   </tr>
                 )

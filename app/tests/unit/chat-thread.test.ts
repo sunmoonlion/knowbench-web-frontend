@@ -167,3 +167,35 @@ describe('花费：把每一次调用相加', () => {
     expect(money(1_204_000)).toBe('1.20')
   })
 })
+
+it('never attaches a completion for an unrelated turn to the last user request', () => {
+  const asked = event('turn/requested', { request_id: 'q1', text: 'hello' })
+  const unknown = {
+    ...asked,
+    type: 'turn/completed',
+    payload: { turn: { id: 'unbound', status: 'completed' } },
+  }
+  expect(thread([asked, unknown])[0].status).toBe('queued')
+})
+
+it('counts old token notifications and avoids adding different currencies', () => {
+  const tokens = { input: 12, output: 0, cached_input: 0, cache_write: 0, total: 12 }
+  const cost = (currency: string) => ({
+    currency,
+    model: 'test',
+    estimated: true,
+    priced: true,
+    call: '1.00',
+    turn: '1.00',
+    call_tokens: tokens,
+    turn_tokens: tokens,
+  })
+  const item = (payload: Record<string, unknown>) => event('thread/tokenUsage/updated', payload)
+  const calls = [item({ cost: cost('USD') }), item({ cost: cost('CNY') })]
+  expect(spent(calls)).toMatchObject({ calls: 2, tokens: 24, micros: null })
+  expect(spent([...calls, item({ tokenUsage: { last: { inputTokens: 12 } } })])).toMatchObject({
+    calls: 3,
+    tokens: 36,
+    micros: null,
+  })
+})

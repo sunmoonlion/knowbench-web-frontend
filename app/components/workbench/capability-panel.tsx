@@ -359,7 +359,7 @@ function SelectionForm({
         <input
           className="mt-1 w-full rounded border px-3 py-2"
           maxLength={1000}
-          disabled={!value.editable}
+          disabled={!value.editable || save.isPending}
           value={purpose}
           onChange={(e) => setPurpose(e.target.value)}
         />

@@ -239,3 +239,47 @@ describe('新建项目：先请电脑上的代理建好，再登记（0024）', 
     expect(screen.getByRole('button', { name: t.submit })).toBeDisabled()
   })
 })
+
+it('点击取消后迟到的目录回执不登记项目、不再跳转', async () => {
+  const original = globalThis.fetch
+  let release!: () => void
+  const gate = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  const entered = vi.fn()
+  vi.stubGlobal('fetch', async (...args: Parameters<typeof fetch>) => {
+    if (String(args[0]).endsWith('/local/v1/projects/folder')) {
+      entered()
+      await gate
+    }
+    return original(...args)
+  })
+  const navigate = dialog()
+  const submit = await screen.findByRole('button', { name: t.submit })
+  await waitFor(() => expect(submit).toBeEnabled())
+  fireEvent.click(submit)
+  await waitFor(() => expect(entered).toHaveBeenCalledOnce())
+  fireEvent.click(screen.getByRole('button', { name: t.cancel }))
+  release()
+  await waitFor(() => expect(submit).toBeEnabled())
+  expect(navigate).not.toHaveBeenCalled()
+  expect(posts().map((r) => r.url)).not.toContain('http://testserver/api/workbench/projects')
+})
+
+it('clears credentials when entering another repository', async () => {
+  clone = () => ({ status: 401, body: { code: 'auth_required', message: 'auth_required' } })
+  dialog()
+  fireEvent.click(await screen.findByRole('button', { name: t.modeClone }))
+  type(t.repo, 'https://example.test/team/a.git')
+  const submit = screen.getByRole('button', { name: t.submitClone })
+  await waitFor(() => expect(submit).toBeEnabled())
+  fireEvent.click(submit)
+  await screen.findByText(t.auth.title)
+  type(t.auth.token, 'fixture')
+  fireEvent.click(screen.getByLabelText(t.auth.remember))
+  type(t.repo, 'https://example.test/other/b.git')
+  fireEvent.click(submit)
+  await screen.findByText(t.auth.title)
+  expect(screen.getByLabelText(t.auth.token)).toHaveValue('')
+  expect(screen.getByLabelText(t.auth.remember)).not.toBeChecked()
+})

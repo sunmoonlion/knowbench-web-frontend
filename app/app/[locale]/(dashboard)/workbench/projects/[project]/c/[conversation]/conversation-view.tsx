@@ -2,18 +2,29 @@
 
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { ChatScreen } from '@/features/chat'
 import { ExpertRunScreen } from '@/features/expert'
 import { CostLine } from '@/features/usage'
 import { WorkScreen } from '@/features/work'
 import { useConversation } from '@/lib/workbench/conversation'
-import { useConversationEvents } from '@/lib/workbench/conversation-events'
+import { ConversationEventsProvider, useConversationEvents } from '@/lib/workbench/conversation-events'
 
 const TURNING = new Set(['wheel/handover', 'wheel/return', 'task/state'])
 
 // 项目里的一段对话。专家正拿着的时候是专家处理中那一页；否则是聊天就用聊天页，是工作就用工作页。
-export function ConversationView({ conversation }: { conversation: string }) {
+export function ConversationView({ conversation, project }: { conversation: string; project: string }) {
+  const t = useTranslations('chat')
+  const found = useConversation(conversation)
+  if (found.isPending) return <p>{t('opening')}</p>
+  if (!found.data || found.isError || found.data.project_id !== project) return <p role="alert">{t('unavailable')}</p>
+  return <ConversationEventsProvider key={conversation} conversation={conversation}>
+    <ProjectConversation conversation={conversation} />
+  </ConversationEventsProvider>
+}
+
+function ProjectConversation({ conversation }: { conversation: string }) {
   const found = useConversation(conversation)
   const { events } = useConversationEvents()
   const client = useQueryClient()

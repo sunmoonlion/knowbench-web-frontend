@@ -204,6 +204,7 @@ export const usageSchema = z
         estimated: z.boolean(),
       })
       .loose(),
+    currency: z.string().nullable().optional(),
     cost: z.string().nullable(),
     tokens: tokensSchema,
     calls: z.number().int(),
@@ -211,6 +212,7 @@ export const usageSchema = z
       z
         .object({
           turn_id: z.string().nullable(),
+          currency: z.string().nullable().optional(),
           calls: z.number().int(),
           cost: z.string().nullable(),
           tokens: tokensSchema,

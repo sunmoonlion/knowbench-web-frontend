@@ -218,3 +218,31 @@ describe('连接码', () => {
     await waitFor(() => expect(document.getElementById('computer')).not.toBeNull())
   })
 })
+
+it('does not present a late device lookup for a different pairing code', async () => {
+  const reply = Promise.withResolvers<Response>()
+  const seen = vi.fn()
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string) => {
+      if (String(url).endsWith('/lookup')) {
+        seen()
+        return reply.promise
+      }
+      if (String(url).endsWith('/environments'))
+        return json({ contract_version: 2, environments: [] })
+      if (String(url).endsWith('/download')) return json({ contract_version: 2, download: null })
+      return json({ status: 'absent' })
+    }),
+  )
+  page(<MachinesScreen />)
+  const field = await screen.findByRole('textbox')
+  fireEvent.change(field, { target: { value: 'K3NPQ7R2' } })
+  fireEvent.click(screen.getByRole('button', { name: '核对这台电脑' }))
+  await waitFor(() => expect(seen).toHaveBeenCalledTimes(1))
+  fireEvent.change(field, { target: { value: 'K3NPQ7R3' } })
+  reply.resolve(json(lookup))
+  await waitFor(() => expect(screen.getByRole('button', { name: '核对这台电脑' })).toBeEnabled())
+  expect(screen.queryByText(lookup.machine_name!)).toBeNull()
+  expect(screen.queryByRole('button', { name: messages.machines.connect.deny })).toBeNull()
+})

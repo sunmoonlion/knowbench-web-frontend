@@ -56,7 +56,7 @@ export function LinkStatus() {
       <p className="text-muted-foreground text-sm">{t('reissueHint')}</p>
       <dl className="grid grid-cols-[8rem_1fr] gap-x-4 gap-y-1 text-sm">
         <dt className={label}>{t('sandbox')}</dt>
-        <dd>{ready ? t('ready') : t('notReady')}</dd>
+        <dd>{sandbox.isSuccess ? (ready ? t('ready') : t('notReady')) : t('unknown')}</dd>
       </dl>
       {needKey ? (
         <p className="text-sm">

@@ -507,6 +507,8 @@
     }
   },
   "projectPicker": {
+    "failed": "Could not load projects.",
+    "retry": "Retry",
     "loading": "Loading…",
     "none": "No projects yet. A project is a folder inside a workspace on your machine.",
     "offline": "local link not connected"
@@ -583,6 +585,8 @@
     }
   },
   "chat": {
+    "opening": "Opening conversation…",
+    "unavailable": "This conversation is unavailable in this project.",
     "noProject": "No project",
     "putInProject": "Put in a project",
     "empty": "Nothing said yet.",
@@ -1252,6 +1256,8 @@
   },
   "projects": {
     "list": {
+      "loadFailed": "Unable to load projects or workspaces.",
+      "retryList": "Retry",
       "title": "Projects",
       "lead": "A project is a folder on your computer, plus what you chatted about, worked on, and what experts handed back around it.",
       "new": "New project",
@@ -1288,6 +1294,7 @@
       "choose": "Choose",
       "machineOffline": " (local link not connected)",
       "problem": {
+        "invalid": "Use valid relative folder names (at most 120 characters each and 400 in total).",
         "absolute": "The subfolder must be relative to the workspace, not an absolute path.",
         "machine_not_connected": "This computer is not connected right now: the local link connected for you is on another computer.",
         "upward": "The subfolder must not go upwards (no ..).",
@@ -1532,6 +1539,8 @@
     "welcome": "First add your model key in Settings, then connect your computer so Work and Expert can read and write your files."
   },
   "memory": {
+    "readFailed": "Could not load memories.",
+    "retry": "Retry",
     "title": "Long-term memory",
     "intro": "These lines go at the start of every conversation you have. Only you can see them. Write facts about yourself: what you follow, which figures you use, how you like answers.",
     "addTitle": "Add one",
@@ -1661,6 +1670,7 @@
         "paired": "Paired: the local link is connected and the sandbox is ready.",
         "unpaired": "Not paired: {missing}.",
         "missingLink": "the local link is not connected",
+        "unknown": "Unknown",
         "missingSandbox": "the sandbox is not ready",
         "and": "; "
       }

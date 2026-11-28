@@ -88,7 +88,7 @@ describe('我的电脑', () => {
       ({ id: 'x', name: 'm', status, roots }) as Machine
     expect(progress([])).toEqual({ install: false, connect: false, folders: false })
     expect(progress(undefined)).toEqual({ install: false, connect: false, folders: false })
-    expect(progress([machine([])])).toEqual({ install: true, connect: true, folders: true })
+    expect(progress([machine([])])).toEqual({ install: true, connect: true, folders: false })
     expect(progress([machine(['/r'], 'offline')])).toEqual({
       install: true,
       connect: false,
