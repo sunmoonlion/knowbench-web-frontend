@@ -29,7 +29,14 @@ const scope = z.object({
   inputs: z.array(
     z.object({ name: z.string(), description: z.string(), required_by: names, used_by: names }),
   ),
-  outputs: z.array(z.object({ name: z.string(), description: z.string(), step: z.string() })),
+  outputs: z.array(
+    z.object({
+      name: z.string(),
+      description: z.string(),
+      step: z.string(),
+      always_present: z.boolean().optional(),
+    }),
+  ),
   requirements: z.array(
     z.object({
       id: z.string(),

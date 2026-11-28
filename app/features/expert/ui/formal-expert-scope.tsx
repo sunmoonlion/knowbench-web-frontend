@@ -38,6 +38,8 @@ export function ScopePreview({ scope }: { scope: FrozenScope }) {
         {scope.outputs.map((output) => (
           <li key={output.name}>
             {output.description} ({output.name}) · {output.step}
+            {output.always_present !== undefined &&
+              ' · ' + t(output.always_present ? 'guaranteedOutput' : 'conditionalOutput')}
           </li>
         ))}
       </ul>

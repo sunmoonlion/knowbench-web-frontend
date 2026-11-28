@@ -63,11 +63,21 @@ function BindingEditor({
   )
   const values: Preparation['bindings']['values'] = Object.create(null)
   const invalidValues = new Set<string>()
+  const unsafeNumbers = new Set<string>()
   for (const [key, text] of Object.entries(texts)) {
     if (view.input_types[key] === 'string') values[key] = text
     else {
       try {
-        values[key] = JSON.parse(text)
+        values[key] = JSON.parse(text, (_name, value: unknown) => {
+          if (
+            typeof value === 'number' &&
+            (!Number.isFinite(value) || (Number.isInteger(value) && !Number.isSafeInteger(value)))
+          ) {
+            unsafeNumbers.add(key)
+            throw new RangeError()
+          }
+          return value
+        })
       } catch {
         invalidValues.add(key)
       }
@@ -121,6 +131,7 @@ function BindingEditor({
               aria-invalid={invalidValues.has(slot.name)}
             />
           </label>
+          {unsafeNumbers.has(slot.name) && <p role="alert">{t('unsafeInputNumber')}</p>}
           {view.input_types[slot.name] !== 'string' && (
             <small>{t('valueFormat', { type: view.input_types[slot.name] })}</small>
           )}
