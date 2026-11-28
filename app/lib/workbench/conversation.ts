@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
@@ -31,10 +32,27 @@ export function useWaiting(conversation: string) {
   })
 }
 
+export function useTurnSender() {
+  const { csrfToken } = useWorkbench()
+  const pending = useRef<{ conversation: string; text: string; request_id: string } | null>(null)
+  return async (conversation: string, text: string) => {
+    if (!pending.current || pending.current.conversation !== conversation || pending.current.text !== text) {
+      pending.current = { conversation, text, request_id: crypto.randomUUID() }
+    }
+    const submission = pending.current
+    const receipt = await sendJson(turnAcceptedSchema, base(conversation) + '/turns', {
+      csrfToken, body: { text, request_id: submission.request_id },
+    })
+    if (pending.current === submission) pending.current = null
+    return receipt
+  }
+}
+
 // 这段对话上能做的动作。做完让受影响的清单重取。
 export function useConversationActions(conversation: string) {
   const { csrfToken } = useWorkbench()
   const client = useQueryClient()
+  const send = useTurnSender()
   const changed = async () => {
     await Promise.all([
       client.invalidateQueries({ queryKey: key(conversation) }),
@@ -43,8 +61,7 @@ export function useConversationActions(conversation: string) {
   }
   return {
     say: useMutation({
-      mutationFn: (text: string) =>
-        sendJson(turnAcceptedSchema, `${base(conversation)}/turns`, { csrfToken, body: { text } }),
+      mutationFn: (text: string) => send(conversation, text),
       onSuccess: changed,
     }),
     // 不用说停哪一轮：停的是这段对话正在跑的那一轮

@@ -284,3 +284,45 @@ it('uses the current question and hands its exact version to the planning draft 
     'csrf',
   )
 })
+
+it('安装修订不一致时要求刷新，隐藏新版入口', async () => {
+  vi.spyOn(registry, 'methodSkillCenterInventory').mockResolvedValue({
+    installed: [asset], formal: methods, native: [],
+  })
+  vi.spyOn(registry, 'methodSkillCenterInstallation').mockResolvedValue({
+    path: 'installed', asset_id, revision: 4, status: 'active',
+    entries: [{ kind: 'mcp', entry: 'revision-four-only', tool_key: null }],
+  })
+  renderPage()
+  fireEvent.click(screen.getByRole('button', { name: zh.methodSkillCenter.tabs.installed }))
+  fireEvent.click(await screen.findByRole('button', { name: '查看安装入口' }))
+  expect(await screen.findByText(zh.methodSkillCenter.installationChanged)).toBeVisible()
+  expect(screen.queryByText('revision-four-only')).toBeNull()
+})
+
+it('清单请求失败时仍可读取最近活动', async () => {
+  vi.spyOn(registry, 'methodSkillCenterInventory').mockRejectedValue(new Error('inventory offline'))
+  const activity = vi.spyOn(registry, 'methodSkillCenterActivity').mockResolvedValue([])
+  renderPage()
+  fireEvent.click(screen.getByRole('button', { name: zh.methodSkillCenter.tabs.activity }))
+  await screen.findByRole('alert')
+  expect(activity).toHaveBeenCalled()
+})
+
+it('按问题找到专家后将冻结的检索问题随版本带到首页', async () => {
+  const { reference, title } = methods[0]
+  const question = '核对当前季度与去年同期的收入'
+  vi.spyOn(registry, 'methodSkillCenterPlanningMethods').mockImplementation(async (_, basis) => ({
+    items: basis.stage === 'directory' ? [] : [{
+      method_id: reference.method_id, latest_version: reference.version,
+      digest: reference.digest, method_kind: 'expert', title, summary: '核对季度数据',
+    }], next: null,
+  }))
+  renderPage(<PlanningMethods />)
+  fireEvent.change(screen.getByRole('textbox'), { target: { value: question } })
+  fireEvent.click(screen.getByRole('button', { name: zh.methodSkillCenter.searchExperts }))
+  const link = await screen.findByRole('link', { name: zh.methodSkillCenter.askVersion })
+  const params = new URL(link.getAttribute('href')!, 'https://example.test').searchParams
+  expect(JSON.parse(params.get('formalReference')!)).toEqual(reference)
+  expect(new URLSearchParams(new URL(link.getAttribute('href')!, 'https://example.test').hash.slice(1)).get('question')).toBe(question)
+})

@@ -12,24 +12,27 @@ import { routes } from '@/lib/workbench/routes'
 
 // Confirm a new market installation before returning to the expert directory.
 export function KnowbotArrival() {
-  const t = useTranslations('home.knowbot')
-  const router = useRouter()
-  const { locale } = useWorkbench()
   const search = useSearchParams()
   const given = search.get('knowbot')
   const ref = given && KNOWBOT_REF.test(given) ? given : null
+  return ref ? <PinArrival key={ref} reference={ref} /> : null
+}
+
+function PinArrival({ reference }: { reference: string }) {
+  const t = useTranslations('home.knowbot')
+  const router = useRouter()
+  const { locale } = useWorkbench()
   const pin = usePinKnowbot()
   const started = useRef(false)
 
   useEffect(() => {
-    if (ref === null || started.current) return
+    if (started.current) return
     started.current = true
-    pin.mutate(ref, {
+    pin.mutate(reference, {
       onSuccess: () => router.replace(routes.expert(locale)),
     })
-  }, [ref, pin, router, locale])
+  }, [reference, pin, router, locale])
 
-  if (ref === null) return null
   if (pin.isError) {
     const code = pin.error instanceof WorkbenchError ? pin.error.code : ''
     const said =

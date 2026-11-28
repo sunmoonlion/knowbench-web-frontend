@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog'
 import { HomeScreen } from '@/features/home'
 import { AskExpertScreen, ExpertHomeScreen } from '@/features/expert'
 import { MachinesScreen } from '@/features/settings'
@@ -14,11 +15,11 @@ import { workbenchKeys } from '@/lib/workbench/queries'
 import zh from '@/messages/zh-CN.json'
 import en from '@/messages/en.json'
 
-const navigation = vi.hoisted(() => ({ query: '', push: vi.fn() }))
+const navigation = vi.hoisted(() => ({ query: '', path: '/zh-CN/workbench', push: vi.fn() }))
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: navigation.push }),
   useSearchParams: () => new URLSearchParams(navigation.query),
-  usePathname: () => '/zh-CN/workbench',
+  usePathname: () => navigation.path,
 }))
 const fixture = (name: string, path: string) => {
   const directory = join(process.cwd(), 'preview/fixtures', name)
@@ -47,6 +48,7 @@ beforeEach(() => {
   hasSandbox = true
   issuedIdentity = true
   navigation.query = ''
+  navigation.path = '/zh-CN/workbench'
   navigation.push.mockReset()
   calls.length = 0
   vi.stubGlobal(
@@ -421,4 +423,65 @@ describe('三步引导证据', () => {
     const guide = within(screen.getByRole('region', { name: zh.machines.guide.title }))
     expect(guide.getAllByLabelText('还没做')).toHaveLength(3)
   })
+})
+
+it('shows a sidebar load error if the machine list fails', async () => {
+  environment = 'error'
+  page(<Sidebar />)
+  expect(await screen.findByText(zh.shell.computerReadFailed)).toBeVisible()
+  expect(screen.queryByText(zh.shell.computer.none)).toBeNull()
+})
+
+it('restores the picked expert question in an editable home draft', async () => {
+  navigation.query = 'mode=expert&formalReference=fixture'
+  window.history.replaceState(null, '', '#question=' + encodeURIComponent('复核本年收入'))
+  try {
+    page(<HomeScreen />)
+    const box = screen.getByRole('textbox')
+    expect(box).toHaveValue('复核本年收入')
+    fireEvent.change(box, { target: { value: '改查本年成本' } })
+    expect(box).toHaveValue('改查本年成本')
+  } finally {
+    window.history.replaceState(null, '', '/')
+  }
+})
+
+it.each(['failure', 'navigation'] as const)('keeps the right project archive confirmation after %s', async (outcome) => {
+  environment = 'full'
+  const base = globalThis.fetch
+  let resolveDelete!: (response: Response) => void
+  const reply = new Promise<Response>(resolve => { resolveDelete = resolve })
+  const id = 'f0410883-287b-578b-81dc-15f24e5b2d8f'
+  navigation.path = '/zh-CN/workbench/projects/' + id
+  vi.stubGlobal('fetch', vi.fn(async (input: string, init: RequestInit = {}) => {
+    if (init.method === 'DELETE') return reply
+    const path = String(input).split('?')[0]
+    if (['/api/workbench/projects', '/api/workbench/sessions', '/api/workbench/workspaces'].includes(path)) {
+      return Response.json(fixture('full', path))
+    }
+    return base(input, init)
+  }))
+  const view = page(<Sidebar />)
+  const research = await screen.findByRole('button', { name: 'research' })
+  if (research.getAttribute('aria-expanded') !== 'true') fireEvent.click(research)
+  fireEvent.click(await screen.findByRole('button', { name: '删除项目 上海机场' }))
+  fireEvent.click(screen.getByRole('button', { name: '确定删除' }))
+  if (outcome === 'failure') {
+    resolveDelete(Response.json({ code: 'project_busy' }, { status: 409 }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(zh.shell.remove.busy)
+  } else {
+    navigation.path = '/zh-CN/workbench/settings'
+    view.rerender(<Sidebar />)
+    const latest = within(screen.getByRole('region', { name: '最近' }))
+    fireEvent.click(latest.getAllByRole('button', { name: /^删除对话 / })[0])
+    await act(async () => resolveDelete(new Response(null, { status: 204 })))
+    await waitFor(() => expect(view.client.isMutating()).toBe(0))
+    expect(latest.getByRole('button', { name: '确定删除' })).toBeVisible()
+    expect(navigation.push).not.toHaveBeenCalled()
+  }
+})
+
+it.each(['en', 'zh-CN'] as const)('names both dialog close buttons in the active language (%s)', locale => {
+  page(<Dialog open><DialogContent><DialogTitle>Example</DialogTitle><DialogFooter showCloseButton /></DialogContent></Dialog>, locale)
+  expect(screen.getAllByRole('button', { name: locale === 'en' ? 'Close' : '关闭' })).toHaveLength(2)
 })

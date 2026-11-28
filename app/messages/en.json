@@ -262,6 +262,7 @@
     "workspaceTitle": "Workspace"
   },
   "common": {
+    "close": "Close",
     "loading": "Loading...",
     "error": "Something went wrong",
     "retry": "Retry",
@@ -431,6 +432,8 @@
     }
   },
   "shell": {
+    "computerReadFailed": "Could not load computers.",
+    "workspaceReadFailed": "Could not load workspaces.",
     "brand": "Research Workbench",
     "modes": "Three functions",
     "more": "More",
@@ -1942,6 +1945,7 @@
     "clear": "Clear this delegation basis"
   },
   "methodSkillCenter": {
+    "installationChanged": "This installation has changed. Refresh the list to see the new version.",
     "tabs": {
       "formal": "Available experts and tools",
       "installed": "Local skills and connectors",

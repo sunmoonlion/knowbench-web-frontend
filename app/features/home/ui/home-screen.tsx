@@ -4,7 +4,7 @@ import { ArrowUpIcon, FolderIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useRef, useState } from 'react'
+import { useRef, useState, useSyncExternalStore } from 'react'
 
 import { KnowbotArrival } from '@/components/workbench/knowbot-arrival'
 import { ProjectPicker } from '@/components/workbench/project-picker'
@@ -29,6 +29,11 @@ import { useOpenTaskFromRef } from '../api/open-task'
 import { useStart } from '../api/start'
 import { blockerOf, projectIsRequired } from '../model/start'
 
+function onHashChange(listener: () => void) {
+  window.addEventListener('hashchange', listener)
+  return () => window.removeEventListener('hashchange', listener)
+}
+
 export function HomeScreen() {
   const t = useTranslations('home')
   const intakeText = useTranslations('formalIntake')
@@ -50,7 +55,12 @@ export function HomeScreen() {
   const conversations = useConversations()
   const start = useStart()
 
-  const [text, setText] = useState('')
+  const fragment = useSyncExternalStore(onHashChange, () => window.location.hash, () => '')
+  const reference = mode === 'expert' ? query.get('formalReference') : null
+  const incoming = reference ? new URLSearchParams(fragment.slice(1)).get('question') ?? '' : ''
+  const [edit, setEdit] = useState<{ incoming: string; reference: string | null; text: string } | null>(null)
+  const text = edit && edit.incoming === incoming && edit.reference === reference ? edit.text : incoming
+  const setText = (value: string) => setEdit({ incoming, reference, text: value })
   const [chosen, setProjectId] = useState<string | null | undefined>(undefined)
   // 聊天什么都不选（0017）：带进来的项目只对工作、专家有效
   const projectId = mode === 'chat' ? null : chosen === undefined ? given : chosen

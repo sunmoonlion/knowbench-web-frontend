@@ -262,6 +262,7 @@
     "workspaceTitle": "工作区"
   },
   "common": {
+    "close": "关闭",
     "loading": "加载中...",
     "error": "出错了",
     "retry": "重试",
@@ -431,6 +432,8 @@
     }
   },
   "shell": {
+    "computerReadFailed": "电脑清单读取失败。",
+    "workspaceReadFailed": "工作区清单读取失败。",
     "brand": "投研工作台",
     "modes": "三个功能",
     "more": "其他",
@@ -1942,6 +1945,7 @@
     "clear": "清除此委派依据"
   },
   "methodSkillCenter": {
+    "installationChanged": "安装已更新。刷新清单后可查看新版本的入口。",
     "tabs": {
       "formal": "可用专家与工具",
       "installed": "本地技能与连接器",

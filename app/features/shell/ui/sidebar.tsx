@@ -16,7 +16,7 @@ import {
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 import { ResizeHandle } from '@/components/common/resize-handle'
 import { Button } from '@/components/ui/button'
@@ -207,20 +207,23 @@ export function Sidebar() {
   const [asking, setAsking] = useState<string | null>(null)
   const remove = useRemove()
   const router = useRouter()
-  const removeProject = (id: string) =>
-    remove.project.mutate(id, {
+  const currentLocation = useRef(pathname)
+  useLayoutEffect(() => { currentLocation.current = pathname }, [pathname])
+  const archive = (kind: 'project' | 'conversation', id: string) => {
+    const confirmation = asking
+    remove[kind].mutate(id, {
       onSuccess: () => {
-        setAsking(null)
-        if (pathname.includes(id)) router.push(routes.home(locale))
+        setAsking(current => current === confirmation ? null : current)
+        if (currentLocation.current === pathname && pathname.split('/').includes(id)) {
+          router.push(routes.home(locale))
+        }
       },
     })
-  const removeConversation = (id: string) =>
-    remove.conversation.mutate(id, {
-      onSuccess: () => {
-        setAsking(null)
-        if (pathname.includes(id)) router.push(routes.home(locale))
-      },
-    })
+  }
+  const archiveError = asking && (
+    (remove.project.variables === asking && remove.project.error) ||
+    (remove.conversation.variables === asking.replace(/^(chat|recent):/, '') && remove.conversation.error)
+  )
   const [showPending, setShowPending] = useState(false)
   const pointers = pendingPointers(pending.data ?? [], locale)
   const isOpen = (key: string, fallback: boolean) => toggled[key] ?? fallback
@@ -329,7 +332,9 @@ export function Sidebar() {
       <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-1">
         <section aria-label={t('computers')}>
           <h2 className={heading}>{t('computers')}</h2>
-          {machines.isPending ? (
+          {machines.isError && !machines.data ? (
+            <p role="alert" className="px-2 text-xs">{t('computerReadFailed')}</p>
+          ) : machines.isPending ? (
             <p className="text-muted-foreground px-2 text-xs">{t('loading')}</p>
           ) : tree.length === 0 ? (
             <p className="text-muted-foreground px-2 text-xs">
@@ -351,7 +356,11 @@ export function Sidebar() {
                       {t('computer.manage')}
                     </Link>
                   </div>
-                  {machine.workspaces.length === 0 ? (
+                  {workspaces.isError && !workspaces.data ? (
+                    <p role="alert" className="px-7 text-xs">{t('workspaceReadFailed')}</p>
+                  ) : workspaces.isPending ? (
+                    <p className="text-muted-foreground px-7 text-xs">{t('loading')}</p>
+                  ) : machine.workspaces.length === 0 ? (
                     <p className="text-muted-foreground px-7 text-xs">{t('workspace.none')}</p>
                   ) : (
                     <ul>
@@ -468,7 +477,7 @@ export function Sidebar() {
                                             busy={remove.project.isPending}
                                             onAsk={() => setAsking(project.id)}
                                             onCancel={() => setAsking(null)}
-                                            onConfirm={() => removeProject(project.id)}
+                                            onConfirm={() => archive('project', project.id)}
                                           />
                                         </div>
                                         {expanded ? (
@@ -505,7 +514,7 @@ export function Sidebar() {
                                                   busy={remove.conversation.isPending}
                                                   onAsk={() => setAsking(talk.id)}
                                                   onCancel={() => setAsking(null)}
-                                                  onConfirm={() => removeConversation(talk.id)}
+                                                  onConfirm={() => archive('conversation', talk.id)}
                                                 />
                                               </li>
                                             ))}
@@ -554,7 +563,7 @@ export function Sidebar() {
                     busy={remove.conversation.isPending}
                     onAsk={() => setAsking(`chat:${talk.id}`)}
                     onCancel={() => setAsking(null)}
-                    onConfirm={() => removeConversation(talk.id)}
+                    onConfirm={() => archive('conversation', talk.id)}
                   />
                 </li>
               ))}
@@ -564,10 +573,10 @@ export function Sidebar() {
 
         <section aria-label={t('recent')}>
           <h2 className={heading}>{t('recent')}</h2>
-          {remove.conversation.isError ? (
+          {archiveError ? (
             <p role="alert" className="text-destructive px-2 pb-1 text-xs">
               {t(
-                (remove.conversation.error as WorkbenchError | null)?.code === 'project_busy'
+                (archiveError as WorkbenchError).code === 'project_busy'
                   ? 'remove.busy'
                   : 'remove.failed',
               )}
@@ -603,7 +612,7 @@ export function Sidebar() {
                     busy={remove.conversation.isPending}
                     onAsk={() => setAsking(`recent:${item.id}`)}
                     onCancel={() => setAsking(null)}
-                    onConfirm={() => removeConversation(item.id)}
+                    onConfirm={() => archive('conversation', item.id)}
                   />
                 )}
               </li>

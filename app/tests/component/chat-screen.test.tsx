@@ -236,7 +236,7 @@ it('retains the unsent second draft when the first send is acknowledged', async 
   await waitFor(() => expect(calls.filter((c) => c.path.endsWith('/turns'))).toHaveLength(1))
   expect(box).toHaveValue('second question')
   expect(calls.filter((c) => c.path.endsWith('/turns')).map((c) => c.body)).toEqual([
-    { text: 'first question' },
+    { text: 'first question', request_id: expect.any(String) },
   ])
 })
 

@@ -31,7 +31,14 @@ export function AskExpertScreen({
   const [typed, setTyped] = useState<string | null>(null)
   const fromHome = useSyncExternalStore(
     noSubscription,
-    () => window.sessionStorage.getItem('workbench.question'),
+    () => {
+      if (from) return null
+      try {
+        return window.sessionStorage.getItem('workbench.question')
+      } catch {
+        return null
+      }
+    },
     () => null,
   )
   const question = typed ?? (from ? said.data?.last : fromHome) ?? ''

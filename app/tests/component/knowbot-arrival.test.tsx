@@ -60,15 +60,17 @@ function stub(pin: () => Response, gets: Record<string, unknown> = {}) {
 
 function page() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
+  const component = () => (
     <NextIntlClientProvider locale="zh-CN" messages={messages} timeZone="Asia/Shanghai">
       <QueryClientProvider client={client}>
         <WorkbenchProvider csrfToken="csrf-for-test" locale="zh-CN">
           <KnowbotArrival />
         </WorkbenchProvider>
       </QueryClientProvider>
-    </NextIntlClientProvider>,
+    </NextIntlClientProvider>
   )
+  const result = render(component())
+  return { ...result, refresh: () => result.rerender(component()) }
 }
 
 beforeEach(() => {
@@ -117,4 +119,16 @@ describe('从 knowmart 选定分身回来', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('knowmart 暂时连不上')
     expect(replace).not.toHaveBeenCalled()
   })
+})
+
+it('pins a second reference after the first fails on the same page', async () => {
+  search = new URLSearchParams({ knowbot: KNOWBOT + '@1' })
+  stub(() => answer(404, { code: 'no_such_expert', status: 404 }))
+  const view = page()
+  await screen.findByRole('alert')
+  search = new URLSearchParams({ knowbot: KNOWBOT + '@2' })
+  stub(() => answer(200, { contract_version: 2, pack: PACK }))
+  view.refresh()
+  await waitFor(() => expect(replace).toHaveBeenCalledOnce())
+  expect(calls.map(call => call.body)).toEqual([{ knowbot: KNOWBOT + '@1' }, { knowbot: KNOWBOT + '@2' }])
 })

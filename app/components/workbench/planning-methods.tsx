@@ -204,7 +204,7 @@ export function PlanningMethods({
                         version: m.latest_version,
                         digest: m.digest,
                       }),
-                    })
+                    }) + (basis.stage === 'directory' ? '' : '#' + new URLSearchParams({ question: basis.question }))
                   }
                 >
                   {t('askVersion')}

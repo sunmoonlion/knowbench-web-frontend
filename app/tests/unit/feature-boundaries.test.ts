@@ -1,7 +1,7 @@
 // 前端的结构规矩（所有者 2026-10-04 定）：按功能分，功能里取数、状态、渲染分开。
 // 和后端的分层检查一样，规矩写成测试，坏了就红。
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative, sep } from 'node:path'
+import { dirname, join, relative, resolve, sep } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
@@ -18,9 +18,15 @@ function filesUnder(directory: string): string[] {
   return found
 }
 
+function projectImport(file: string, target: string): string {
+  if (!target.startsWith('.') && !target.startsWith('@/')) return target
+  const path = target.startsWith('@/') ? resolve(root, target.slice(2)) : resolve(root, dirname(file), target)
+  return '@/' + relative(root, path).split(sep).join('/')
+}
+
 function importsOf(file: string): string[] {
   const source = readFileSync(join(root, file), 'utf8')
-  return [...source.matchAll(/(?:from|import)\s+['"]([^'"]+)['"]/g)].map((found) => found[1])
+  return [...source.matchAll(/(?:from|import)\s+['"]([^'"]+)['"]/g)].map((found) => projectImport(file, found[1]))
 }
 
 const features = readdirSync(join(root, 'features')).filter((name) =>
@@ -80,7 +86,7 @@ describe('一个功能里：取数、状态、渲染分开', () => {
         const reasons = importsOf(file)
           .filter(
             (target) =>
-              /^\.\.\/(api|ui)\b/.test(target) ||
+              /^@\/features\/[^/]+\/(api|ui)\b/.test(target) ||
               target === '@tanstack/react-query' ||
               target === '@/lib/workbench/http' ||
               target.startsWith('@/components/'),
@@ -98,7 +104,7 @@ describe('一个功能里：取数、状态、渲染分开', () => {
       .filter((file) => partOf(file) === 'api')
       .flatMap((file) => {
         const reasons = importsOf(file)
-          .filter((target) => /^\.\.\/ui\b/.test(target) || target.startsWith('@/components/'))
+          .filter((target) => /^@\/features\/[^/]+\/ui\b/.test(target) || target.startsWith('@/components/'))
           .map((target) => `${file} → ${target}`)
         if (file.endsWith('.tsx')) reasons.push(`${file} 是 .tsx`)
         return reasons
@@ -123,4 +129,10 @@ describe('一个功能里：取数、状态、渲染分开', () => {
     expect(features.length).toBeGreaterThanOrEqual(4)
     expect(featureFiles.map((file) => relative('features', file)).length).toBeGreaterThan(8)
   })
+})
+
+it('resolves sibling features for both relative and aliased imports', () => {
+  const file = 'features/expert/ui/form.tsx'
+  expect(projectImport(file, '../../home/ui/form')).toBe('@/features/home/ui/form')
+  expect(projectImport(file, '@/features/home/ui/form')).toBe('@/features/home/ui/form')
 })

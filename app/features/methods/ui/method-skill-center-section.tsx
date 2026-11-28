@@ -27,6 +27,7 @@ const panel = 'space-y-3 rounded-xl border p-4'
 
 function EntryList({ asset }: { asset: MethodSkillCenterAsset }) {
   const t = useTranslations('methodSkillCenter')
+  const client = useQueryClient()
   const query = useQuery({
     queryKey: [...methodSkillCenterKey, asset.asset_id, asset.revision],
     queryFn: () => methodSkillCenterInstallation(asset.asset_id),
@@ -34,6 +35,16 @@ function EntryList({ asset }: { asset: MethodSkillCenterAsset }) {
   if (query.isError)
     return <RequestFailure error={query.error} retry={() => void query.refetch()} />
   if (!query.data) return <p>{t('loading')}</p>
+  if (query.data.asset_id !== asset.asset_id || query.data.revision !== asset.revision) {
+    return (
+      <div role="status">
+        {t('installationChanged')}{' '}
+        <Button variant="outline" size="sm" onClick={() => void client.invalidateQueries({ queryKey: methodSkillCenterKey })}>
+          {t('refresh')}
+        </Button>
+      </div>
+    )
+  }
   return (
     <ul className="space-y-1 text-sm">
       {query.data.entries.map((e) => (
@@ -336,6 +347,7 @@ export function MethodSkillCenterSection() {
           onChange={(e) => setTerm(e.target.value)}
         />
       )}
+      {tab === 'activity' && <RecentActivity />}
       {query.isError ? (
         <RequestFailure error={query.error} retry={() => void query.refetch()} />
       ) : !data ? (
@@ -501,7 +513,6 @@ export function MethodSkillCenterSection() {
 
           {tab === 'activity' && (
             <div className="space-y-6">
-              <RecentActivity />
               <details className="rounded-xl border p-4">
                 <summary className="cursor-pointer text-sm font-medium">
                   {t('protocolDiagnostics')}

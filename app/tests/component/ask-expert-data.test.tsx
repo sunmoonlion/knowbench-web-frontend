@@ -248,3 +248,15 @@ it('原问题已达上限时可以明确选择用回答改写，旧轮次不可�
   await screen.findByRole('link', { name: messages.formalIntake.latest })
   expect(screen.queryByRole('textbox', { name: '你的回答' })).toBeNull()
 })
+
+it.each([null, 'conversation'])('keeps the question editable when storage is unavailable (from %s)', async (from) => {
+  const get = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new DOMException('Storage denied', 'SecurityError') })
+  try {
+    page(<AskExpertScreen project={project} from={from} />)
+    const box = screen.getByRole('textbox', { name: messages.askExpert.question })
+    fireEvent.change(box, { target: { value: 'another question' } })
+    expect(box).toHaveValue('another question')
+  } finally {
+    get.mockRestore()
+  }
+})
