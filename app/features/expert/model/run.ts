@@ -78,7 +78,14 @@ export function minutesAndSeconds(total: number) {
 // ---------------- 交回了什么 ----------------
 // 交回物是专家包定的结构，各不相同。这里只按形状分：一张表、一串东西、一个值。
 export type Shaped =
-  | { kind: 'table'; key: string; columns: string[]; rows: unknown[][]; more: number }
+  | {
+      kind: 'table'
+      key: string
+      columns: string[]
+      rows: unknown[][]
+      more: number
+      hiddenColumns: number
+    }
   | { kind: 'list'; key: string; items: string[]; more: number }
   | { kind: 'value'; key: string; value: string }
 
@@ -93,7 +100,7 @@ function plain(value: unknown): string {
   return JSON.stringify(value)
 }
 
-export function shape(content: unknown): Shaped[] {
+export function shape(content: unknown, expanded = false): Shaped[] {
   if (content === null || typeof content !== 'object' || Array.isArray(content)) return []
   const out: Shaped[] = []
   for (const [key, value] of Object.entries(content as Record<string, unknown>)) {
@@ -102,25 +109,24 @@ export function shape(content: unknown): Shaped[] {
       value.length > 0 &&
       value.every((row) => row && typeof row === 'object' && !Array.isArray(row))
     ) {
-      const columns = [...new Set(value.flatMap((row) => Object.keys(row as object)))].slice(
-        0,
-        COLUMNS,
-      )
+      const allColumns = [...new Set(value.flatMap((row) => Object.keys(row as object)))]
+      const columns = expanded ? allColumns : allColumns.slice(0, COLUMNS)
       out.push({
         kind: 'table',
         key,
         columns,
-        rows: value
-          .slice(0, ROWS)
-          .map((row) => columns.map((column) => (row as Record<string, unknown>)[column])),
-        more: Math.max(0, value.length - ROWS),
+        hiddenColumns: allColumns.length - columns.length,
+        rows: (expanded ? value : value.slice(0, ROWS)).map((row) =>
+          columns.map((column) => (row as Record<string, unknown>)[column]),
+        ),
+        more: expanded ? 0 : Math.max(0, value.length - ROWS),
       })
     } else if (Array.isArray(value)) {
       out.push({
         kind: 'list',
         key,
-        items: value.slice(0, ROWS).map(plain),
-        more: Math.max(0, value.length - ROWS),
+        items: (expanded ? value : value.slice(0, ROWS)).map(plain),
+        more: expanded ? 0 : Math.max(0, value.length - ROWS),
       })
     } else {
       out.push({ kind: 'value', key, value: plain(value) })

@@ -2,6 +2,7 @@
 
 import { CheckIcon, LoaderIcon, MinusIcon, XIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useState } from 'react'
 
 import type { Attempt, Now, RunSheet, RunStep } from '@/contracts/workbench-v2'
 import { money, symbol, toMicros } from '@/lib/workbench/money'
@@ -156,6 +157,7 @@ export function StepRail({
 
 function Returned({ attempt }: { attempt: Attempt }) {
   const t = useTranslations('expert')
+  const [expanded, setExpanded] = useState(false)
   const returned = attempt.returned
   if (!returned) return <p className="text-muted-foreground text-[13px]">{t('detail.noReturn')}</p>
   if (returned.content === null || returned.content === undefined) {
@@ -170,10 +172,15 @@ function Returned({ attempt }: { attempt: Attempt }) {
       <p className="text-muted-foreground text-[13px]">{t('detail.noReturn')}</p>
     )
   }
+  const parts = shape(returned.content, expanded)
+  const truncated = parts.some(
+    (part) =>
+      part.kind !== 'value' && (part.more > 0 || (part.kind === 'table' && part.hiddenColumns > 0)),
+  )
   const word = (key: string) => returned.labels?.[key] ?? key
   return (
     <div className="space-y-3">
-      {shape(returned.content).map((part) =>
+      {parts.map((part) =>
         part.kind === 'table' ? (
           <div key={part.key} className="overflow-x-auto rounded-md border">
             <table className="w-full text-[13px]">
@@ -201,6 +208,11 @@ function Returned({ attempt }: { attempt: Attempt }) {
                 ))}
               </tbody>
             </table>
+            {part.hiddenColumns > 0 && (
+              <p className="text-muted-foreground px-2 py-1 text-xs">
+                {t('detail.moreColumns', { n: part.hiddenColumns })}
+              </p>
+            )}
             {part.more ? (
               <p className="text-muted-foreground border-t px-2 py-1 text-xs">
                 {t('detail.more', { n: part.more })}
@@ -212,9 +224,24 @@ function Returned({ attempt }: { attempt: Attempt }) {
             <dt className="text-muted-foreground truncate text-xs leading-6">{word(part.key)}</dt>
             <dd className="min-w-0 break-words">
               {part.kind === 'value' ? part.value : part.items.length ? part.items.join('；') : '—'}
+              {part.kind === 'list' && part.more > 0 && (
+                <p className="text-muted-foreground text-xs">
+                  {t('detail.moreItems', { n: part.more })}
+                </p>
+              )}
             </dd>
           </dl>
         ),
+      )}
+      {(truncated || expanded) && (
+        <button
+          type="button"
+          className="text-sm underline"
+          aria-expanded={expanded}
+          onClick={() => setExpanded(!expanded)}
+        >
+          {t(expanded ? 'detail.collapseResult' : 'detail.expandResult')}
+        </button>
       )}
     </div>
   )

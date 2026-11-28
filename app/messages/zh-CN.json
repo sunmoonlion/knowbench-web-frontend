@@ -903,6 +903,10 @@
       "afterRejection": "验收不过的话",
       "raw": "交回的不是约定的格式。原样是：",
       "more": "还有 {n} 行没有列出",
+      "moreColumns": "还有 {n} 列",
+      "moreItems": "还有 {n} 项",
+      "expandResult": "展开完整结果",
+      "collapseResult": "收起结果",
       "noReturn": "这一次还没有交回东西。",
       "loading": "加载中…"
     },

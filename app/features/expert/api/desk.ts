@@ -16,7 +16,7 @@ export function useOverview() {
 
 // 有哪些专家。给的是名字、白话、每一步的名字与不过时怎么办；没有方法的原文
 
-// 从一段对话里请专家：带入那段对话里用户最近说的一句，并数一数说了几轮
+// 从一段对话里请专家：带入那段对话里用户最近说的一句
 export function useSaid(conversation: string | null) {
   return useQuery({
     queryKey: ['workbench', 'said', conversation],
@@ -24,10 +24,14 @@ export function useSaid(conversation: string | null) {
     queryFn: async () => {
       const page = await getJson(
         eventsPageSchema,
-        `/api/workbench/sessions/${seg(conversation!)}/events?limit=1000`,
+        `/api/workbench/sessions/${seg(conversation!)}/events?latest_user_prompt=true`,
       )
-      const said = page.events.filter((event) => event.type === 'turn/requested')
-      return { turns: said.length, last: text(said[said.length - 1]?.payload.text) }
+      const said = page.events
+        .filter(
+          (event) => event.type === 'turn/requested' && (event.payload.by ?? 'user') === 'user',
+        )
+        .at(-1)
+      return { eventId: said?.id ?? null, last: text(said?.payload.text) }
     },
   })
 }

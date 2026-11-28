@@ -118,6 +118,7 @@ describe('交回了什么：按形状摆', () => {
       kind: 'table',
       key: 'checks',
       columns: ['rule', 'unbalanced', 'note'],
+      hiddenColumns: 0,
       rows: [
         ['资产 = 负债 + 所有者权益', 0, undefined],
         ['净利润勾稽', 1, 'x'],
