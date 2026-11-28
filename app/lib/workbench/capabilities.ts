@@ -447,6 +447,8 @@ export const callSchema = z
     status: capabilityCallStatusSchema,
     created_at: z.string(),
     updated_at: z.string(),
+    receipt_retry_at: z.iso.datetime({ offset: true }).nullish(),
+    receipt_problem: z.string().nullish(),
     detail: z.union([
       modelCallDetail,
       hostCallDetail,
