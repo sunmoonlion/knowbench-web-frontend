@@ -449,7 +449,14 @@ export const reviewSchema = z
             title: z.string(),
             question: z.string(),
             options: z.array(
-              z.object({ id: z.string(), label: z.string(), consequence: z.string() }).loose(),
+              z
+                .object({
+                  id: z.string(),
+                  label: z.string(),
+                  consequence: z.string(),
+                  needs_amount: z.boolean().optional(),
+                })
+                .loose(),
             ),
           })
           .loose(),

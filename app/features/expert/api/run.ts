@@ -73,6 +73,7 @@ export function useRunActions(task: string) {
         token: string
         subject_digest?: string
         decision: string
+        amount?: string
         answer?: Record<string, unknown>
       }) =>
         sendJson(acceptedSchema, `/api/workbench/interactions/${seg(input.pending)}/respond`, {
@@ -81,6 +82,7 @@ export function useRunActions(task: string) {
             token: input.token,
             ...(input.subject_digest ? { subject_digest: input.subject_digest } : {}),
             decision: input.decision,
+            ...(input.amount === undefined ? {} : { amount: input.amount }),
             ...(input.answer ? { answer: input.answer } : {}),
           },
         }),

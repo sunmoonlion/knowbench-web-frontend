@@ -921,6 +921,7 @@
     },
     "review": {
       "failed": "What did not pass",
+      "topupAmount": "Additional amount (CNY)",
       "choose": "Your decision",
       "expires": "This question is kept until {date}.",
       "noToken": "The credential for answering was not found. Reload the page and try again.",

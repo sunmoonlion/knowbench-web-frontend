@@ -921,6 +921,7 @@
     },
     "review": {
       "failed": "没有通过的",
+      "topupAmount": "追加金额（元）",
       "choose": "你来决定",
       "expires": "这个问题保留到 {date}。",
       "noToken": "答复用的凭证没有取到，刷新页面再试。",

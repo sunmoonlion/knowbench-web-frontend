@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import type { Review } from '@/contracts/workbench-v2'
 
-export type ReviewAnswer = { decision: string; answer?: Record<string, unknown> }
+export type ReviewAnswer = { decision: string; answer?: Record<string, unknown>; amount?: string }
 // 这几种选项可以附一句话：拒绝附话 = 告诉它怎么改；停下 / 重做附话 = 这一步重做时的要求
 const WITH_NOTE = new Set([
   'decline',
@@ -38,6 +38,8 @@ export function ReviewPanel({
   const format = useFormatter()
   const pending = review.pending
   const [note, setNote] = useState('')
+  const [amount, setAmount] = useState('')
+  const validAmount = /^\d{1,12}(?:\.\d{1,6})?$/.test(amount) && Number(amount) > 0
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const questions = review.subject?.questions ?? []
   const isQuestion = review.kind === 'question'
@@ -155,6 +157,16 @@ export function ReviewPanel({
         <div>
           <p className="text-muted-foreground text-xs font-medium">{t('review.choose')}</p>
           <p className="mt-1 text-[13px] whitespace-pre-line">{pending.question}</p>
+          {pending.options.some((option) => option.needs_amount) && (
+            <label className="mt-2 block text-sm">
+              {t('review.topupAmount')}
+              <Input
+                value={amount}
+                inputMode="decimal"
+                onChange={(event) => setAmount(event.target.value)}
+              />
+            </label>
+          )}
           <ul className="mt-2 space-y-2">
             {pending.options.map((option) => (
               <li key={option.id} className="flex items-start gap-3">
@@ -165,8 +177,12 @@ export function ReviewPanel({
                       ? 'outline'
                       : 'default'
                   }
-                  disabled={answering || token === null}
-                  onClick={() => send(option.id)}
+                  disabled={answering || token === null || (option.needs_amount && !validAmount)}
+                  onClick={() =>
+                    option.needs_amount
+                      ? onAnswer({ decision: option.id, amount })
+                      : send(option.id)
+                  }
                   className="shrink-0"
                 >
                   {option.label}
