@@ -820,7 +820,12 @@ export const taskDataSchema = z
           .object({
             id: z.string(),
             review_dropped: z.array(z.string()).optional(),
-            review_picks: z.record(z.string(), z.object({material_id:z.string(),version_no:z.number().int()})).optional(),
+            review_picks: z
+              .record(
+                z.string(),
+                z.object({ material_id: z.string(), version_no: z.number().int() }),
+              )
+              .optional(),
             labels: z.array(z.string()),
             status: z.string(),
             needs: z.array(dataRequestSchema).default([]),

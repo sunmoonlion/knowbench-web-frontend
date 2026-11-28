@@ -59,6 +59,7 @@ export function TaskDataPanel({
   const request = pending.length
     ? {
         ...pending[0],
+        revised: pending.some((r) => r.review_picks !== undefined),
         review_dropped: pending.flatMap((r) => r.review_dropped ?? []),
         review_picks: Object.assign({}, ...pending.map((r) => r.review_picks ?? {})),
         labels: pending.flatMap((r) => r.labels),
@@ -69,7 +70,11 @@ export function TaskDataPanel({
           : undefined,
       }
     : undefined
-  const identity = JSON.stringify([task, data.view_digest, pending.map((r) => [r.id, r.needs, r.items])])
+  const identity = JSON.stringify([
+    task,
+    data.view_digest,
+    pending.map((r) => [r.id, r.needs, r.items]),
+  ])
   return <TaskDataForm key={identity} {...{ task, data, compact, request }} />
 }
 
@@ -86,7 +91,11 @@ function TaskDataForm({
 }) {
   const t = useTranslations('expert.data')
   const act = useTaskDataActions(task)
-  const [changes, setChanges] = useState<Changes>(() => ({...noChanges,dropped:request?.review_dropped ?? [],picks:request?.review_picks ?? {}}))
+  const [changes, setChanges] = useState<Changes>(() => ({
+    ...noChanges,
+    dropped: request?.review_dropped ?? [],
+    picks: request?.review_picks ?? {},
+  }))
   const duration = useDuration()
   if (!data.listed) return <NotSaved data={data} />
   const missing = data.requests.filter((each) => each.status === 'missing')
@@ -94,6 +103,7 @@ function TaskDataForm({
   const failure = (act.confirm.error ??
     act.decline.error ??
     act.recheck.error) as WorkbenchError | null
+  const revising = Object.keys(changes.edits).length > 0 || changes.added.length > 0
   const blocked = request ? unchosen(request, changes).length : 0
 
   return (
@@ -150,6 +160,7 @@ function TaskDataForm({
               </li>
             ))}
           </ul>
+          {request.revised === true && <p role="status">{t('reviewRevised')}</p>}
           <AddItem onAdd={(add) => setChanges({ ...changes, added: [...changes.added, add] })} />
           {blocked ? (
             <p className="text-amber-700 dark:text-amber-400">
@@ -159,14 +170,17 @@ function TaskDataForm({
           <div className="flex flex-wrap items-center gap-2">
             <Button
               size="sm"
-              disabled={busy || blocked > 0 || !data.view_digest}
+              disabled={busy || (!revising && blocked > 0) || !data.view_digest}
               onClick={() =>
-                act.confirm.mutate({...confirmBody(request, changes), view_digest: data.view_digest!}, {
-                  onSuccess: () => setChanges(noChanges),
-                })
+                act.confirm.mutate(
+                  { ...confirmBody(request, changes), view_digest: data.view_digest! },
+                  {
+                    onSuccess: () => setChanges(noChanges),
+                  },
+                )
               }
             >
-              {act.confirm.isPending ? t('confirming') : t('confirm')}
+              {act.confirm.isPending ? t('confirming') : t(revising ? 'saveRevision' : 'confirm')}
             </Button>
             <Button
               size="sm"

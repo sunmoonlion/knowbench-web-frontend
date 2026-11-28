@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
@@ -6,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TaskDataPanel } from '@/components/workbench/task-data-panel'
 import type { TaskData } from '@/contracts/workbench-v2'
 import { ProjectScreen } from '@/features/projects'
+import { useTaskData } from '@/lib/workbench/task-data'
 import { WorkbenchProvider } from '@/lib/workbench/context'
 import messages from '@/messages/zh-CN.json'
 
@@ -47,7 +49,7 @@ function wrap(children: React.ReactNode) {
 
 const TASK = '11111111-1111-4111-8111-111111111111'
 const proposed: TaskData = {
-  view_digest: "a".repeat(64),
+  view_digest: 'a'.repeat(64),
   listed: true,
   status: 'ready',
   confirm_in: 'here',
@@ -139,7 +141,7 @@ describe('确认专家提出的数据（decisions ⑭）', () => {
     })
     fireEvent.click(panel.getByRole('button', { name: '好' }))
     expect(panel.getByText('改过，确认时重新找')).toBeInTheDocument()
-    fireEvent.click(panel.getByRole('button', { name: '确认使用这些数据' }))
+    fireEvent.click(panel.getByRole('button', { name: '保存修改并重新查找' }))
     await waitFor(() => expect(calls.some((each) => each.method === 'POST')).toBe(true))
     const sent = calls.find((each) => each.method === 'POST')!
     expect(sent.path).toBe(`/api/workbench/tasks/${TASK}/data-requests/confirm`)
@@ -155,7 +157,7 @@ describe('确认专家提出的数据（decisions ⑭）', () => {
     fireEvent.click(panel.getAllByRole('button', { name: '不要这一样' })[1])
     fireEvent.click(panel.getByRole('button', { name: '确认使用这些数据' }))
     await waitFor(() => expect(calls.length).toBe(1))
-    expect(calls[0].body).toEqual({ dropped: ['req1_2:b'],view_digest: proposed.view_digest })
+    expect(calls[0].body).toEqual({ dropped: ['req1_2:b'], view_digest: proposed.view_digest })
     fireEvent.click(panel.getByRole('button', { name: '都不要，照现有的做' }))
     await waitFor(() =>
       expect(calls.at(-1)!.path).toBe(`/api/workbench/tasks/${TASK}/data-requests/decline`),
@@ -577,7 +579,7 @@ it('shows supplier query arguments and sends edited arguments for fresh confirma
   fireEvent.click(screen.getByRole('button', { name: messages.expert.data.editDone }))
   expect(screen.getByText(/changed annual report/)).toBeInTheDocument()
   expect(calls.filter((c) => c.method === 'POST')).toHaveLength(0)
-  fireEvent.click(screen.getByRole('button', { name: '确认使用这些数据' }))
+  fireEvent.click(screen.getByRole('button', { name: '保存修改并重新查找' }))
   await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true))
   const sent = calls.find((c) => c.method === 'POST')!
   expect(sent.path).toBe(`/api/workbench/tasks/${TASK}/data-requests/confirm`)
@@ -591,25 +593,58 @@ it('两张待确认采单同时展示并确认所见修订', async () => {
   const data = structuredClone(proposed)
   const extra = structuredClone(data.requests[0])
   extra.id = 'r2'
-  extra.needs = [{...extra.needs[0],key:'req2_1'}]
-  extra.items = [{...extra.items[0],ref:'r2:first',need_key:'req2_1'}]
+  extra.needs = [{ ...extra.needs[0], key: 'req2_1' }]
+  extra.items = [{ ...extra.items[0], ref: 'r2:first', need_key: 'req2_1' }]
   extra.needs[0].name = '第二批独立核验资料'
   data.requests.push(extra)
   wrap(<TaskDataPanel task={TASK} data={data} />)
   expect(screen.getByText('第二批独立核验资料')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button',{name:'确认使用这些数据'}))
-  await waitFor(() => expect(calls[0]?.body).toEqual({view_digest:proposed.view_digest}))
+  fireEvent.click(screen.getByRole('button', { name: '确认使用这些数据' }))
+  await waitFor(() => expect(calls[0]?.body).toEqual({ view_digest: proposed.view_digest }))
 })
 it('只改主体，确认仍保留原固定季度', async () => {
   const data = structuredClone(proposed)
   const req = data.requests[0]
-  req.needs[0].period = {kind:'fixed',start:'2025-04-01',end:'2025-06-30'}
-  Object.assign(req.items[0].key,{period_start:'2025-04-01', period_end:'2025-06-30'})
+  req.needs[0].period = { kind: 'fixed', start: '2025-04-01', end: '2025-06-30' }
+  Object.assign(req.items[0].key, { period_start: '2025-04-01', period_end: '2025-06-30' })
   wrap(<TaskDataPanel task={TASK} data={data} />)
-  fireEvent.click(screen.getAllByRole('button',{name:'改'})[0])
-  fireEvent.change(screen.getByRole('textbox',{name:'主体'}),{target:{value:'000858.SZ'}})
-  fireEvent.click(screen.getByRole('button',{name:'好'}))
-  fireEvent.click(screen.getByRole('button',{name:'确认使用这些数据'}))
-  await waitFor(() => expect((calls[0]?.body as {needs:{period:unknown}[]})?.needs[0].period).toEqual(
-    {kind:'fixed',start:'2025-04-01',end:'2025-06-30'}))
+  fireEvent.click(screen.getAllByRole('button', { name: '改' })[0])
+  fireEvent.change(screen.getByRole('textbox', { name: '主体' }), {
+    target: { value: '000858.SZ' },
+  })
+  fireEvent.click(screen.getByRole('button', { name: '好' }))
+  fireEvent.click(screen.getByRole('button', { name: '保存修改并重新查找' }))
+  await waitFor(() =>
+    expect((calls[0]?.body as { needs: { period: unknown }[] })?.needs[0].period).toEqual({
+      kind: 'fixed',
+      start: '2025-04-01',
+      end: '2025-06-30',
+    }),
+  )
+})
+
+it('任务切换和同任务刷新分别使用正确的占位清单', async () => {
+  function Probe() {
+    const [which, setWhich] = useState(TASK)
+    const [beat, setBeat] = useState(0)
+    const result = useTaskData(which, beat)
+    return (
+      <>
+        <button onClick={() => setWhich('another')}>switch</button>
+        <button onClick={() => setBeat(beat + 1)}>refresh</button>
+        <output>{result.data?.requests[0]?.id || 'loading'}</output>
+      </>
+    )
+  }
+  replies['GET /api/workbench/tasks/' + TASK + '/data'] = proposed
+  wrap(<Probe />)
+  expect(await screen.findByText('r1')).toBeInTheDocument()
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() => new Promise<Response>(() => {})),
+  )
+  fireEvent.click(screen.getByText('refresh'))
+  expect(screen.getByText('r1')).toBeInTheDocument()
+  fireEvent.click(screen.getByText('switch'))
+  expect(screen.getByText('loading')).toBeInTheDocument()
 })

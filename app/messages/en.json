@@ -996,6 +996,8 @@
       "pinned": "{count} pinned: {names}",
       "requested": "For your question the expert proposes this data. You can switch to another copy, change the company or years, drop an item or add one; after you confirm, available materials are used for this task and items that need fetching are handled as listed. The expert waits here for your confirmation.",
       "confirm": "Confirm data use",
+      "saveRevision": "Save changes and find candidates",
+      "reviewRevised": "Review the updated candidates and supply terms before confirming.",
       "confirming": "Confirming…",
       "decline": "None of it, go on with what there is",
       "declined": "Not needed",

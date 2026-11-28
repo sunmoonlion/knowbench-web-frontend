@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { DataRequestItem } from '@/contracts/workbench-v2'
+import { dataRequestSchema, type DataRequestItem } from '@/contracts/workbench-v2'
 import {
   confirmBody,
   noChanges,
@@ -177,4 +177,23 @@ it('preserves the other period of a revised multi-period need', () => {
   )
   expect(body.needs?.[0]).toEqual(request.needs[0])
   expect(body.dropped).toEqual([second.ref])
+})
+
+it('混合采单重新提交时保留财务事实原有口径', () => {
+  const facts = {
+    key: 'profits',
+    kind: 'facts',
+    name: '合并利润',
+    subject: '600519.SH',
+    codes: ['IS.REVENUE'],
+    start: '2025-01-01',
+    end: '2025-06-30',
+    duration: 'half',
+    disclosure: 'first',
+    required: true,
+    description: '',
+  }
+  const mixed = { ...request, needs: [dataRequestSchema.parse(facts), ...request.needs] }
+  const changed = confirmBody(mixed, { ...noChanges, edits: { req1_1: { subject: '000858.SZ' } } })
+  expect(changed.needs?.[0]).toEqual(facts)
 })

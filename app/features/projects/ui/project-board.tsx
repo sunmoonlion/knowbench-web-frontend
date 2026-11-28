@@ -84,8 +84,7 @@ function Card({ project, card }: { project: string; card: BoardCard }) {
 
 function CardData({ task }: { task: string }) {
   const data = useTaskData(task)
-  if (data.isError && !data.data)
-    return <RequestFailure error={data.error} retry={() => void data.refetch()} />
+  if (data.isError) return <RequestFailure error={data.error} retry={() => void data.refetch()} />
   return data.data ? (
     <div className="mt-1.5">
       <TaskDataPanel task={task} data={data.data} compact />

@@ -130,10 +130,10 @@ export function ExpertRunScreen({ task }: { task: string }) {
       <div className="flex min-h-0 flex-1">
         <StepRail steps={steps} shown={shown} onPick={setPicked} />
         <div className="min-w-0 flex-1 overflow-y-auto">
-          {data.data ? (
-            <TaskDataPanel task={task} data={data.data} />
-          ) : data.isError ? (
+          {data.isError ? (
             <RequestFailure error={data.error} retry={() => void data.refetch()} />
+          ) : data.data ? (
+            <TaskDataPanel task={task} data={data.data} />
           ) : null}
           <StepDetail
             step={detail.data ?? steps.find((step) => step.index === shown)}
