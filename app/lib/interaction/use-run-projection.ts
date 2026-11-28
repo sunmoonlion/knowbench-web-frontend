@@ -32,7 +32,7 @@ export function useRunProjection(runId: string, csrfToken: string) {
       return
     }
     if (
-      !projectionRef.current ||
+      projectionRef.current?.snapshot.run_id !== runId ||
       query.data.last_sequence_no >= projectionRef.current.snapshot.last_sequence_no
     ) {
       projectionRef.current = createRunProjection(query.data)
@@ -43,10 +43,25 @@ export function useRunProjection(runId: string, csrfToken: string) {
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null
     let reconnectAttempt = 0
 
+    // A successful refetch can reuse the same cached snapshot. Reconnect explicitly
+    // after a gap even when React Query does not change the data reference.
+    const scheduleReconnect = () => {
+      if (stopped || reconnectTimer) return
+      const delay = Math.min(1000 * 2 ** reconnectAttempt, 10000) + Math.floor(Math.random() * 250)
+      reconnectAttempt += 1
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null
+        connect()
+      }, delay)
+    }
     const reconcile = async () => {
       setStreamState('reconciling')
       source?.close()
-      await refetch()
+      source = null
+      const refreshed = await refetch()
+      if (stopped || isTerminal(projectionRef.current?.snapshot.status ?? '') ||
+          (refreshed.data && isTerminal(refreshed.data.status))) return
+      scheduleReconnect()
     }
 
     const connect = () => {
@@ -54,14 +69,17 @@ export function useRunProjection(runId: string, csrfToken: string) {
       const cursor = projectionRef.current?.snapshot.last_event_id
       const params = cursor ? `?last_event_id=${encodeURIComponent(cursor)}` : ''
       setStreamState(reconnectAttempt ? 'offline' : 'connecting')
-      source = new EventSource(`/api/web/v1/runs/${encodeURIComponent(runId)}/events${params}`, {
+      const stream = new EventSource(`/api/web/v1/runs/${encodeURIComponent(runId)}/events${params}`, {
         withCredentials: true,
       })
-      source.onopen = () => {
+      source = stream
+      stream.onopen = () => {
+        if (stopped || source !== stream) return
         reconnectAttempt = 0
         setStreamState('open')
       }
-      source.addEventListener('run-event', (message) => {
+      stream.addEventListener('run-event', (message) => {
+        if (stopped || source !== stream) return
         if (!(message instanceof MessageEvent) || !projectionRef.current) return
         try {
           const event = parseRunEventPayload(String(message.data), message.lastEventId)
@@ -78,14 +96,12 @@ export function useRunProjection(runId: string, csrfToken: string) {
           void reconcile()
         }
       })
-      source.onerror = () => {
-        source?.close()
-        if (stopped) return
+      stream.onerror = () => {
+        if (stopped || source !== stream) return
+        stream.close()
+        source = null
         setStreamState('offline')
-        const delay =
-          Math.min(1000 * 2 ** reconnectAttempt, 10000) + Math.floor(Math.random() * 250)
-        reconnectAttempt += 1
-        reconnectTimer = setTimeout(connect, delay)
+        scheduleReconnect()
       }
     }
 
@@ -117,9 +133,9 @@ export function useRunProjection(runId: string, csrfToken: string) {
 
   const snapshot =
     query.data &&
-    (!projection || query.data.last_sequence_no >= projection.snapshot.last_sequence_no)
+    (projection?.snapshot.run_id !== runId || query.data.last_sequence_no >= projection.snapshot.last_sequence_no)
       ? query.data
-      : (projection?.snapshot ?? null)
+      : (projection?.snapshot.run_id === runId ? projection.snapshot : null)
 
   return {
     snapshot,

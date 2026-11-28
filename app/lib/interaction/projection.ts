@@ -39,7 +39,10 @@ export function applyRunEvent(projection: RunProjection, event: RunEvent): Proje
     last_event_id: event.event_id,
     updated_at: event.occurred_at,
   }
-  if (event.type === 'status') snapshot.status = event.data.status
+  if (event.type === 'status') {
+    snapshot.status = event.data.status
+    if (snapshot.status !== 'waiting_for_input') snapshot.required_action = null
+  }
   if (event.type === 'delta') {
     snapshot.summary = `${snapshot.summary ?? ''}${event.data.text}`.slice(0, 20000)
   }
