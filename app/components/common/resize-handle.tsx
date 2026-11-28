@@ -1,6 +1,6 @@
 'use client'
 
-import { type KeyboardEvent, type PointerEvent, useRef } from 'react'
+import { type KeyboardEvent, type PointerEvent, useEffect, useRef } from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -27,25 +27,31 @@ export function ResizeHandle({
   onReset: () => void
   className?: string
 }) {
-  const drag = useRef<{ x: number; width: number } | null>(null)
+  const drag = useRef<{ x: number; width: number; pointer: number } | null>(null)
   const sign = edge === 'right' ? 1 : -1
 
+  function clearDrag() {
+    if (!drag.current) return
+    drag.current = null
+    document.documentElement.classList.remove('resizing-panes')
+  }
+  useEffect(() => clearDrag, [])
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return
+    if (event.button !== 0 || document.documentElement.classList.contains('resizing-panes')) return
     event.preventDefault()
     event.currentTarget.setPointerCapture?.(event.pointerId)
-    drag.current = { x: event.clientX, width }
+    drag.current = { x: event.clientX, width, pointer: event.pointerId }
     document.documentElement.classList.add('resizing-panes')
   }
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!drag.current) return
+    if (!drag.current || drag.current.pointer !== event.pointerId) return
     onResize(drag.current.width + sign * (event.clientX - drag.current.x))
   }
   const end = (event: PointerEvent<HTMLDivElement>) => {
-    if (!drag.current) return
-    drag.current = null
-    event.currentTarget.releasePointerCapture?.(event.pointerId)
-    document.documentElement.classList.remove('resizing-panes')
+    if (!drag.current || drag.current.pointer !== event.pointerId) return
+    clearDrag()
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId))
+      event.currentTarget.releasePointerCapture(event.pointerId)
   }
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const step = event.shiftKey ? 64 : 16
@@ -79,6 +85,7 @@ export function ResizeHandle({
       onPointerMove={onPointerMove}
       onPointerUp={end}
       onPointerCancel={end}
+      onLostPointerCapture={end}
       onDoubleClick={onReset}
       onKeyDown={onKeyDown}
       className={cn(

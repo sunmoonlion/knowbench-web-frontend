@@ -1,4 +1,4 @@
-import type { BlockContent, List, PhrasingContent, Root, RootContent, Table } from 'mdast'
+import type { BlockContent, List, Nodes, PhrasingContent, Root, RootContent, Table } from 'mdast'
 
 import { plainText } from './markdown'
 
@@ -16,6 +16,13 @@ type Marks = { bold?: boolean; italics?: boolean; strike?: boolean; code?: boole
 export async function markdownToDocx(root: Root, title: string): Promise<Blob> {
   const d: Docx = await import('docx')
   let lists = 0
+  const definitions = new Map<string, string>()
+  function collect(node: Nodes) {
+    if (node.type === 'definition' && !definitions.has(node.identifier))
+      definitions.set(node.identifier, node.url)
+    if ('children' in node) node.children.forEach(collect)
+  }
+  collect(root)
 
   const runs = (
     nodes: PhrasingContent[],
@@ -36,13 +43,16 @@ export async function markdownToDocx(root: Root, title: string): Promise<Blob> {
         case 'break':
           return [new d.TextRun({ break: 1 })]
         case 'link':
-          if (!SAFE_LINK.test(node.url)) return runs(node.children, marks)
+        case 'linkReference': {
+          const url = node.type === 'link' ? node.url : definitions.get(node.identifier)
+          if (!url || !SAFE_LINK.test(url)) return runs(node.children, marks)
           return [
             new d.ExternalHyperlink({
-              link: node.url,
+              link: url,
               children: [new d.TextRun({ text: plainText(node), style: 'Hyperlink' })],
             }),
           ]
+        }
         case 'footnoteReference':
           return [new d.TextRun({ text: `[${node.label ?? node.identifier}]`, superScript: true })]
         case 'html':
@@ -83,7 +93,12 @@ export async function markdownToDocx(root: Root, title: string): Promise<Blob> {
         if (child.type === 'paragraph' && index === 0) {
           return [
             new d.Paragraph({
-              children: runs(child.children),
+              children: [
+                ...(typeof item.checked === 'boolean'
+                  ? [textRun(item.checked ? '☑ ' : '☐ ', {})]
+                  : []),
+                ...runs(child.children),
+              ],
               ...(node.ordered
                 ? { numbering: { reference: 'ordered', level: Math.min(level, 8), instance } }
                 : { bullet: { level: Math.min(level, 8) } }),

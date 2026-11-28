@@ -65,10 +65,11 @@ function resultText(result: unknown): string {
   if (!result || typeof result !== 'object') return pretty(result)
   const content = (result as { content?: unknown }).content
   if (!Array.isArray(content)) return pretty(result)
-  return content
+  const message = content
     .map((part) => (part && typeof part === 'object' ? text((part as Item).text) : ''))
     .filter(Boolean)
     .join('\n')
+  return message || pretty((result as Item).structuredContent)
 }
 
 function versionIn(result: string): string | null {
@@ -87,7 +88,11 @@ export function dataStep(item: Item, running: boolean): DataStep {
     tool: text(item.tool),
     dataset: text(args.dataset) || null,
     version: versionIn(result),
-    failed: !running && (item.status === 'failed' || Boolean(item.error)),
+    failed:
+      !running &&
+      (item.status === 'failed' ||
+        Boolean(item.error) ||
+        (item.result as Item | null)?.isError === true),
     running,
     query: pretty(item.arguments),
     result: result || pretty(item.error),
@@ -106,7 +111,9 @@ export function commandStep(item: Item, running: boolean): CommandStep {
     label: reading ? actions.map((action) => text(action.name)).join('、') : command,
     reading,
     running,
-    failed: !running && exitCode !== null && exitCode !== 0,
+    failed:
+      !running &&
+      (item.status === 'failed' || Boolean(item.error) || (exitCode !== null && exitCode !== 0)),
     exitCode,
     command,
     output: text(item.aggregatedOutput),
@@ -116,8 +123,11 @@ export function commandStep(item: Item, running: boolean): CommandStep {
 function countLines(diff: string) {
   let added = 0
   let removed = 0
+  let inHunk = false
   for (const line of diff.split('\n')) {
-    if (line.startsWith('+++') || line.startsWith('---')) continue
+    if (line.startsWith('@@ ')) inHunk = true
+    if (line.startsWith('diff --git ')) inHunk = false
+    if (!inHunk && (line.startsWith('+++ ') || line.startsWith('--- '))) continue
     if (line.startsWith('+')) added += 1
     else if (line.startsWith('-')) removed += 1
   }
@@ -170,9 +180,4 @@ export function turnIdOf(payload: Item): string | null {
   return text(payload.turnId) || text(turn?.id) || null
 }
 
-// 路径写成相对项目目录的：页面上不用每行都带一长串
-export function relativeTo(directory: string | null | undefined, path: string): string {
-  if (!directory) return path
-  const base = directory.endsWith('/') ? directory : `${directory}/`
-  return path.startsWith(base) ? path.slice(base.length) : path
-}
+export { relativeTo } from './file-tree'

@@ -149,3 +149,44 @@ describe('file names', () => {
     expect(exportName('/a/b/notes.markdown')).toBe('notes')
   })
 })
+
+const source = { path: 'report.md', exportedAt: new Date(0), sheetSource: '出处', notes: '核查' }
+it('preserves identifiers and non-numeric cells in the delivered workbook', async () => {
+  const markdown =
+    '| 代码 | 凭证号 | 两项 | 原文 |\n|---|---|---|---|\n|000858|9007199254740993|1,2|3 4|'
+  const book = new ExcelJS.Workbook()
+  await book.xlsx.load(await bytes(await tablesToXlsx(tablesOf(parseMarkdown(markdown)), source)))
+  expect(book.worksheets[0].getRow(2).values).toEqual([
+    undefined,
+    '000858',
+    '9007199254740993',
+    '1,2',
+    '3 4',
+  ])
+})
+it.each(['History', "'利润表'"])('exports a valid Markdown heading %s', async (name) => {
+  await expect(
+    tablesToXlsx([{ name, header: ['x'], rows: [['1']] }], source),
+  ).resolves.toBeInstanceOf(Blob)
+})
+it('retains the evidence URL of a reference-style link in Word', async () => {
+  const doc = await markdownToDocx(
+    parseMarkdown('见[核验原文][report]。\n\n[report]: https://example.org/annual'),
+    'test',
+  )
+  const zip = await JSZip.loadAsync(await bytes(doc))
+  expect(await zip.file('word/document.xml')!.async('string')).toContain('核验原文')
+  expect(await zip.file('word/_rels/document.xml.rels')!.async('string')).toContain(
+    'example.org/annual',
+  )
+})
+it('exports completed and outstanding checklist items with distinct checkmarks', async () => {
+  const render = async (text: string) => {
+    const zip = await JSZip.loadAsync(
+      await bytes(await markdownToDocx(parseMarkdown(text), 'test')),
+    )
+    return (await zip.file('word/document.xml')!.async('string')).split('<w:body>')[1]
+  }
+  expect(await render('- [x] 核对余额')).toContain('☑')
+  expect(await render('- [ ] 核对余额')).toContain('☐')
+})

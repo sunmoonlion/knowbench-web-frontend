@@ -24,6 +24,7 @@ describe('文件树的路径算术（Windows 与 POSIX 都认）', () => {
     expect(isUnder('C:\\r\\p', 'c:\\R')).toBe(true)
     expect(isUnder('C:\\research2\\p', 'C:\\research')).toBe(false)
     expect(isUnder('/home/me', '/home/me')).toBe(true)
+    expect(isUnder('/home/Me/report', '/home/me')).toBe(false)
   })
 
   it('树根：白名单目录；当前项目所在的根排最前', () => {

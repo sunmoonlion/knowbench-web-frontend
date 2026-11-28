@@ -10,6 +10,7 @@ import {
   childPath,
   pathsToExpand,
   sortEntries,
+  samePath,
   treeRoots,
   type TreeRoot,
 } from '@/lib/workbench/file-tree'
@@ -251,7 +252,7 @@ function EntryNode({
               <span className="truncate">{entry.name}</span>
             </span>
           }
-          initiallyOpen={expand.some((each) => each.toLowerCase() === path.toLowerCase())}
+          initiallyOpen={expand.some((each) => samePath(each, path))}
           expand={expand}
           selected={selected}
           onSelect={onSelect}
@@ -260,7 +261,7 @@ function EntryNode({
       </li>
     )
   }
-  const active = selected !== null && selected.toLowerCase() === path.toLowerCase()
+  const active = selected !== null && samePath(selected, path)
   return (
     <li>
       <button

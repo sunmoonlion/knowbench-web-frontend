@@ -35,10 +35,9 @@ function pick<T extends string>(allowed: readonly T[], value: unknown, fallback:
 export function readPreferences(): Preferences {
   let raw: Record<string, unknown> = {}
   try {
-    raw = JSON.parse(window.localStorage.getItem(PREFERENCES_KEY) ?? '{}') as Record<
-      string,
-      unknown
-    >
+    const stored: unknown = JSON.parse(window.localStorage.getItem(PREFERENCES_KEY) ?? '{}')
+    if (stored && typeof stored === 'object' && !Array.isArray(stored))
+      raw = stored as Record<string, unknown>
   } catch {
     raw = {}
   }

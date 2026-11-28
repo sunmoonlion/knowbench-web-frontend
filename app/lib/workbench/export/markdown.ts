@@ -48,10 +48,7 @@ function tableOf(table: Table, name: string): ExportTable {
  * 不猜单位，「—」「-」「N/A」与空白都不是数。和 knowlab 读表格的规则一致（0030 §3.1）。
  */
 export function numberOf(raw: string): { value: number; percent: boolean } | null {
-  let text = raw
-    .trim()
-    .replace(/[,，\s]/g, '')
-    .replace(/[−－]/g, '-')
+  let text = raw.trim().replace(/，/g, ',').replace(/[−－]/g, '-')
   if (!text) return null
   let negative = false
   if (text.startsWith('(') && text.endsWith(')')) {
@@ -60,9 +57,24 @@ export function numberOf(raw: string): { value: number; percent: boolean } | nul
   }
   const percent = text.endsWith('%')
   if (percent) text = text.slice(0, -1)
-  if (!/^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(text)) return null
-  let value = Number(text)
-  if (!Number.isFinite(value)) return null
+  if (
+    !/^[+-]?(?:(?:0|[1-9]\d*|[1-9]\d{0,2}(?:,\d{3})+)(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text)
+  )
+    return null
+  if (negative && /^[+-]/.test(text)) return null
+  const numeric = text.replace(/,/g, '')
+  const mantissa = numeric
+    .split(/e/i)[0]
+    .replace(/[+.\-]/g, '')
+    .replace(/^0+|0+$/g, '')
+  let value = Number(numeric)
+  if (
+    mantissa.length > 15 ||
+    !Number.isFinite(value) ||
+    (Number.isInteger(value) && !Number.isSafeInteger(value)) ||
+    (value === 0 && mantissa !== '')
+  )
+    return null
   if (negative) value = -value
   return { value: percent ? value / 100 : value, percent }
 }

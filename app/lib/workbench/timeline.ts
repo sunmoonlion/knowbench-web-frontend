@@ -508,26 +508,25 @@ export function timeline(events: readonly ConversationEvent[]): Timeline {
 // 专家一步交回的原样：一个 JSON 对象（可能包在 ```json 围栏里）。它说的过程话不是这样
 export function looksLikeArtifact(said: string): boolean {
   const body = said.trim()
-  return body.startsWith('{') || body.startsWith('```')
+  const fenced = /^\x60{3}(?:json)?[^\S\n]*\r?\n([\s\S]*?)\r?\n\x60{3}$/i.exec(body)
+  const candidate = fenced ? fenced[1].trim() : body
+  if (!candidate.startsWith('{')) return false
+  try {
+    JSON.parse(candidate)
+    return true
+  } catch {
+    return false
+  }
 }
 
-const SUMMARY_CHARS = 120
-
-/**
- * 一段话里有没有交回的原文：整段是 JSON，或者先说一两句再贴 JSON（围栏或从某一行起的 {…}）。
- * 有就拆成（前面那句说明，原文）；说明取第一行、过长截断。没有回 null（是它说的过程话）。
- */
 export function splitArtifact(said: string): { summary: string | null; raw: string } | null {
   const body = said.trim()
-  if (!body) return null
   if (looksLikeArtifact(body)) return { summary: null, raw: body }
-  const fence = body.search(/^```/m)
-  const brace = body.search(/^\{/m)
-  const at = fence >= 0 ? fence : brace >= 0 && body.endsWith('}') ? brace : -1
-  if (at < 0) return null
-  const line = body.slice(0, at).trim().split('\n')[0]?.trim() ?? ''
-  const summary = line.length > SUMMARY_CHARS ? `${line.slice(0, SUMMARY_CHARS)}…` : line || null
-  return { summary, raw: body.slice(at).trim() }
+  const at = body.search(/^(?:\x60{3}|\{)/m)
+  if (at < 1) return null
+  const raw = body.slice(at)
+  if (!looksLikeArtifact(raw)) return null
+  return { summary: body.slice(0, at).trim(), raw }
 }
 
 // 「改动」栏：一个文件一行，同一个文件改了几次合在一起
@@ -549,6 +548,7 @@ export function byFile(changes: readonly ChangedFile[]): FileChanges[] {
       seen.diffs.push(change.diff)
       // 先新建后修改，还是「新建」；后来删了，就是「删除」
       if (change.how === 'delete') seen.how = 'delete'
+      else if (seen.how === 'delete') seen.how = 'update'
     } else {
       files.set(change.path, {
         path: change.path,

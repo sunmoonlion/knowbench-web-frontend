@@ -1,13 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { PlatformProviders } from '@/components/platform/providers'
+import { ResizeHandle } from '@/components/common/resize-handle'
 import { SettingsScreen } from '@/features/settings'
 import { Sidebar } from '@/features/shell/ui/sidebar'
 import { PREFERENCES_KEY } from '@/lib/preferences-boot'
 import { PANE_WIDTHS_KEY, usePaneWidths } from '@/lib/pane-widths'
-import { usePreferences } from '@/lib/preferences'
+import { readPreferences, DEFAULT_PREFERENCES, usePreferences } from '@/lib/preferences'
 import { WorkbenchProvider } from '@/lib/workbench/context'
 import zh from '@/messages/zh-CN.json'
 
@@ -289,4 +291,42 @@ describe('设置分三类（0021）', () => {
     const cloudPuts = puts.length
     expect(cloudPuts).toBe(0)
   })
+})
+
+it('restores defaults from null and follows subsequent system changes until fixed', () => {
+  localStorage.setItem(PREFERENCES_KEY, 'null')
+  expect(readPreferences()).toEqual(DEFAULT_PREFERENCES)
+  const media = Object.assign(new EventTarget(), { matches: false })
+  vi.stubGlobal('matchMedia', () => media)
+  const view = render(
+    <PlatformProviders>
+      <div />
+    </PlatformProviders>,
+  )
+  act(() => {
+    media.matches = true
+    media.dispatchEvent(new Event('change'))
+  })
+  expect(document.documentElement).toHaveClass('dark')
+  act(() => usePreferences.getState().update({ appearance: 'light' }))
+  act(() => media.dispatchEvent(new Event('change')))
+  expect(document.documentElement).not.toHaveClass('dark')
+  view.unmount()
+})
+it('restores text selection when a dragging handle is removed', () => {
+  const view = render(
+    <ResizeHandle
+      label="宽度"
+      edge="right"
+      min={10}
+      max={200}
+      width={100}
+      onResize={() => {}}
+      onReset={() => {}}
+    />,
+  )
+  fireEvent.pointerDown(screen.getByRole('separator'), { button: 0, pointerId: 1, clientX: 100 })
+  expect(document.documentElement).toHaveClass('resizing-panes')
+  view.unmount()
+  expect(document.documentElement).not.toHaveClass('resizing-panes')
 })

@@ -294,3 +294,28 @@ describe('右边栏「文件」：直接问本机代理，文件不经云端', (
     expect(screen.getByText('这段对话不在哪台电脑上，没有文件可看。')).toBeInTheDocument()
   })
 })
+
+it('opens only for a file change received after loading history', () => {
+  const view = (count: number) => (
+    <NextIntlClientProvider locale="zh-CN" messages={messages}>
+      <WorkSidePanel
+        files={[
+          {
+            path: 'report.md',
+            how: 'update',
+            added: count,
+            removed: 0,
+            diffs: Array(count).fill('+row'),
+          },
+        ]}
+        directory={null}
+        live
+      />
+    </NextIntlClientProvider>
+  )
+  const mounted = render(view(1))
+  mounted.rerender(view(1))
+  expect(screen.getByRole('complementary')).toHaveAttribute('data-state', 'collapsed')
+  mounted.rerender(view(2))
+  expect(screen.getByRole('complementary')).toHaveAttribute('data-state', 'open')
+})

@@ -9,9 +9,11 @@ const BAD_SHEET_CHARS = /[[\]:*?/\\]/g
 export function sheetNames(names: string[]): string[] {
   const used = new Set<string>()
   return names.map((raw, i) => {
-    const base = (
+    const cleaned = (
       raw.replace(BAD_SHEET_CHARS, ' ').replace(/\s+/g, ' ').trim() || `表 ${i + 1}`
     ).slice(0, 31)
+    const title = cleaned.replace(/^'+|'+$/g, '').trim()
+    const base = /^history$/i.test(title) ? title + ' (1)' : title || `表 ${i + 1}`
     let name = base
     for (let n = 2; used.has(name.toLowerCase()); n++) {
       const suffix = `(${n})`
@@ -47,15 +49,20 @@ export async function tablesToXlsx(
     header.eachCell((cell) => {
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } }
     })
+    const identifiers = table.header.map((title) =>
+      /(?:代码|编号|凭证号|证券号|(?:^|[ _-])(?:id|code|identifier|serial)(?:$|[ _-]))/i.test(
+        title,
+      ),
+    )
     for (const values of table.rows) {
       const row = sheet.addRow(
-        values.map((raw) => {
-          const parsed = numberOf(raw)
+        values.map((raw, c) => {
+          const parsed = identifiers[c] ? null : numberOf(raw)
           return parsed ? parsed.value : raw
         }),
       )
       values.forEach((raw, c) => {
-        if (numberOf(raw)?.percent) row.getCell(c + 1).numFmt = '0.00%'
+        if (!identifiers[c] && numberOf(raw)?.percent) row.getCell(c + 1).numFmt = '0.00%'
       })
     }
     const columns = Math.max(table.header.length, ...table.rows.map((r) => r.length))

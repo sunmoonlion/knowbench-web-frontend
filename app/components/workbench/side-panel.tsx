@@ -66,20 +66,17 @@ export function WorkSidePanel({
     setTab(request.tab)
     if (request.tab === 'dossier') setPaper(null)
   }
-  // 页面刚打开时装进来的历史改动不算「出现」：接上实时流再过一会儿才开始数
-  const [armed, setArmed] = useState(false)
-  const [sawChanges, setSawChanges] = useState(false)
-  useEffect(() => {
-    if (!live) return
-    const timer = setTimeout(() => setArmed(true), 1500)
-    return () => clearTimeout(timer)
-  }, [live])
-  // 渲染中推导：数起来之后第一次从「没有改动」变成「有改动」，弹开「改动」；之后不再抢焦点
-  if (armed && !sawChanges) {
-    if (files.length > 0) {
-      setSawChanges(true)
-      if (tab === null) setTab('changes')
-    }
+  const count = files.reduce((total, file) => total + Math.max(1, file.diffs.length), 0)
+  const [observed, setObserved] = useState({ conversation, live, count, opened: false })
+  if (
+    observed.conversation !== conversation ||
+    observed.live !== live ||
+    observed.count !== count
+  ) {
+    const same = observed.conversation === conversation
+    const fresh = same && observed.live && live && count > observed.count && !observed.opened
+    setObserved({ conversation, live, count, opened: fresh || (same && observed.opened) })
+    if (fresh && tab === null && (!only || only.includes('changes'))) setTab('changes')
   }
   const tabs: { key: SideTab; icon: React.ReactNode }[] = [
     // 「工作底稿」按对话列：不知道是哪段对话（专家进度页）就不摆

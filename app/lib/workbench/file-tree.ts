@@ -24,11 +24,24 @@ export function baseName(path: string): string {
   return at >= 0 ? trimmed.slice(at + 1) || trimmed : trimmed
 }
 
+function pathKey(path: string): string {
+  if (/^(?:[a-z]:[\\/]|[\\/]{2})/i.test(path)) return path.replace(/\\/g, '/').toLowerCase()
+  return path
+}
+
+export function samePath(path: string, other: string): boolean {
+  return pathKey(path) === pathKey(other)
+}
+
 export function isUnder(path: string, root: string): boolean {
-  const sep = separatorOf(root)
-  const a = path.toLowerCase()
-  const b = root.toLowerCase()
-  return a === b || a.startsWith(b.endsWith(sep) ? b : b + sep)
+  const base = pathKey(root)
+  return samePath(path, root) || pathKey(path).startsWith(base.endsWith('/') ? base : base + '/')
+}
+
+export function relativeTo(directory: string | null | undefined, path: string): string {
+  if (!directory || !isUnder(path, directory) || samePath(path, directory)) return path
+  const start = pathKey(directory).endsWith('/') ? directory.length : directory.length + 1
+  return path.slice(start)
 }
 
 export type TreeRoot = { path: string }
