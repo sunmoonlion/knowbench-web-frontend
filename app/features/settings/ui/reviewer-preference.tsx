@@ -2,13 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { loadReviewers, pinKey, saveReviewer } from '@/lib/workbench/reviewer'
+import { loadReviewers, reviewerKey, pinKey, saveReviewer } from '@/lib/workbench/reviewer'
 
 export function ReviewerPreference({ csrfToken }: { csrfToken: string }) {
   const t = useTranslations('reviewRouting')
   const cache = useQueryClient()
-  const key = ['reviewer-preference']
-  const view = useQuery({ queryKey: key, queryFn: loadReviewers })
+  const view = useQuery({ queryKey: reviewerKey, queryFn: loadReviewers })
   const [edit, setEdit] = useState<string | null>(null)
   const save = useMutation({
     mutationFn: () => {
@@ -17,7 +16,7 @@ export function ReviewerPreference({ csrfToken }: { csrfToken: string }) {
       return saveReviewer(pin ?? null, csrfToken)
     },
     onSuccess: (data) => {
-      cache.setQueryData(key, data)
+      cache.setQueryData(reviewerKey, data)
       setEdit(null)
     },
     onError: () => {

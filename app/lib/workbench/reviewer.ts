@@ -24,6 +24,7 @@ const reviewerView = z.object({
 export type ReviewerPin = z.infer<typeof reviewerPin>
 export const pinKey = (p: ReviewerPin) => JSON.stringify([p.credential_id, p.provider, p.model])
 const url = '/api/workbench/prefs/reviewer'
+export const reviewerKey = ['reviewer-preference'] as const
 export const loadReviewers = () => getJson(reviewerView, url)
 export const saveReviewer = (reviewer: ReviewerPin | null, csrfToken: string) =>
   sendJson(reviewerView, url, { method: 'PUT', csrfToken, body: { reviewer } })

@@ -85,7 +85,7 @@ export type PairingLookup = z.infer<typeof pairingLookupSchema>
 export const prefsSchema = z
   .object({
     model: z.string().nullable(),
-    approval_policy: z.enum(['untrusted', 'on-request', 'on-failure', 'never']),
+    approval_policy: z.enum(['untrusted', 'on-request', 'never']),
     // Codex 在云端能用哪些数据源（0021 §二之 2）
     mcp_sources: z.record(z.string(), z.boolean()).optional(),
   })
@@ -111,6 +111,7 @@ export const credentialSchema = z
 
 export const provisionedSandboxSchema = z
   .object({
+    provision_revision: uuid.nullable().optional(),
     sandbox_id: uuid.nullable().optional(),
     app_server_url: z.string().optional(),
     status: z.string().nullable().optional(),

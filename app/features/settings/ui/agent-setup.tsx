@@ -44,10 +44,14 @@ export function AgentSetup({ csrfToken }: { csrfToken: string }) {
   }
   // 每个动作做完都给一句人话（做了什么、接下来会看到什么）；失败也在这里说（KIND 09：点了没反应，用户不知道成没成）
   const [notice, setNotice] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
-  const [confirming, setConfirming] = useState(false)
+  type DeleteTarget = { expected_sandbox_id: string; expected_revision: string }
+  const [confirming, setConfirming] = useState<DeleteTarget | null>(null)
+  const target = status.data?.sandbox_id && status.data.provision_revision
+    ? { expected_sandbox_id: status.data.sandbox_id, expected_revision: status.data.provision_revision }
+    : null
   const errorText = (error: unknown) => {
     const code = (error as Error).message
-    if (['relay_identity_changed', 'relay_identity_busy'].includes(code))
+    if (['relay_identity_changed', 'relay_identity_busy', 'sandbox_changed'].includes(code))
       return u('refreshRequired')
     if (code === 'no_active_credential') return u('needKey')
     return code === 'sandbox_capacity_full'
@@ -81,7 +85,7 @@ export function AgentSetup({ csrfToken }: { csrfToken: string }) {
   })
   const remove = useMutation({
     retry: false,
-    mutationFn: () => deprovisionSandbox(csrfToken),
+    mutationFn: (snapshot: DeleteTarget) => deprovisionSandbox(csrfToken, snapshot),
     onMutate: () => setNotice(null),
     onSuccess: () => {
       setIssued(null)
@@ -132,8 +136,8 @@ export function AgentSetup({ csrfToken }: { csrfToken: string }) {
           <button
             type="button"
             className="rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
-            disabled={busy || status.isPending || status.isError}
-            onClick={() => setConfirming(true)}
+            disabled={busy || status.isPending || status.isError || !target}
+            onClick={() => setConfirming(target)}
           >
             {remove.isPending ? t('deleting') : t('sandboxDelete')}
           </button>
@@ -148,8 +152,8 @@ export function AgentSetup({ csrfToken }: { csrfToken: string }) {
               className="bg-primary text-primary-foreground rounded-lg px-3 py-1.5 text-sm"
               disabled={busy || status.isError}
               onClick={() => {
-                setConfirming(false)
-                remove.mutate()
+                setConfirming(null)
+                remove.mutate(confirming)
               }}
             >
               {t('confirmDeleteYes')}
@@ -157,7 +161,7 @@ export function AgentSetup({ csrfToken }: { csrfToken: string }) {
             <button
               type="button"
               className="rounded-lg border px-3 py-1.5 text-sm"
-              onClick={() => setConfirming(false)}
+              onClick={() => setConfirming(null)}
             >
               {t('cancel')}
             </button>

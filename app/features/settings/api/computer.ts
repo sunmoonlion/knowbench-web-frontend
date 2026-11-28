@@ -7,6 +7,7 @@ import {
   pairingLookupSchema,
   provisionedSandboxSchema,
   type InstallCommand,
+  type AgentDownload,
   type PairingLookup,
   type ProvisionedSandbox,
 } from '@/contracts/workbench-settings'
@@ -30,11 +31,12 @@ export function provisionedSandboxStatus(fetchImpl: Fetch = fetch): Promise<Prov
 }
 export async function deprovisionSandbox(
   csrfToken: string,
+  target: { expected_sandbox_id: string; expected_revision: string },
   fetchImpl: Fetch = fetch,
 ): Promise<void> {
   await sendJson(
     z.object({ status: z.string() }).loose(),
-    '/api/workbench/sandboxes/provisioned',
+    '/api/workbench/sandboxes/provisioned?' + new URLSearchParams(target),
     { csrfToken, method: 'DELETE' },
     fetchImpl,
   )
@@ -56,12 +58,20 @@ export function fetchAgentDownload(fetchImpl: Fetch = fetch) {
 }
 export function issueInstallCommand(
   csrfToken: string,
+  release: Pick<AgentDownload, 'version' | 'manifest_sha256' | 'zip_sha256'>,
   fetchImpl: Fetch = fetch,
 ): Promise<InstallCommand> {
   return sendJson(
     installCommandSchema,
     '/api/workbench/agent/install-command',
-    { csrfToken },
+    {
+      csrfToken,
+      body: {
+        version: release.version,
+        manifest_sha256: release.manifest_sha256,
+        zip_sha256: release.zip_sha256,
+      },
+    },
     fetchImpl,
   )
 }

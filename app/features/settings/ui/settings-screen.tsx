@@ -6,8 +6,10 @@ import { ReviewerPreference } from './reviewer-preference'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
+import { ServiceProblem } from '@/components/workbench/file-tree'
+import { reviewerKey } from '@/lib/workbench/reviewer'
 import { CapabilitySettings } from './capabilities-section'
 
 import type { Prefs } from '@/contracts/workbench-settings'
@@ -28,7 +30,7 @@ import { LocalAgentSettings } from './local-agent-settings'
 import { MachinesScreen } from './machines-screen'
 import { PreferencesSection } from './preferences-section'
 
-const POLICIES: Prefs['approval_policy'][] = ['untrusted', 'on-request', 'on-failure', 'never']
+const POLICIES: Prefs['approval_policy'][] = ['untrusted', 'on-request', 'never']
 const input = 'bg-background mt-1 w-full rounded-lg border px-3 py-2 font-normal'
 const primaryButton =
   'bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50'
@@ -86,6 +88,7 @@ function CloudSection({ csrfToken }: { csrfToken: string }) {
       </header>
       <KeysSection csrfToken={csrfToken} />
       <ReviewerPreference csrfToken={csrfToken} />
+      {prefs.isError && <ServiceProblem error={prefs.error} />}
       {prefs.data ? (
         <ThreadSection
           key={`${prefs.data.model ?? ''}|${prefs.data.approval_policy}`}
@@ -170,21 +173,27 @@ function KeysSection({ csrfToken }: { csrfToken: string }) {
   const creds = useQuery({ queryKey: ['wb-credentials'], queryFn: () => listCredentials() })
   const [provider, setProvider] = useState('kimi')
   const [apiKey, setApiKey] = useState('')
+  const inputRevision = useRef(0)
+  const refresh = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['wb-credentials'] }),
+      queryClient.invalidateQueries({ queryKey: reviewerKey }),
+    ])
   const [baseUrl, setBaseUrl] = useState('')
   const add = useMutation({
-    mutationFn: () =>
+    mutationFn: (_revision: number) =>
       addCredential(
         { provider: provider.trim(), api_key: apiKey, base_url: baseUrl.trim() || null },
         csrfToken,
       ),
-    onSuccess: () => {
-      setApiKey('')
-      void queryClient.invalidateQueries({ queryKey: ['wb-credentials'] })
+    onSuccess: (_, revision) => {
+      if (inputRevision.current === revision) setApiKey('')
+      void refresh()
     },
   })
   const revoke = useMutation({
     mutationFn: (id: string) => revokeCredential(id, csrfToken),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['wb-credentials'] }),
+    onSuccess: refresh,
   })
 
   return (
@@ -197,7 +206,7 @@ function KeysSection({ csrfToken }: { csrfToken: string }) {
         className="mt-4 space-y-3"
         onSubmit={(e) => {
           e.preventDefault()
-          if (apiKey.length >= 8) add.mutate()
+          if (apiKey.length >= 8) add.mutate(inputRevision.current)
         }}
       >
         <label className="block text-sm font-medium">
@@ -211,7 +220,10 @@ function KeysSection({ csrfToken }: { csrfToken: string }) {
             type="password"
             autoComplete="off"
             value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
+            onChange={(e) => {
+              inputRevision.current++
+              setApiKey(e.target.value)
+            }}
           />
         </label>
         <label className="block text-sm font-medium">
@@ -241,6 +253,8 @@ function KeysSection({ csrfToken }: { csrfToken: string }) {
           </p>
         ) : null}
       </form>
+      {creds.isError && <ServiceProblem error={creds.error} />}
+      {revoke.isError && <ServiceProblem error={revoke.error} />}
       <ul className="mt-4 divide-y text-sm">
         {(creds.data ?? []).map((c) => (
           <li

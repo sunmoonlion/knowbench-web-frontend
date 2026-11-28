@@ -1493,6 +1493,7 @@
       "unavailable": "下载暂未开放",
       "copyCommand": "复制安装命令",
       "copyHint": "在 PowerShell 里粘贴回车；10 分钟内有效、只能用一次",
+      "commandExpired": "安装命令已过期，请重新复制。",
       "remaining": "还剩 {minutes} 分钟",
       "tooFast": "点得太快了，稍等再试",
       "copied": "安装命令已复制。",

@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -50,8 +50,10 @@ export function changesBetween(base: Draft, next: Draft): SettingsChange {
 
 // 哪些改动是放宽的（代理会弹窗）：提前告诉用户要去电脑上点一下
 export function widens(base: Draft, next: Draft): boolean {
-  const lower = (s: string) => s.toLowerCase()
-  if (next.roots.some((root) => !base.roots.map(lower).includes(lower(root)))) return true
+  const normalized = (path: string) =>
+    /^(?:[a-z]:[\\/]|\\\\)/i.test(path) ? path.replaceAll('/', '\\').toLowerCase() : path
+  const roots = new Set(base.roots.map(normalized))
+  if (next.roots.some((root) => !roots.has(normalized(root)))) return true
   if (base.sandbox === 'read-only' && next.sandbox === 'workspace-write') return true
   if (!base.network && next.network) return true
   if (!base.autostart && next.autostart) return true
@@ -94,7 +96,7 @@ export function LocalAgentSettings() {
           </div>
         ) : settings.data ? (
           <SettingsForm
-            key={settings.dataUpdatedAt}
+            key={current.id}
             agent={link.data}
             settings={settings.data}
             onApplied={() => {
@@ -157,13 +159,31 @@ function SettingsForm({
   const t = useTranslations('settings.computer')
   const client = useQueryClient()
   const base = fromSettings(settings)
-  const [draft, setDraftState] = useState<Draft>(base)
+  const [edits, setEdits] = useState<Partial<Draft>>({})
+  useEffect(() => {
+    const latest = fromSettings(settings)
+    setEdits((current) => {
+      const entries = Object.entries(current)
+      const pending = entries.filter(
+        ([key, value]) => JSON.stringify(value) !== JSON.stringify(latest[key as keyof Draft]),
+      )
+      return pending.length === entries.length ? current : Object.fromEntries(pending)
+    })
+  }, [settings])
+  const draft = { ...base, ...edits }
   const [newRoot, setNewRoot] = useState('')
   const [outcome, setOutcome] = useState<'saved' | null>(null)
   // 再改任何一项，「已保存」就撤掉
   const setDraft = (update: Draft | ((d: Draft) => Draft)) => {
     setOutcome(null)
-    setDraftState(update)
+    const next = typeof update === 'function' ? update(draft) : update
+    setEdits(
+      Object.fromEntries(
+        Object.entries(next).filter(
+          ([key, value]) => JSON.stringify(value) !== JSON.stringify(base[key as keyof Draft]),
+        ),
+      ),
+    )
   }
   const change = changesBetween(base, draft)
   const dirty = Object.keys(change).length > 0

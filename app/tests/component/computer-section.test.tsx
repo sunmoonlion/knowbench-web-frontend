@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { NextIntlClientProvider } from 'next-intl'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { widens } from '@/features/settings/ui/local-agent-settings'
 import { MachinesRedirect, MachinesScreen } from '@/features/settings'
 import {
   formatPairingCode,
@@ -245,4 +246,10 @@ it('does not present a late device lookup for a different pairing code', async (
   await waitFor(() => expect(screen.getByRole('button', { name: '核对这台电脑' })).toBeEnabled())
   expect(screen.queryByText(lookup.machine_name!)).toBeNull()
   expect(screen.queryByRole('button', { name: messages.machines.connect.deny })).toBeNull()
+})
+
+it('compares the directory ceiling using the file system path syntax', () => {
+  const settings = { roots: ['/Work'], rootChoices: [], network: false, autostart: false, sandbox: 'read-only' }
+  expect(widens(settings, { ...settings, roots: ['/work'] })).toBe(true)
+  expect(widens({ ...settings, roots: ['C:/Work'] }, { ...settings, roots: ['c:/work'] })).toBe(false)
 })

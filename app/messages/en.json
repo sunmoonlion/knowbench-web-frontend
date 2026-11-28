@@ -1493,6 +1493,7 @@
       "unavailable": "Download is not open yet",
       "copyCommand": "Copy install command",
       "copyHint": "Paste it into PowerShell and press Enter. It works for 10 minutes and only once",
+      "commandExpired": "The installation command expired. Copy a new one.",
       "remaining": "{minutes} minutes left",
       "tooFast": "That was too fast. Wait and try again",
       "copied": "Install command copied.",

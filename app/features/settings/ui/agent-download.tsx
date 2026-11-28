@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { WorkbenchError } from '@/lib/workbench/http'
 
@@ -21,25 +21,39 @@ export function AgentDownloadPanel({ csrfToken }: { csrfToken: string }) {
   const [copied, setCopied] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const issue = useMutation({
-    mutationFn: () => issueInstallCommand(csrfToken),
+    mutationFn: async () => {
+      if (!release) throw new Error('release unavailable')
+      const result = await issueInstallCommand(csrfToken, release)
+      try {
+        await navigator.clipboard.writeText(result.command)
+      } catch {
+        throw new Error('clipboard_failed')
+      }
+      return result.expires_at
+    },
+    gcTime: 0,
     onMutate: () => {
       setCopied(null)
       setNotice(null)
     },
-    onSuccess: async (result) => {
-      try {
-        await navigator.clipboard.writeText(result.command)
-        setCopied(result.expires_at)
-      } catch {
-        setNotice(a('copyFailed'))
-      }
-    },
+    onSuccess: setCopied,
     onError: (error) => {
-      setNotice(error instanceof WorkbenchError && error.status === 429 ? t('tooFast') : t('downloadFailed'))
+      if (error instanceof WorkbenchError && error.status === 409) void query.refetch()
+      setNotice(
+        error.message === 'clipboard_failed'
+          ? a('copyFailed')
+          : error instanceof WorkbenchError && error.status === 429
+            ? t('tooFast')
+            : t('downloadFailed'),
+      )
     },
   })
   return (
-    <section id="agent-download" className="space-y-3 rounded-xl border p-5" aria-label={t('downloadTitle')}>
+    <section
+      id="agent-download"
+      className="space-y-3 rounded-xl border p-5"
+      aria-label={t('downloadTitle')}
+    >
       <h2 className="text-base font-semibold">{t('downloadTitle')}</h2>
       {query.isPending ? (
         <p role="status">{t('loading')}</p>
@@ -70,15 +84,36 @@ export function AgentDownloadPanel({ csrfToken }: { csrfToken: string }) {
             {t('copyCommand')}
           </button>
           <p className="text-muted-foreground text-sm">{t('copyHint')}</p>
-          {copied ? (
-            <p role="status">
-              {t('copied')} {t('remaining', { minutes: minutesRemaining(copied) })}
-            </p>
-          ) : null}
+          {copied ? <InstallExpiry expires={copied} /> : null}
         </>
       )}
       {notice ? <p role="alert">{notice}</p> : null}
     </section>
+  )
+}
+
+function InstallExpiry({ expires }: { expires: string }) {
+  const t = useTranslations('machines.setup')
+  const [now, setNow] = useState(Date.now)
+  const minutes = minutesRemaining(expires, now)
+  useEffect(() => {
+    if (!minutes) return
+    const timer = setTimeout(
+      () => setNow(Date.now()),
+      Math.max(0, Date.parse(expires) - Date.now() - (minutes - 1) * 60000),
+    )
+    return () => clearTimeout(timer)
+  }, [expires, minutes, now])
+  return (
+    <p role="status">
+      {minutes ? (
+        <>
+          {t('copied')} {t('remaining', { minutes })}
+        </>
+      ) : (
+        t('commandExpired')
+      )}
+    </p>
   )
 }
 
