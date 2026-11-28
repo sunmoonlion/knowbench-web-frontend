@@ -2,6 +2,7 @@ import type { RunEvent, RunSnapshot } from '@/contracts/interaction'
 
 export type RunProjection = {
   snapshot: RunSnapshot
+  citations: RunSnapshot['citations']
   seenEventIds: ReadonlySet<string>
 }
 
@@ -11,9 +12,13 @@ export type ProjectionResult =
   | { kind: 'gap'; projection: RunProjection; expected: number; received: number }
   | { kind: 'foreign_run'; projection: RunProjection }
 
-export function createRunProjection(snapshot: RunSnapshot): RunProjection {
+export function createRunProjection(snapshot: RunSnapshot, previous?: RunProjection | null): RunProjection {
+  const citations = previous?.snapshot.run_id === snapshot.run_id
+    ? Array.from(new Map([...previous.citations, ...snapshot.citations].map(c => [c.evidence_id, c])).values())
+    : snapshot.citations
   return {
     snapshot,
+    citations,
     seenEventIds: new Set(snapshot.last_event_id ? [snapshot.last_event_id] : []),
   }
 }
@@ -46,12 +51,10 @@ export function applyRunEvent(projection: RunProjection, event: RunEvent): Proje
   if (event.type === 'delta') {
     snapshot.summary = `${snapshot.summary ?? ''}${event.data.text}`.slice(0, 20000)
   }
-  if (event.type === 'citation') {
-    snapshot.citations = projection.snapshot.citations.some(
-      (item) => item.evidence_id === event.data.citation.evidence_id,
-    )
-      ? projection.snapshot.citations
-      : [...projection.snapshot.citations, event.data.citation]
+  let citations = projection.citations
+  if (event.type === 'citation' && !citations.some(c => c.evidence_id === event.data.citation.evidence_id)) {
+    citations = [...citations, event.data.citation]
+    snapshot.citations = citations.slice(0, 50)
   }
   if (event.type === 'input_required') {
     snapshot.status = 'waiting_for_input'
@@ -72,6 +75,7 @@ export function applyRunEvent(projection: RunProjection, event: RunEvent): Proje
     kind: 'applied',
     projection: {
       snapshot,
+      citations,
       seenEventIds: new Set([...projection.seenEventIds, event.event_id]),
     },
   }

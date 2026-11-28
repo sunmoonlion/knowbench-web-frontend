@@ -36,6 +36,7 @@ export async function fetchRunSnapshot(
     `/api/web/v1/runs/${encodeURIComponent(runId)}`,
     { method: 'GET' },
     fetchImpl,
+    runId,
   )
 }
 
@@ -69,6 +70,7 @@ export async function submitRunAction(
       body: JSON.stringify(action),
     },
     fetchImpl,
+    runId,
   )
 }
 
@@ -86,6 +88,7 @@ export async function cancelRun(
       body: JSON.stringify(cancelRunRequestSchema.parse(command)),
     },
     fetchImpl,
+    runId,
   )
 }
 
@@ -109,6 +112,7 @@ async function requestSnapshot(
   url: string,
   init: RequestInit,
   fetchImpl: typeof fetch,
+  expectedRunId?: string,
 ): Promise<RunSnapshot> {
   let response: Response
   try {
@@ -143,6 +147,9 @@ async function requestSnapshot(
     throw new InteractionClientError('contract_invalid', undefined, { cause: parsed.error })
   }
   assertSessionResponse(response)
+  if (expectedRunId && parsed.data.run_id.toLowerCase() !== expectedRunId.toLowerCase()) {
+    throw new InteractionClientError('contract_invalid')
+  }
   return parsed.data
 }
 

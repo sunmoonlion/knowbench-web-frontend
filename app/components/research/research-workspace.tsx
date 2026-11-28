@@ -117,7 +117,7 @@ function RunWorkspace({
   onNewRun: () => void
 }) {
   const t = useTranslations('interaction')
-  const { snapshot, streamState, queryError, isLoading, action, cancel } = useRunProjection(
+  const { snapshot, citations, streamState, queryError, isLoading, action, cancel } = useRunProjection(
     runId,
     csrfToken,
   )
@@ -198,9 +198,9 @@ function RunWorkspace({
 
         <aside className="bg-card rounded-xl border p-5 shadow-sm" aria-label={t('citations')}>
           <h3 className="font-medium">{t('citations')}</h3>
-          {snapshot.citations.length ? (
+          {citations.length ? (
             <ol className="mt-3 space-y-3">
-              {snapshot.citations.map((citation, index) => (
+              {citations.map((citation, index) => (
                 <li key={citation.evidence_id} className="text-sm">
                   <a className="font-medium underline underline-offset-4" href={citation.source_href}>
                     {citation.title ?? t('citationFallback', { index: index + 1 })}

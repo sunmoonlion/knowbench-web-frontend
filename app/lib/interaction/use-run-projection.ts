@@ -35,7 +35,8 @@ export function useRunProjection(runId: string, csrfToken: string) {
       projectionRef.current?.snapshot.run_id !== runId ||
       query.data.last_sequence_no >= projectionRef.current.snapshot.last_sequence_no
     ) {
-      projectionRef.current = createRunProjection(query.data)
+      projectionRef.current = createRunProjection(query.data, projectionRef.current)
+      setProjection(projectionRef.current)
     }
 
     let stopped = false
@@ -139,6 +140,7 @@ export function useRunProjection(runId: string, csrfToken: string) {
 
   return {
     snapshot,
+    citations: projection?.snapshot.run_id === runId ? projection.citations : snapshot?.citations ?? [],
     streamState: snapshot && isTerminal(snapshot.status) ? 'closed' : streamState,
     queryError: query.error,
     isLoading: query.isLoading,
