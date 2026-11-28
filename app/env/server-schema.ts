@@ -66,7 +66,7 @@ export function parseServerEnv(
   }
   if (
     deploymentEnv === 'test' &&
-    !['127.0.0.1', 'localhost', '::1'].includes(new URL(appOrigin).hostname)
+    !['127.0.0.1', 'localhost', '[::1]'].includes(new URL(appOrigin).hostname)
   ) {
     throw new Error('Invalid server environment: test APP_ORIGIN must use a loopback host')
   }

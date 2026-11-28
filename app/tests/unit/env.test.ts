@@ -61,19 +61,19 @@ describe('server environment', () => {
     })
   })
 
-  it('allows loopback HTTP only for an explicit test deployment', () => {
+  it.each(['127.0.0.1', '[::1]', 'localhost'])('allows test loopback %s', (host) => {
     expect(
       parseServerEnv({
         NODE_ENV: 'production',
         DEPLOYMENT_ENV: 'test',
         AUTH_APP: 'knowfeed',
-        APP_ORIGIN: 'http://127.0.0.1:3008',
+        APP_ORIGIN: `http://${host}:3008`,
         BACKEND_INTERNAL_URL: 'http://127.0.0.1:18080',
         DEPLOYMENT_ID: 'arch-v2-r2-web-e2e',
       }),
     ).toMatchObject({
       DEPLOYMENT_ENV: 'test',
-      APP_ORIGIN: 'http://127.0.0.1:3008',
+      APP_ORIGIN: `http://${host}:3008`,
     })
   })
 

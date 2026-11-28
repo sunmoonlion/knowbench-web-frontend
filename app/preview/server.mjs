@@ -196,12 +196,13 @@ export function createPreviewServer({ config, fixturesRoot, log = () => {} }) {
       const found = findResponse(scenario, method, path, url.search)
       if (found) {
         const status = Number(found.status ?? 200)
+        const body = status === 204 || status === 304 ? undefined : readBody(scenario, found)
         response.writeHead(status, {
           'content-type': found.content_type ?? 'application/json; charset=utf-8',
           'cache-control': 'no-store',
           ...(found.headers ?? {}),
         })
-        response.end(status === 204 ? undefined : readBody(scenario, found))
+        response.end(body)
         return
       }
     }

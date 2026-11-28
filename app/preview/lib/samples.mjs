@@ -63,7 +63,7 @@ export function findStream(scenario, path) {
 
 export function readBody(scenario, response) {
   if (response.file) return readFileSync(join(scenario.directory, response.file))
-  if (response.body === undefined || response.body === null) return Buffer.alloc(0)
+  if (response.body === undefined) return Buffer.alloc(0)
   return Buffer.from(JSON.stringify(response.body))
 }
 

@@ -50,6 +50,9 @@ beforeAll(async () => {
       user: { display_name: '样例用户' },
       pages: [{ title: '首页', path: '/zh-CN/workbench' }],
       responses: [
+        { method: 'GET', path: '/api/empty-record', body: null },
+        { method: 'GET', path: '/api/missing-record', file: 'not-recorded.json' },
+        { method: 'GET', path: '/api/no-content', status: 204, body: null },
         { method: 'GET', path: '/api/workbench/projects', file: 'projects.json' },
         {
           method: 'GET',
@@ -300,4 +303,16 @@ describe('preview: how samples are matched', () => {
       'id: 7\ndata: {"cursor":7,"type":"turn/completed"}\n\n',
     )
   })
+})
+
+it('distinguishes an absent fixture, JSON null and a bodyless success', async () => {
+  const missing = await fetch(base + '/api/missing-record')
+  expect(missing.status).toBe(500)
+  expect((await missing.json()).message).toContain('not-recorded.json')
+  const empty = await fetch(base + '/api/empty-record')
+  expect(empty.status).toBe(200)
+  expect(await empty.json()).toBeNull()
+  const noContent = await fetch(base + '/api/no-content')
+  expect(noContent.status).toBe(204)
+  expect(await noContent.text()).toBe('')
 })
