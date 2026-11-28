@@ -22,7 +22,7 @@ export function useTaskData(task: string, beat = 0) {
   return useQuery({
     queryKey: [...taskDataKey(task), beat],
     queryFn: () => getJson(taskDataSchema, `/api/workbench/tasks/${seg(task)}/data`),
-    placeholderData: (previous) => previous,
+    placeholderData: (previous, query) => (query?.queryKey[2] === task ? previous : undefined),
     // 采集进度更新不一定产生对话事件；等待时读取服务端快照，办结后停止。
     refetchInterval: (query) => (query.state.data?.status === 'waiting' ? 10_000 : false),
   })
@@ -30,6 +30,7 @@ export function useTaskData(task: string, beat = 0) {
 
 export type Pick = { material_id: string; version_no: number }
 export type ConfirmBody = {
+  view_digest?: string
   picks?: Record<string, Pick>
   dropped?: string[]
   needs?: Record<string, unknown>[]
@@ -126,9 +127,14 @@ export function confirmBody(request: DataRequestItem, changes: Changes): Confirm
     if (changes.dropped.length) body.dropped = changes.dropped
     return body
   }
-  const gone = new Set(
-    request.items.filter((item) => changes.dropped.includes(item.ref)).map((i) => i.need_key),
+  const retained = new Set(
+    request.items.filter((i) => !changes.dropped.includes(i.ref)).map((i) => i.need_key),
   )
+  const gone = new Set(
+    request.items.filter((i) => !retained.has(i.need_key)).map((i) => i.need_key),
+  )
+  const partial = changes.dropped.filter((ref) => retained.has(byNeed.get(ref) ?? ''))
+  if (partial.length) body.dropped = partial
   body.needs = [
     ...request.needs
       .filter((need) => !gone.has(need.key))

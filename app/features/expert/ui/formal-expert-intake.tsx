@@ -290,6 +290,11 @@ export function FormalExpertIntake({
           {!result.selected && result.more && (
             <p className="text-muted-foreground text-sm">{t('partial')}</p>
           )}
+          {task && !result.selected && !result.ended && !round.data?.superseded_by && result.next != null && (
+            <FormalExpertStart key={task + ':' + result.next} project={project} from={from} task={task}
+              question={current} initialOffset={result.next} actionLabel={t('continueSearch')}
+              blocked={blocked || busy || round.isFetching} onStarted={openRound}/>
+          )}
           {result.ended ? (
             <p role="status">{t('ended')}</p>
           ) : result.match.outcome === 'no_match' ? (

@@ -47,6 +47,7 @@ function wrap(children: React.ReactNode) {
 
 const TASK = '11111111-1111-4111-8111-111111111111'
 const proposed: TaskData = {
+  view_digest: "a".repeat(64),
   listed: true,
   status: 'ready',
   confirm_in: 'here',
@@ -154,7 +155,7 @@ describe('确认专家提出的数据（decisions ⑭）', () => {
     fireEvent.click(panel.getAllByRole('button', { name: '不要这一样' })[1])
     fireEvent.click(panel.getByRole('button', { name: '确认使用这些数据' }))
     await waitFor(() => expect(calls.length).toBe(1))
-    expect(calls[0].body).toEqual({ dropped: ['req1_2:b'] })
+    expect(calls[0].body).toEqual({ dropped: ['req1_2:b'],view_digest: proposed.view_digest })
     fireEvent.click(panel.getByRole('button', { name: '都不要，照现有的做' }))
     await waitFor(() =>
       expect(calls.at(-1)!.path).toBe(`/api/workbench/tasks/${TASK}/data-requests/decline`),
@@ -584,4 +585,31 @@ it('shows supplier query arguments and sends edited arguments for fresh confirma
     ...query,
     arguments: { query: 'changed annual report', top_k: 2 },
   })
+})
+
+it('两张待确认采单同时展示并确认所见修订', async () => {
+  const data = structuredClone(proposed)
+  const extra = structuredClone(data.requests[0])
+  extra.id = 'r2'
+  extra.needs = [{...extra.needs[0],key:'req2_1'}]
+  extra.items = [{...extra.items[0],ref:'r2:first',need_key:'req2_1'}]
+  extra.needs[0].name = '第二批独立核验资料'
+  data.requests.push(extra)
+  wrap(<TaskDataPanel task={TASK} data={data} />)
+  expect(screen.getByText('第二批独立核验资料')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button',{name:'确认使用这些数据'}))
+  await waitFor(() => expect(calls[0]?.body).toEqual({view_digest:proposed.view_digest}))
+})
+it('只改主体，确认仍保留原固定季度', async () => {
+  const data = structuredClone(proposed)
+  const req = data.requests[0]
+  req.needs[0].period = {kind:'fixed',start:'2025-04-01',end:'2025-06-30'}
+  Object.assign(req.items[0].key,{period_start:'2025-04-01', period_end:'2025-06-30'})
+  wrap(<TaskDataPanel task={TASK} data={data} />)
+  fireEvent.click(screen.getAllByRole('button',{name:'改'})[0])
+  fireEvent.change(screen.getByRole('textbox',{name:'主体'}),{target:{value:'000858.SZ'}})
+  fireEvent.click(screen.getByRole('button',{name:'好'}))
+  fireEvent.click(screen.getByRole('button',{name:'确认使用这些数据'}))
+  await waitFor(() => expect((calls[0]?.body as {needs:{period:unknown}[]})?.needs[0].period).toEqual(
+    {kind:'fixed',start:'2025-04-01',end:'2025-06-30'}))
 })

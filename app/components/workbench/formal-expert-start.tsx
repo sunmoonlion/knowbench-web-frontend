@@ -18,6 +18,7 @@ export function FormalExpertStart({
   from = null,
   task = null,
   ended = false,
+  initialOffset = 0,
   blocked,
   actionLabel,
   startButtonRef,
@@ -28,6 +29,7 @@ export function FormalExpertStart({
   from?: string | null
   task?: string | null
   ended?: boolean
+  initialOffset?: number
   blocked: boolean
   actionLabel?: string
   startButtonRef?: Ref<HTMLButtonElement>
@@ -56,7 +58,7 @@ export function FormalExpertStart({
   const current = question.trim()
   const search = JSON.stringify([project, from, task, current, named])
   const emptyPage = empty?.search === search ? empty : null
-  const offset = emptyPage?.next ?? 0
+  const offset = emptyPage?.next ?? initialOffset
   const start = useMutation({
     mutationFn: async () => {
       const storageKey = `workbench.formal-intake.${project}`
@@ -115,6 +117,7 @@ export function FormalExpertStart({
         disabled={
           availability.data?.unified !== true ||
           blocked ||
+          (emptyPage !== null && emptyPage.next === null && initialOffset > 0) ||
           (named !== null && !reference) ||
           !current ||
           current.length > 2000 ||

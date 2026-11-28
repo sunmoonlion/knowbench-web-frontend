@@ -164,3 +164,17 @@ describe('facts items', () => {
     expect(uploadValues(facts)).toEqual({ subject: '300750.SZ', period_end: '2025-12-31' })
   })
 })
+
+it('preserves the other period of a revised multi-period need', () => {
+  const second = { ...request.items[1], need_key: request.needs[0].key }
+  const body = confirmBody(
+    { ...request, needs: [request.needs[0]], items: [request.items[0], second] },
+    {
+      ...noChanges,
+      dropped: [second.ref],
+      added: [{ doc_type: 'annual_report', subject: null, from: 2026, to: 2026 }],
+    },
+  )
+  expect(body.needs?.[0]).toEqual(request.needs[0])
+  expect(body.dropped).toEqual([second.ref])
+})

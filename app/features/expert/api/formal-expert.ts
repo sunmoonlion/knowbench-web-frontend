@@ -101,6 +101,7 @@ const reviewed = z.object({
     .object({
       review_digest: z.string(),
       more: z.boolean(),
+      next: z.number().int().positive().nullable().optional(),
       source: z.literal('empty_directory').optional(),
       suggested_plan: suggestion.nullable().optional(),
       attached_plan: z.boolean().optional(),
@@ -151,6 +152,7 @@ const partialOption = z.object({
   artifact: z.object({ step_id: z.string(), version: z.number(), digest: z.string() }),
   output_names: z.array(z.string()),
   applicable_promises: z.array(z.string()),
+  conditional_promises: z.record(z.string(),z.object({when:z.string(), input_slots:z.array(z.string()),status:z.literal("unverified")})).optional(),
 })
 const partialResponse = z.object({
   report: z

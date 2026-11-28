@@ -55,12 +55,40 @@ export function TaskDataPanel({
   data: TaskData
   compact?: boolean
 }) {
+  const pending = data.requests.filter((each) => each.status === 'pending')
+  const request = pending.length
+    ? {
+        ...pending[0],
+        review_dropped: pending.flatMap((r) => r.review_dropped ?? []),
+        review_picks: Object.assign({}, ...pending.map((r) => r.review_picks ?? {})),
+        labels: pending.flatMap((r) => r.labels),
+        needs: pending.flatMap((r) => r.needs),
+        items: pending.flatMap((r) => r.items),
+        eta_seconds: pending.every((r) => typeof r.eta_seconds === 'number')
+          ? pending.reduce((sum, r) => sum + (r.eta_seconds ?? 0), 0)
+          : undefined,
+      }
+    : undefined
+  const identity = JSON.stringify([task, data.view_digest, pending.map((r) => [r.id, r.needs, r.items])])
+  return <TaskDataForm key={identity} {...{ task, data, compact, request }} />
+}
+
+function TaskDataForm({
+  task,
+  data,
+  compact,
+  request,
+}: {
+  task: string
+  data: TaskData
+  compact: boolean
+  request?: TaskData['requests'][number]
+}) {
   const t = useTranslations('expert.data')
   const act = useTaskDataActions(task)
-  const [changes, setChanges] = useState<Changes>(noChanges)
+  const [changes, setChanges] = useState<Changes>(() => ({...noChanges,dropped:request?.review_dropped ?? [],picks:request?.review_picks ?? {}}))
   const duration = useDuration()
   if (!data.listed) return <NotSaved data={data} />
-  const request = data.requests.find((each) => each.status === 'pending')
   const missing = data.requests.filter((each) => each.status === 'missing')
   const busy = act.confirm.isPending || act.decline.isPending || act.recheck.isPending
   const failure = (act.confirm.error ??
@@ -131,9 +159,9 @@ export function TaskDataPanel({
           <div className="flex flex-wrap items-center gap-2">
             <Button
               size="sm"
-              disabled={busy || blocked > 0}
+              disabled={busy || blocked > 0 || !data.view_digest}
               onClick={() =>
-                act.confirm.mutate(confirmBody(request, changes), {
+                act.confirm.mutate({...confirmBody(request, changes), view_digest: data.view_digest!}, {
                   onSuccess: () => setChanges(noChanges),
                 })
               }
@@ -538,7 +566,11 @@ function EditOrdinaryItem({
         onClick={() =>
           onDone({
             subject: normal,
-            ...(years && years[0] !== null && years[1] !== null
+            ...((from !== (need.period?.start?.slice(0, 4) ?? '') ||
+              to !== (need.period?.end?.slice(0, 4) ?? '')) &&
+            years &&
+            years[0] !== null &&
+            years[1] !== null
               ? { from: years[0], to: years[1] }
               : {}),
           })

@@ -29,7 +29,7 @@ export function PartialDelivery({ task }: { task: string }) {
       {report.missing_objects?.length ? (
         <p>{t('partialObjects', { objects: report.missing_objects.join(', ') })}</p>
       ) : null}
-      {report.options.map(({ artifact, output_names, applicable_promises, object_id }) => {
+      {report.options.map(({ artifact, output_names, applicable_promises, conditional_promises, object_id }) => {
         const receipt = report.received.find((r) => r.step === artifact.step_id)
         return (
           <div key={artifact.step_id}>
@@ -42,6 +42,9 @@ export function PartialDelivery({ task }: { task: string }) {
                   applicable_promises.map((p) => report.promises[p]).join(', ') || t('partialNone'),
               })}
             </p>
+            {Object.entries(conditional_promises ?? {}).map(([id, condition]) =>
+              <p key={id}>{t('partialConditional', {promise:report.promises[id], condition:condition.when, slots:condition.input_slots.join(', ') || t('partialNone')})}</p>
+            )}
             {receipt ? (
               <pre className="whitespace-pre-wrap">{JSON.stringify(receipt.outputs, null, 2)}</pre>
             ) : (

@@ -143,6 +143,7 @@
     "handoffEmpty": "No child handoffs recorded.",
     "handoffRefresh": "Refresh handoffs",
     "partialMissing": "Missing steps: {steps}",
+    "partialConditional": "{promise} · Condition awaiting verification: {condition} · Inputs: {slots}",
     "partialPromises": "Promises in scope: {promises}",
     "partialNone": "Branch outputs only",
     "partialReceive": "Receive only the outputs of {step}",

@@ -716,7 +716,7 @@ export const dataRequestSchema = z
       .loose()
       .optional(),
     required: z.boolean().default(false),
-    reading: z.string().default('original'),
+    reading: z.string().optional(),
     description: z.string().default(''),
   })
   .loose()
@@ -781,6 +781,7 @@ export type ListedItem = z.infer<typeof listedItemSchema>
 // 委托用的数据（清单 v2）：在定数据、钉了哪几份、在等哪几项、专家提出了什么、没取到的
 export const taskDataSchema = z
   .object({
+    view_digest: z.string().nullable().optional(),
     listed: z.boolean(),
     status: z.enum(['planning', 'ready', 'waiting', 'failed', 'cancelled']).optional(),
     // 测试委托：提出的数据由作者在 knowlab 测试页确认（SDD 0046 第三节）
@@ -818,6 +819,8 @@ export const taskDataSchema = z
         z
           .object({
             id: z.string(),
+            review_dropped: z.array(z.string()).optional(),
+            review_picks: z.record(z.string(), z.object({material_id:z.string(),version_no:z.number().int()})).optional(),
             labels: z.array(z.string()),
             status: z.string(),
             needs: z.array(dataRequestSchema).default([]),
