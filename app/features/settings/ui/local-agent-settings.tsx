@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -160,16 +160,15 @@ function SettingsForm({
   const client = useQueryClient()
   const base = fromSettings(settings)
   const [edits, setEdits] = useState<Partial<Draft>>({})
-  useEffect(() => {
-    const latest = fromSettings(settings)
-    setEdits((current) => {
-      const entries = Object.entries(current)
-      const pending = entries.filter(
-        ([key, value]) => JSON.stringify(value) !== JSON.stringify(latest[key as keyof Draft]),
-      )
-      return pending.length === entries.length ? current : Object.fromEntries(pending)
-    })
-  }, [settings])
+  const [previousSettings, setPreviousSettings] = useState(settings)
+  if (settings !== previousSettings) {
+    setPreviousSettings(settings)
+    setEdits(Object.fromEntries(
+      Object.entries(edits).filter(
+        ([key, value]) => JSON.stringify(value) !== JSON.stringify(base[key as keyof Draft]),
+      ),
+    ))
+  }
   const draft = { ...base, ...edits }
   const [newRoot, setNewRoot] = useState('')
   const [outcome, setOutcome] = useState<'saved' | null>(null)

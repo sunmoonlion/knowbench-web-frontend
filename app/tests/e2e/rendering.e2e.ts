@@ -369,9 +369,9 @@ test('registry management follows an installed source to its two frozen versions
   await expect(page).toHaveURL(/\/en\/workbench\/methods$/)
   await expect(page.getByRole('heading', { name: 'Methods and skills', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Monthly report/ })).toBeVisible()
-  await page.getByRole('button', { name: 'Installations', exact: true }).click()
+  await page.getByRole('button', { name: 'Local skills and connectors', exact: true }).click()
   await expect(page.getByText('Office mail', { exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Formal Methods' }).click()
+  await page.getByRole('button', { name: 'Available experts and tools' }).click()
   await page.getByRole('searchbox').fill('auditor')
   await expect(page.getByRole('heading', { name: /Notify auditor/ })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Monthly report/ })).toHaveCount(0)
@@ -397,7 +397,7 @@ test('registry management follows an installed source to its two frozen versions
   })
   await page.getByRole('button', { name: 'Planning candidates' }).click()
   await expect(page.getByRole('heading', { name: 'Acquired reviewer · v2' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: /Notify auditor/ })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: /Notify auditor/ })).toBeVisible()
   const question = 'Check the November report'
   await page.getByLabel('What question are you working on?').fill(question)
   await page.getByRole('button', { name: 'Find available experts' }).click()
@@ -422,7 +422,11 @@ test('registry management follows an installed source to its two frozen versions
       },
     })
   })
-  await page.getByText('View version declaration', { exact: true }).click()
+  await page
+    .getByRole('article')
+    .filter({ has: page.getByRole('heading', { name: 'Acquired reviewer · v2' }) })
+    .getByText('View version declaration', { exact: true })
+    .click()
   await expect(page.getByText('Forecasts', { exact: true })).toBeVisible()
   await expect(page.getByText(/Both ledgers supplied/)).toBeVisible()
   await expect(page.getByText(/Output fields · differences/)).toBeVisible()
@@ -517,7 +521,7 @@ test('author registers a standalone script and publishes a second text revision'
     return route.fulfill({ status: row ? 200 : 404, json: row ?? {} })
   })
   await page.goto('/en/workbench/methods')
-  await page.getByRole('button', { name: 'Scripts and instructions' }).click()
+  await page.getByRole('button', { name: 'Local skills and connectors' }).click()
   await page.getByRole('button', { name: 'New registration' }).click()
   await page.getByLabel('Load from file').setInputFiles({
     name: 'reconcile.py',
